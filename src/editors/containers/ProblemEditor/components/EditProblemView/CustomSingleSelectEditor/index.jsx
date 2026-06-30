@@ -6,7 +6,9 @@ import { Button } from '@openedx/paragon';
 import { Add } from '@openedx/paragon/icons';
 
 import { actions, selectors } from '../../../../../data/redux';
-import { buildOLX, createEmptyGroup, parseGroupsFromOLX } from './utils';
+import {
+  ANSWER_TYPES, buildOLX, createEmptyGroup, parseGroupsFromOLX,
+} from './utils';
 import QuestionGroup from './QuestionGroup';
 
 const CustomSingleSelectEditor = () => {
@@ -36,7 +38,7 @@ const CustomSingleSelectEditor = () => {
 
   const addGroup = () => {
     const nextId = groups.length > 0 ? Math.max(...groups.map((g) => g.id)) + 1 : 0;
-    setGroups((prev) => [...prev, createEmptyGroup(nextId)]);
+    setGroups((prev) => [...prev, createEmptyGroup(nextId, ANSWER_TYPES.SINGLECHOICE)]);
   };
 
   return (

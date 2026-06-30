@@ -70,6 +70,13 @@ export const getDataFromOlx = ({ rawOLX, rawSettings, defaultSettings }) => {
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('The Problem Could Not Be Parsed from OLX. redirecting to Advanced editor.', error);
+    if (olxParser?.problem?.['@_x-custom-type'] === AdvanceProblemKeys.CUSTOMSINGLESELECT) {
+      return {
+        problemType: AdvanceProblemKeys.CUSTOMSINGLESELECT,
+        rawOLX,
+        settings: parseSettings(rawSettings, defaultSettings),
+      };
+    }
     return { problemType: ProblemTypeKeys.ADVANCED, rawOLX, settings: parseSettings(rawSettings, defaultSettings) };
   }
   if (olxParser.problem?.['@_x-custom-type'] === AdvanceProblemKeys.CUSTOMSINGLESELECT) {

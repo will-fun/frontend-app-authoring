@@ -10,7 +10,7 @@ import { actions as problemActions } from '../problem';
 import { actions as requestActions } from '../requests';
 import { selectors as appSelectors } from '../app';
 import * as requests from './requests';
-import { ProblemTypeKeys } from '../../constants/problem';
+import { ProblemTypeKeys, AdvanceProblemKeys } from '../../constants/problem';
 import { RequestKeys } from '../../constants/requests';
 
 // Similar to `import { actions, selectors } from '..';` but avoid circular imports:
@@ -71,6 +71,13 @@ export const getDataFromOlx = ({ rawOLX, rawSettings, defaultSettings }) => {
     // eslint-disable-next-line no-console
     console.error('The Problem Could Not Be Parsed from OLX. redirecting to Advanced editor.', error);
     return { problemType: ProblemTypeKeys.ADVANCED, rawOLX, settings: parseSettings(rawSettings, defaultSettings) };
+  }
+  if (olxParser.problem?.['@_x-custom-type'] === AdvanceProblemKeys.CUSTOMSINGLESELECT) {
+    return {
+      problemType: AdvanceProblemKeys.CUSTOMSINGLESELECT,
+      rawOLX,
+      settings: parseSettings(rawSettings, defaultSettings),
+    };
   }
   if (parsedProblem?.problemType === ProblemTypeKeys.ADVANCED) {
     return { problemType: ProblemTypeKeys.ADVANCED, rawOLX, settings: parseSettings(rawSettings, defaultSettings) };

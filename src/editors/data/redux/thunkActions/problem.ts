@@ -7,7 +7,7 @@ import * as requests from './requests';
 import { isLibraryKey } from '../../../../generic/key-utils';
 import { OLXParser } from '../../../containers/ProblemEditor/data/OLXParser';
 import { parseSettings } from '../../../containers/ProblemEditor/data/SettingsParser';
-import { ProblemTypeKeys } from '../../constants/problem';
+import { ProblemTypeKeys, AdvanceProblemKeys } from '../../constants/problem';
 import ReactStateOLXParser from '../../../containers/ProblemEditor/data/ReactStateOLXParser';
 import { fetchEditorContent } from '../../../containers/ProblemEditor/components/EditProblemView/hooks';
 import { RequestKeys } from '../../constants/requests';
@@ -70,6 +70,13 @@ export const getDataFromOlx = ({ rawOLX, rawSettings, defaultSettings }) => {
     // eslint-disable-next-line no-console
     console.error('The Problem Could Not Be Parsed from OLX. redirecting to Advanced editor.', error);
     return { problemType: ProblemTypeKeys.ADVANCED, rawOLX, settings: parseSettings(rawSettings, defaultSettings) };
+  }
+  if (olxParser.problem?.['@_x-custom-type'] === AdvanceProblemKeys.CUSTOMSINGLESELECT) {
+    return {
+      problemType: AdvanceProblemKeys.CUSTOMSINGLESELECT,
+      rawOLX,
+      settings: parseSettings(rawSettings, defaultSettings),
+    };
   }
   if (parsedProblem?.problemType === ProblemTypeKeys.ADVANCED) {
     return { problemType: ProblemTypeKeys.ADVANCED, rawOLX, settings: parseSettings(rawSettings, defaultSettings) };

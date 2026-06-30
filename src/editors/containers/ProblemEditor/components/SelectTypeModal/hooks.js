@@ -12,7 +12,15 @@ export const onSelect = ({
   defaultSettings,
   formatMessage,
 }) => () => {
-  if (Object.values(AdvanceProblemKeys).includes(selected)) {
+  if (selected === AdvanceProblemKeys.CUSTOMSINGLESELECT) {
+    updateField({ problemType: AdvanceProblemKeys.CUSTOMSINGLESELECT, rawOLX: AdvanceProblems[selected].template });
+    if (formatMessage) {
+      const localizedAdvanceProblems = getAdvanceProblems(formatMessage);
+      setBlockTitle(localizedAdvanceProblems[selected].title);
+    } else {
+      setBlockTitle(AdvanceProblems[selected].title);
+    }
+  } else if (Object.values(AdvanceProblemKeys).includes(selected)) {
     updateField({ problemType: ProblemTypeKeys.ADVANCED, rawOLX: AdvanceProblems[selected].template });
     if (formatMessage) {
       const localizedAdvanceProblems = getAdvanceProblems(formatMessage);

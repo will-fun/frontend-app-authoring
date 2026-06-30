@@ -4,7 +4,8 @@ import { StrictDict, convertMarkdownToXml } from '../../../../utils';
 import ReactStateSettingsParser from '../../data/ReactStateSettingsParser';
 import ReactStateOLXParser from '../../data/ReactStateOLXParser';
 import { setAssetToStaticUrl } from '../../../../sharedComponents/TinyMceWidget/hooks';
-import { ProblemTypeKeys } from '../../../../data/constants/problem';
+import { AdvanceProblemKeys, ProblemTypeKeys } from '../../../../data/constants/problem';
+import { buildOLXFromTinyMCEEditors } from './CustomSingleSelectEditor/utils';
 
 export const state = StrictDict({
   // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -68,13 +69,23 @@ export const fetchEditorContent = ({ format }) => {
 export const parseState = ({
   problem,
   isAdvanced,
+  isCustomSingleSelect,
   isMarkdownEditorEnabled,
   ref,
   lmsEndpointUrl,
 }) => () => {
+  if (isCustomSingleSelect) {
+    const olx = buildOLXFromTinyMCEEditors(problem.rawOLX);
+    const reactSettingsParser = new ReactStateSettingsParser({ problem, rawOLX: olx });
+    const settings = reactSettingsParser.parseRawOlxSettings();
+    return {
+      settings: { ...settings, markdown: null, markdown_edited: false },
+      olx,
+    };
+  }
   // Constructs the save payload by parsing the current state of the problem editor.
   // If the Markdown editor is enabled, the editor content is converted to OLX using convertMarkdownToXml.
-  // For advanced problems, raw editor content is used as OLX; for visual ones, it's built via ReactStateOLXParser.
+  // For advanced problems, raw editor content is used as OLX; for visual ones, it’s built via ReactStateOLXParser.
   // Settings are then parsed from the OLX and returned alongside the OLX content,
   // including markdown incase of markdown editor.
   const contentString = ref?.current?.state.doc.toString();
@@ -91,7 +102,7 @@ export const parseState = ({
     settings: {
       ...settings,
       // If the save action isn’t triggered from the Markdown editor, the Markdown content might be outdated. Since the
-      // Markdown editor shouldn't be displayed in future in this case, we’re sending `null` instead.
+      // Markdown editor shouldn’t be displayed in future in this case, we’re sending `null` instead.
       // TODO: Implement OLX-to-Markdown conversion to properly handle this scenario.
       markdown: isMarkdownEditorEnabled ? contentString : null,
       markdown_edited: isMarkdownEditorEnabled,
@@ -171,6 +182,10 @@ export const checkForSettingDiscrepancy = ({
   return false;
 };
 
+export const isCustomSingleSelectType = (problemType) => (
+  problemType === AdvanceProblemKeys.CUSTOMSINGLESELECT
+);
+
 export const getContent = ({
   problemState,
   openSaveWarningModal,
@@ -180,19 +195,22 @@ export const getContent = ({
   lmsEndpointUrl,
 }) => {
   const problem = problemState;
-  const hasNoAnswers = isAdvancedProblemType || isMarkdownEditorEnabled ? false : checkForNoAnswers({
-    problem,
-    openSaveWarningModal,
-  });
-  const hasMismatchedSettings = isAdvancedProblemType || isMarkdownEditorEnabled ? checkForSettingDiscrepancy({
-    ref: editorRef,
-    problem,
-    openSaveWarningModal,
-    isMarkdownEditorEnabled,
-  }) : false;
+  const isCustomSingleSelect = isCustomSingleSelectType(problem.problemType);
+  const hasNoAnswers = isAdvancedProblemType || isMarkdownEditorEnabled || isCustomSingleSelect
+    ? false
+    : checkForNoAnswers({ problem, openSaveWarningModal });
+  const hasMismatchedSettings = isAdvancedProblemType || isMarkdownEditorEnabled
+    ? checkForSettingDiscrepancy({
+      ref: editorRef,
+      problem,
+      openSaveWarningModal,
+      isMarkdownEditorEnabled,
+    })
+    : false;
   if (!hasNoAnswers && !hasMismatchedSettings) {
     const data = parseState({
       isAdvanced: isAdvancedProblemType,
+      isCustomSingleSelect,
       ref: editorRef,
       isMarkdownEditorEnabled,
       problem,

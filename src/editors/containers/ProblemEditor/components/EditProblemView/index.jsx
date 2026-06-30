@@ -16,7 +16,8 @@ import SettingsWidget from './SettingsWidget';
 import QuestionWidget from './QuestionWidget';
 import EditorContainer from '../../../EditorContainer';
 import RawEditor from '../../../../sharedComponents/RawEditor';
-import { ProblemTypeKeys } from '../../../../data/constants/problem';
+import { AdvanceProblemKeys, ProblemTypeKeys } from '../../../../data/constants/problem';
+import CustomSingleSelectEditor from './CustomSingleSelectEditor';
 
 import {
   checkIfEditorsDirty, parseState, saveWarningModalToggle, getContent,
@@ -48,12 +49,16 @@ const EditProblemView = ({ returnFunction }) => {
   const isMarkdownEditorEnabled = isMarkdownEditorEnabledSelector && isMarkdownEditorEnabledForContext;
 
   const isAdvancedProblemType = problemType === ProblemTypeKeys.ADVANCED;
+  const isCustomSingleSelect = problemType === AdvanceProblemKeys.CUSTOMSINGLESELECT;
 
   const { isSaveWarningModalOpen, openSaveWarningModal, closeSaveWarningModal } = saveWarningModalToggle();
 
   const checkIfDirty = () => {
     if (isAdvancedProblemType && editorRef?.current) {
       return editorRef.current.observer?.lastChange !== 0;
+    }
+    if (isCustomSingleSelect) {
+      return isDirty || checkIfEditorsDirty();
     }
     return isDirty || checkIfEditorsDirty();
   };
@@ -126,6 +131,10 @@ const EditProblemView = ({ returnFunction }) => {
                 content={isMarkdownEditorEnabled ? problemState.rawMarkdown : problemState.rawOLX}
               />
             </Container>
+          ) : isCustomSingleSelect ? (
+            <span className="flex-grow-1 mb-5">
+              <CustomSingleSelectEditor />
+            </span>
           ) : (
             <span className="flex-grow-1 mb-5">
               <QuestionWidget />

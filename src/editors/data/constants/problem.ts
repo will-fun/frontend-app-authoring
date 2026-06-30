@@ -171,6 +171,7 @@ export const AdvanceProblemKeys = StrictDict({
   IMAGE: 'imageresponse',
   FORMULA: 'formularesponse',
   PROBLEMWITHHINT: 'problemwithhint',
+  CUSTOMSINGLESELECT: 'customsingleselect',
 } as const);
 export type AdvancedProblemType = typeof AdvanceProblemKeys[keyof typeof AdvanceProblemKeys];
 
@@ -200,6 +201,11 @@ export const getAdvanceProblems = (formatMessage) => ({
     title: formatMessage(problemMessages.blankProblemTitle),
     status: '',
     template: '<problem></problem>',
+  },
+  [AdvanceProblemKeys.CUSTOMSINGLESELECT]: {
+    title: formatMessage(problemMessages.customSingleSelectTitle),
+    status: '',
+    template: '<problem x-custom-type="customsingleselect"><multiplechoiceresponse><label></label><choicegroup type="MultipleChoice"><choice correct="true"></choice><choice correct="false"></choice><choice correct="false"></choice></choicegroup></multiplechoiceresponse></problem>',
   },
   [AdvanceProblemKeys.CIRCUITSCHEMATIC]: {
     title: formatMessage(problemMessages.circuitSchematicTitle),
@@ -238,6 +244,11 @@ export const AdvanceProblems = StrictDict({
     title: 'Blank problem',
     status: '',
     template: '<problem></problem>',
+  },
+  [AdvanceProblemKeys.CUSTOMSINGLESELECT]: {
+    title: 'Custom single select',
+    status: '',
+    template: '<problem x-custom-type="customsingleselect"><multiplechoiceresponse><label></label><choicegroup type="MultipleChoice"><choice correct="true"></choice><choice correct="false"></choice><choice correct="false"></choice></choicegroup></multiplechoiceresponse></problem>',
   },
   [AdvanceProblemKeys.CIRCUITSCHEMATIC]: {
     title: 'Circuit schematic builder',
@@ -382,6 +393,7 @@ export const ignoredOlxAttributes = [
   '@_markdown_edited',
   '@_copied_from_block',
   '@_copied_from_version',
+  '@_x-custom-type',
 ] as const;
 
 // Useful for the block creation workflow.

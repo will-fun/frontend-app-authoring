@@ -95,13 +95,13 @@ const GradingSettings = () => {
 
   useEffect(() => {
     if (savingStatus) {
-      setShowSuccessAlert(!showSuccessAlert);
-      setShowSavePrompt(!showSavePrompt);
+      setShowSuccessAlert(true);
+      setShowSavePrompt(false);
       setTimeout(() => setShowSuccessAlert(false), 15000);
-      setIsQueryPending(!isQueryPending);
+      setIsQueryPending(false);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  }, [savePending]);
+  }, [savingStatus]);   // ⬅️ diganti dari [savePending] ke [savingStatus]
 
   if (!isLoadingUserPermissions && !canViewGradingSettings) {
     return <PermissionDeniedAlert />;

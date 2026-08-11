@@ -57,7 +57,7 @@ const CertificateDisplayRow = ({
 
   const handleOnChange = (optionId) => {
     if (optionId !== CERTIFICATE_DISPLAY_BEHAVIOR.endWithDate) {
-      onChange('', 'certificateAvailableDate');
+      onChange(null, 'certificateAvailableDate');
     }
     onChange(optionId, 'certificatesDisplayBehavior');
   };

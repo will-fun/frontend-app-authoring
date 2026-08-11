@@ -226,7 +226,11 @@ export const parseGroupsFromOLX = (olx) => {
       }
 
       return {
-        id: idx, question, explanation, answerType, answers,
+        id: idx,
+        question,
+        explanation,
+        answerType,
+        answers,
       };
     });
   } catch {
@@ -267,7 +271,10 @@ export const buildOLXFromTinyMCEEditors = (rawOLX) => {
     }
 
     return {
-      ...group, question, explanation, answers,
+      ...group,
+      question,
+      explanation,
+      answers,
     };
   });
 

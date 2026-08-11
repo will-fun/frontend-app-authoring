@@ -246,7 +246,8 @@ export const getAdvanceProblems = (formatMessage) => ({
   [AdvanceProblemKeys.CUSTOMPROBLEM]: {
     title: formatMessage(problemMessages.customProblemTitle),
     status: '',
-    template: '<problem x-custom-type="customproblem"><multiplechoiceresponse><label></label><choicegroup type="MultipleChoice"><choice correct="true"></choice><choice correct="false"></choice><choice correct="false"></choice></choicegroup></multiplechoiceresponse></problem>',
+    template:
+      '<problem x-custom-type="customproblem"><multiplechoiceresponse><label></label><choicegroup type="MultipleChoice"><choice correct="true"></choice><choice correct="false"></choice><choice correct="false"></choice></choicegroup></multiplechoiceresponse></problem>',
   },
   [AdvanceProblemKeys.CIRCUITSCHEMATIC]: {
     title: formatMessage(problemMessages.circuitSchematicTitle),
@@ -290,7 +291,8 @@ export const AdvanceProblems = StrictDict(
     [AdvanceProblemKeys.CUSTOMPROBLEM]: {
       title: 'Custom problem',
       status: '',
-      template: '<problem x-custom-type="customproblem"><multiplechoiceresponse><label></label><choicegroup type="MultipleChoice"><choice correct="true"></choice><choice correct="false"></choice><choice correct="false"></choice></choicegroup></multiplechoiceresponse></problem>',
+      template:
+        '<problem x-custom-type="customproblem"><multiplechoiceresponse><label></label><choicegroup type="MultipleChoice"><choice correct="true"></choice><choice correct="false"></choice><choice correct="false"></choice></choicegroup></multiplechoiceresponse></problem>',
     },
     [AdvanceProblemKeys.CIRCUITSCHEMATIC]: {
       title: 'Circuit schematic builder',

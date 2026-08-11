@@ -61,8 +61,7 @@ export const isBlankProblem = ({ rawOLX }) => {
   return false;
 };
 
-const isCustomProblemOlx = (olxParser) =>
-  customProblemOlxTypes.includes(olxParser?.problem?.['@_x-custom-type']);
+const isCustomProblemOlx = (olxParser) => customProblemOlxTypes.includes(olxParser?.problem?.['@_x-custom-type']);
 
 export const getDataFromOlx = ({ rawOLX, rawSettings, defaultSettings }) => {
   let olxParser;

@@ -20,8 +20,10 @@ const TypeCard = ({
   const localizedProblemTypes = getProblemTypes(intl.formatMessage);
   const problemTypeKeysArray = Object.values(ProblemTypeKeys).filter(key => key !== ProblemTypeKeys.ADVANCED);
 
-  if (problemType === ProblemTypeKeys.ADVANCED
-    || problemType === AdvanceProblemKeys.CUSTOMPROBLEM) { return null; }
+  if (
+    problemType === ProblemTypeKeys.ADVANCED
+    || problemType === AdvanceProblemKeys.CUSTOMPROBLEM
+  ) { return null; }
 
   return (
     <SettingsOption

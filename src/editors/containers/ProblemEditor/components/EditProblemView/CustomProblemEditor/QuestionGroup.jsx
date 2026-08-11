@@ -21,7 +21,14 @@ import { ANSWER_TYPES, getDefaultAnswers } from './utils';
 
 // Thin wrapper so each group gets its own TinyMCE editor ref
 const GroupEditor = ({
-  id, editorType, content, onUpdate, minHeight, images, isLibrary, learningContextId,
+  id,
+  editorType,
+  content,
+  onUpdate,
+  minHeight,
+  images,
+  isLibrary,
+  learningContextId,
 }) => {
   const { editorRef, refReady, setEditorRef } = prepareEditorRef();
   if (!refReady) { return null; }
@@ -72,7 +79,11 @@ const ANSWER_TYPE_DESCRIPTIONS = {
 // -
 
 const QuestionGroup = ({
-  group, index, onChange, onRemove, isOnly,
+  group,
+  index,
+  onChange,
+  onRemove,
+  isOnly,
 }) => {
   const intl = useIntl();
   const images = useSelector(selectors.app.images);
@@ -250,7 +261,9 @@ const QuestionGroup = ({
                   <Checker
                     hasSingleAnswer
                     answer={{ id: indexToLetterMap[ai], correct: ans.correct }}
-                    setAnswer={({ correct }) => { if (correct) { setSingleCorrectAnswer(ans.id); } }}
+                    setAnswer={({ correct }) => {
+                      if (correct) { setSingleCorrectAnswer(ans.id); }
+                    }}
                   />
                 </div>
                 <div className="ml-1 flex-grow-1">

@@ -18,8 +18,8 @@ export const onSelect = ({
   formatMessage,
 }) =>
 () => {
-  if (selected === AdvanceProblemKeys.CUSTOMSINGLESELECT) {
-    updateField({ problemType: AdvanceProblemKeys.CUSTOMSINGLESELECT, rawOLX: AdvanceProblems[selected].template });
+  if (selected === AdvanceProblemKeys.CUSTOMPROBLEM) {
+    updateField({ problemType: AdvanceProblemKeys.CUSTOMPROBLEM, rawOLX: AdvanceProblems[selected].template });
     if (formatMessage) {
       const localizedAdvanceProblems = getAdvanceProblems(formatMessage);
       setBlockTitle(localizedAdvanceProblems[selected].title);

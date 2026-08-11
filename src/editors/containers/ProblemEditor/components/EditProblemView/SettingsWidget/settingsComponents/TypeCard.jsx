@@ -21,7 +21,7 @@ const TypeCard = ({
   const problemTypeKeysArray = Object.values(ProblemTypeKeys).filter(key => key !== ProblemTypeKeys.ADVANCED);
 
   if (problemType === ProblemTypeKeys.ADVANCED
-    || problemType === AdvanceProblemKeys.CUSTOMSINGLESELECT) { return null; }
+    || problemType === AdvanceProblemKeys.CUSTOMPROBLEM) { return null; }
 
   return (
     <SettingsOption

@@ -137,7 +137,7 @@ export const buildOLX = (groups) => {
     return '';
   });
 
-  return `<problem x-custom-type="customsingleselect">\n${responses.filter(Boolean).join('\n')}\n</problem>`;
+  return `<problem x-custom-type="customproblem">\n${responses.filter(Boolean).join('\n')}\n</problem>`;
 };
 
 export const parseGroupsFromOLX = (olx) => {

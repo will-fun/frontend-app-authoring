@@ -11,7 +11,7 @@ import {
 } from './utils';
 import QuestionGroup from './QuestionGroup';
 
-const CustomSingleSelectEditor = () => {
+const CustomProblemEditor = () => {
   const dispatch = useDispatch();
   const problemState = useSelector(selectors.problem.completeState);
   const rawOLX = problemState?.rawOLX;
@@ -65,4 +65,4 @@ const CustomSingleSelectEditor = () => {
   );
 };
 
-export default CustomSingleSelectEditor;
+export default CustomProblemEditor;

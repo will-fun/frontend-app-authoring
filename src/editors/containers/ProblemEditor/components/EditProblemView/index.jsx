@@ -17,7 +17,7 @@ import QuestionWidget from './QuestionWidget';
 import EditorContainer from '../../../EditorContainer';
 import RawEditor from '../../../../sharedComponents/RawEditor';
 import { AdvanceProblemKeys, ProblemTypeKeys } from '../../../../data/constants/problem';
-import CustomSingleSelectEditor from './CustomSingleSelectEditor';
+import CustomProblemEditor from './CustomProblemEditor';
 
 import {
   checkIfEditorsDirty,
@@ -52,7 +52,7 @@ const EditProblemView = ({ returnFunction }) => {
   const isMarkdownEditorEnabled = isMarkdownEditorEnabledSelector && isMarkdownEditorEnabledForContext;
 
   const isAdvancedProblemType = problemType === ProblemTypeKeys.ADVANCED;
-  const isCustomSingleSelect = problemType === AdvanceProblemKeys.CUSTOMSINGLESELECT;
+  const isCustomProblem = problemType === AdvanceProblemKeys.CUSTOMPROBLEM;
 
   const { isSaveWarningModalOpen, openSaveWarningModal, closeSaveWarningModal } = saveWarningModalToggle();
 
@@ -60,7 +60,7 @@ const EditProblemView = ({ returnFunction }) => {
     if (isAdvancedProblemType && editorRef?.current) {
       return editorRef.current.observer?.lastChange !== 0;
     }
-    if (isCustomSingleSelect) {
+    if (isCustomProblem) {
       return isDirty || checkIfEditorsDirty();
     }
     return isDirty || checkIfEditorsDirty();
@@ -138,8 +138,8 @@ const EditProblemView = ({ returnFunction }) => {
             ) :
             (
               <span className="flex-grow-1 mb-5">
-                {isCustomSingleSelect ?
-                  <CustomSingleSelectEditor /> :
+                {isCustomProblem ?
+                  <CustomProblemEditor /> :
                   (
                     <>
                       <QuestionWidget />

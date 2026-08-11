@@ -200,10 +200,21 @@ export const AdvanceProblemKeys = StrictDict(
     IMAGE: 'imageresponse',
     FORMULA: 'formularesponse',
     PROBLEMWITHHINT: 'problemwithhint',
-    CUSTOMSINGLESELECT: 'customsingleselect',
+    CUSTOMPROBLEM: 'customproblem',
   } as const,
 );
 export type AdvancedProblemType = typeof AdvanceProblemKeys[keyof typeof AdvanceProblemKeys];
+
+/**
+ * Values accepted for the `x-custom-type` OLX attribute that mark a problem as a custom problem.
+ * `customsingleselect` is the legacy value written before the type was renamed, kept here so
+ * problems authored under the old name keep opening in the custom editor. Saving rewrites the
+ * attribute with the current value.
+ */
+export const customProblemOlxTypes = [
+  AdvanceProblemKeys.CUSTOMPROBLEM,
+  'customsingleselect',
+] as const;
 
 export function isAdvancedProblemType(pt: ProblemType | AdvancedProblemType): pt is AdvancedProblemType {
   return Object.values(AdvanceProblemKeys).includes(pt as any);
@@ -232,10 +243,10 @@ export const getAdvanceProblems = (formatMessage) => ({
     status: '',
     template: '<problem></problem>',
   },
-  [AdvanceProblemKeys.CUSTOMSINGLESELECT]: {
-    title: formatMessage(problemMessages.customSingleSelectTitle),
+  [AdvanceProblemKeys.CUSTOMPROBLEM]: {
+    title: formatMessage(problemMessages.customProblemTitle),
     status: '',
-    template: '<problem x-custom-type="customsingleselect"><multiplechoiceresponse><label></label><choicegroup type="MultipleChoice"><choice correct="true"></choice><choice correct="false"></choice><choice correct="false"></choice></choicegroup></multiplechoiceresponse></problem>',
+    template: '<problem x-custom-type="customproblem"><multiplechoiceresponse><label></label><choicegroup type="MultipleChoice"><choice correct="true"></choice><choice correct="false"></choice><choice correct="false"></choice></choicegroup></multiplechoiceresponse></problem>',
   },
   [AdvanceProblemKeys.CIRCUITSCHEMATIC]: {
     title: formatMessage(problemMessages.circuitSchematicTitle),
@@ -276,10 +287,10 @@ export const AdvanceProblems = StrictDict(
       status: '',
       template: '<problem></problem>',
     },
-    [AdvanceProblemKeys.CUSTOMSINGLESELECT]: {
-      title: 'Custom single select',
+    [AdvanceProblemKeys.CUSTOMPROBLEM]: {
+      title: 'Custom problem',
       status: '',
-      template: '<problem x-custom-type="customsingleselect"><multiplechoiceresponse><label></label><choicegroup type="MultipleChoice"><choice correct="true"></choice><choice correct="false"></choice><choice correct="false"></choice></choicegroup></multiplechoiceresponse></problem>',
+      template: '<problem x-custom-type="customproblem"><multiplechoiceresponse><label></label><choicegroup type="MultipleChoice"><choice correct="true"></choice><choice correct="false"></choice><choice correct="false"></choice></choicegroup></multiplechoiceresponse></problem>',
     },
     [AdvanceProblemKeys.CIRCUITSCHEMATIC]: {
       title: 'Circuit schematic builder',

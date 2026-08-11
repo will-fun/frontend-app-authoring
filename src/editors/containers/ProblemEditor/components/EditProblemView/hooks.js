@@ -5,7 +5,7 @@ import ReactStateSettingsParser from '../../data/ReactStateSettingsParser';
 import ReactStateOLXParser from '../../data/ReactStateOLXParser';
 import { setAssetToStaticUrl } from '../../../../sharedComponents/TinyMceWidget/hooks';
 import { AdvanceProblemKeys, ProblemTypeKeys } from '../../../../data/constants/problem';
-import { buildOLXFromTinyMCEEditors } from './CustomSingleSelectEditor/utils';
+import { buildOLXFromTinyMCEEditors } from './CustomProblemEditor/utils';
 
 export const state = StrictDict({
   // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -69,13 +69,13 @@ export const fetchEditorContent = ({ format }) => {
 export const parseState = ({
   problem,
   isAdvanced,
-  isCustomSingleSelect,
+  isCustomProblem,
   isMarkdownEditorEnabled,
   ref,
   lmsEndpointUrl,
 }) =>
 () => {
-  if (isCustomSingleSelect) {
+  if (isCustomProblem) {
     const olx = buildOLXFromTinyMCEEditors(problem.rawOLX);
     const reactSettingsParser = new ReactStateSettingsParser({ problem, rawOLX: olx });
     const settings = reactSettingsParser.parseRawOlxSettings();
@@ -186,8 +186,8 @@ export const checkForSettingDiscrepancy = ({
   return false;
 };
 
-export const isCustomSingleSelectType = (problemType) => (
-  problemType === AdvanceProblemKeys.CUSTOMSINGLESELECT
+export const isCustomProblemType = (problemType) => (
+  problemType === AdvanceProblemKeys.CUSTOMPROBLEM
 );
 
 export const getContent = ({
@@ -199,8 +199,8 @@ export const getContent = ({
   lmsEndpointUrl,
 }) => {
   const problem = problemState;
-  const isCustomSingleSelect = isCustomSingleSelectType(problem.problemType);
-  const skipAnswerCheck = isAdvancedProblemType || isMarkdownEditorEnabled || isCustomSingleSelect;
+  const isCustomProblem = isCustomProblemType(problem.problemType);
+  const skipAnswerCheck = isAdvancedProblemType || isMarkdownEditorEnabled || isCustomProblem;
   const hasNoAnswers = skipAnswerCheck ? false : checkForNoAnswers({
     problem,
     openSaveWarningModal,
@@ -216,7 +216,7 @@ export const getContent = ({
   if (!hasNoAnswers && !hasMismatchedSettings) {
     const data = parseState({
       isAdvanced: isAdvancedProblemType,
-      isCustomSingleSelect,
+      isCustomProblem,
       ref: editorRef,
       isMarkdownEditorEnabled,
       problem,

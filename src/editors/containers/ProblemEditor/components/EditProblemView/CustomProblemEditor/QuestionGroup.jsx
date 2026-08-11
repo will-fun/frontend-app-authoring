@@ -15,7 +15,8 @@ import Button from '../../../../../sharedComponents/Button';
 import Checker from '../AnswerWidget/components/Checker';
 import { selectors } from '../../../../../data/redux';
 import { indexToLetterMap } from '../../../data/OLXParser';
-import messages from '../AnswerWidget/messages';
+import answerWidgetMessages from '../AnswerWidget/messages';
+import messages from './messages';
 import { ANSWER_TYPES, getDefaultAnswers } from './utils';
 
 // Thin wrapper so each group gets its own TinyMCE editor ref
@@ -52,12 +53,20 @@ GroupEditor.propTypes = {
   learningContextId: PropTypes.string.isRequired,
 };
 
+const ANSWER_TYPE_LABELS = {
+  [ANSWER_TYPES.SINGLECHOICE]: messages.answerTypeSingleSelect,
+  [ANSWER_TYPES.MULTIPLECHOICE]: messages.answerTypeMultiSelect,
+  [ANSWER_TYPES.DROPDOWN]: messages.answerTypeDropdown,
+  [ANSWER_TYPES.NUMERICAL]: messages.answerTypeNumericalInput,
+  [ANSWER_TYPES.TEXT]: messages.answerTypeTextInput,
+};
+
 const ANSWER_TYPE_DESCRIPTIONS = {
-  [ANSWER_TYPES.SINGLECHOICE]: 'Tandai jawaban yang benar. Learner harus memilih satu jawaban.',
-  [ANSWER_TYPES.MULTIPLECHOICE]: 'Tandai semua jawaban yang benar. Learner dapat memilih lebih dari satu.',
-  [ANSWER_TYPES.DROPDOWN]: 'Tandai satu pilihan yang benar. Learner memilih dari daftar dropdown (teks biasa, bukan rich text).',
-  [ANSWER_TYPES.NUMERICAL]: 'Masukkan angka sebagai jawaban yang benar. Bisa berupa angka biasa (42), pecahan (3/2), atau range ([1,10)).',
-  [ANSWER_TYPES.TEXT]: 'Masukkan teks sebagai jawaban yang benar (tidak case-sensitive).',
+  [ANSWER_TYPES.SINGLECHOICE]: messages.singleSelectDescription,
+  [ANSWER_TYPES.MULTIPLECHOICE]: messages.multiSelectDescription,
+  [ANSWER_TYPES.DROPDOWN]: messages.dropdownDescription,
+  [ANSWER_TYPES.NUMERICAL]: messages.numericalDescription,
+  [ANSWER_TYPES.TEXT]: messages.textDescription,
 };
 
 // -
@@ -119,12 +128,12 @@ const QuestionGroup = ({
       {/* - Question - */}
       <div className="tinyMceWidget">
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <div className="h4 m-0">{`Question ${n}`}</div>
+          <div className="h4 m-0">{intl.formatMessage(messages.questionSectionTitle, { number: n })}</div>
           {!isOnly && (
             <IconButton
               src={DeleteOutline}
               iconAs={Icon}
-              alt={`Hapus Pertanyaan ${n}`}
+              alt={intl.formatMessage(messages.deleteQuestionAltText, { number: n })}
               onClick={onRemove}
               variant="primary"
             />
@@ -143,9 +152,9 @@ const QuestionGroup = ({
 
       {/* - Explanation - */}
       <div className="tinyMceWidget mt-4 text-primary-500">
-        <div className="h4 mb-3">{`Explanation ${n}`}</div>
+        <div className="h4 mb-3">{intl.formatMessage(messages.explanationSectionTitle, { number: n })}</div>
         <div className="small mb-3">
-          Tulis penjelasan jawaban yang benar untuk pertanyaan ini.
+          <FormattedMessage {...messages.explanationHelperText} />
         </div>
         <GroupEditor
           id={`css-q-${group.id}-explanation`}
@@ -161,24 +170,23 @@ const QuestionGroup = ({
       {/* - Answers - */}
       <div className="mt-4 text-primary-500">
         <div className="d-flex align-items-center justify-content-between mb-2">
-          <div className="h4 mb-0">{`Answers ${n}`}</div>
+          <div className="h4 mb-0">{intl.formatMessage(messages.answersSectionTitle, { number: n })}</div>
           <Form.Group className="mb-0">
             <Form.Control
               as="select"
               value={answerType}
               onChange={(e) => handleAnswerTypeChange(e.target.value)}
+              aria-label={intl.formatMessage(messages.answerTypeSelectLabel)}
               style={{ minWidth: '160px' }}
             >
-              <option value={ANSWER_TYPES.SINGLECHOICE}>Single select</option>
-              <option value={ANSWER_TYPES.MULTIPLECHOICE}>Multi-select</option>
-              <option value={ANSWER_TYPES.DROPDOWN}>Dropdown</option>
-              <option value={ANSWER_TYPES.NUMERICAL}>Numerical input</option>
-              <option value={ANSWER_TYPES.TEXT}>Text input</option>
+              {Object.entries(ANSWER_TYPE_LABELS).map(([type, label]) => (
+                <option key={type} value={type}>{intl.formatMessage(label)}</option>
+              ))}
             </Form.Control>
           </Form.Group>
         </div>
         <div className="small mb-3">
-          {ANSWER_TYPE_DESCRIPTIONS[answerType]}
+          <FormattedMessage {...ANSWER_TYPE_DESCRIPTIONS[answerType]} />
         </div>
 
         {/* Rich-text choices: single select and multi-select (TinyMCE per answer) */}
@@ -207,7 +215,7 @@ const QuestionGroup = ({
                     id={`css-q-${group.id}-answer-${ans.id}`}
                     value={ans.text}
                     setContent={(html) => updateAnswerText(ans.id, html)}
-                    placeholder={intl.formatMessage(messages.answerTextboxPlaceholder)}
+                    placeholder={intl.formatMessage(answerWidgetMessages.answerTextboxPlaceholder)}
                     images={images}
                     isLibrary={isLibrary}
                     learningContextId={learningContextId}
@@ -217,7 +225,7 @@ const QuestionGroup = ({
                   <IconButton
                     src={DeleteOutline}
                     iconAs={Icon}
-                    alt={intl.formatMessage(messages.answerDeleteIconAltText)}
+                    alt={intl.formatMessage(answerWidgetMessages.answerDeleteIconAltText)}
                     onClick={() => removeAnswer(ans.id)}
                     variant="primary"
                   />
@@ -225,7 +233,7 @@ const QuestionGroup = ({
               </div>
             ))}
             <Button variant="add" onClick={addAnswer}>
-              <FormattedMessage {...messages.addAnswerButtonText} />
+              <FormattedMessage {...answerWidgetMessages.addAnswerButtonText} />
             </Button>
           </div>
         )}
@@ -253,14 +261,14 @@ const QuestionGroup = ({
                     rows={1}
                     value={ans.text}
                     onChange={(e) => updateAnswerText(ans.id, e.target.value)}
-                    placeholder={intl.formatMessage(messages.answerTextboxPlaceholder)}
+                    placeholder={intl.formatMessage(answerWidgetMessages.answerTextboxPlaceholder)}
                   />
                 </div>
                 {group.answers.length > 1 && (
                   <IconButton
                     src={DeleteOutline}
                     iconAs={Icon}
-                    alt={intl.formatMessage(messages.answerDeleteIconAltText)}
+                    alt={intl.formatMessage(answerWidgetMessages.answerDeleteIconAltText)}
                     onClick={() => removeAnswer(ans.id)}
                     variant="primary"
                   />
@@ -268,7 +276,7 @@ const QuestionGroup = ({
               </div>
             ))}
             <Button variant="add" onClick={addAnswer}>
-              <FormattedMessage {...messages.addAnswerButtonText} />
+              <FormattedMessage {...answerWidgetMessages.addAnswerButtonText} />
             </Button>
           </div>
         )}
@@ -277,7 +285,9 @@ const QuestionGroup = ({
         {answerType === ANSWER_TYPES.NUMERICAL && (
           <div className="answers-container border border-light-700 rounded py-4 pl-4 pr-3">
             <Form.Group controlId={`css-q-${group.id}-numerical-answer`} className="mb-0">
-              <Form.Label className="small text-gray-500 mb-1">Jawaban yang benar</Form.Label>
+              <Form.Label className="small text-gray-500 mb-1">
+                <FormattedMessage {...messages.correctAnswerLabel} />
+              </Form.Label>
               <Form.Control
                 as="textarea"
                 className="answer-option-textarea text-gray-500 small"
@@ -285,7 +295,7 @@ const QuestionGroup = ({
                 rows={1}
                 value={group.answers[0]?.text || ''}
                 onChange={(e) => updateAnswerText(0, e.target.value)}
-                placeholder={intl.formatMessage(messages.answerTextboxPlaceholder)}
+                placeholder={intl.formatMessage(answerWidgetMessages.answerTextboxPlaceholder)}
               />
             </Form.Group>
           </div>
@@ -295,7 +305,9 @@ const QuestionGroup = ({
         {answerType === ANSWER_TYPES.TEXT && (
           <div className="answers-container border border-light-700 rounded py-4 pl-4 pr-3">
             <Form.Group controlId={`css-q-${group.id}-text-answer`} className="mb-0">
-              <Form.Label className="small text-gray-500 mb-1">Jawaban yang benar</Form.Label>
+              <Form.Label className="small text-gray-500 mb-1">
+                <FormattedMessage {...messages.correctAnswerLabel} />
+              </Form.Label>
               <Form.Control
                 as="textarea"
                 className="answer-option-textarea text-gray-500 small"
@@ -303,7 +315,7 @@ const QuestionGroup = ({
                 rows={1}
                 value={group.answers[0]?.text || ''}
                 onChange={(e) => updateAnswerText(0, e.target.value)}
-                placeholder={intl.formatMessage(messages.answerTextboxPlaceholder)}
+                placeholder={intl.formatMessage(answerWidgetMessages.answerTextboxPlaceholder)}
               />
             </Form.Group>
           </div>

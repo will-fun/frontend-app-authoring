@@ -2,6 +2,7 @@ import React, {
   useEffect, useRef, useState,
 } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import { Button } from '@openedx/paragon';
 import { Add } from '@openedx/paragon/icons';
 
@@ -10,6 +11,7 @@ import {
   ANSWER_TYPES, buildOLX, createEmptyGroup, parseGroupsFromOLX,
 } from './utils';
 import QuestionGroup from './QuestionGroup';
+import messages from './messages';
 
 const CustomProblemEditor = () => {
   const dispatch = useDispatch();
@@ -59,7 +61,7 @@ const CustomProblemEditor = () => {
         onClick={addGroup}
         className="mt-2"
       >
-        Tambah Pertanyaan
+        <FormattedMessage {...messages.addQuestionButtonText} />
       </Button>
     </div>
   );

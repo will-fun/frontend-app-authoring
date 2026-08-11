@@ -205,17 +205,6 @@ export const AdvanceProblemKeys = StrictDict(
 );
 export type AdvancedProblemType = typeof AdvanceProblemKeys[keyof typeof AdvanceProblemKeys];
 
-/**
- * Values accepted for the `x-custom-type` OLX attribute that mark a problem as a custom problem.
- * `customsingleselect` is the legacy value written before the type was renamed, kept here so
- * problems authored under the old name keep opening in the custom editor. Saving rewrites the
- * attribute with the current value.
- */
-export const customProblemOlxTypes = [
-  AdvanceProblemKeys.CUSTOMPROBLEM,
-  'customsingleselect',
-] as const;
-
 export function isAdvancedProblemType(pt: ProblemType | AdvancedProblemType): pt is AdvancedProblemType {
   return Object.values(AdvanceProblemKeys).includes(pt as any);
 }

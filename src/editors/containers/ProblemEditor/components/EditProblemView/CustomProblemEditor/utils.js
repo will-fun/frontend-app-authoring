@@ -254,15 +254,15 @@ export const buildOLXFromTinyMCEEditors = (rawOLX) => {
   );
 
   const updatedGroups = groups.map((group) => {
-    const qEditor = tinyMCE?.get(`css-q-${group.id}-question`);
-    const eEditor = tinyMCE?.get(`css-q-${group.id}-explanation`);
+    const qEditor = tinyMCE?.get(`cp-q-${group.id}-question`);
+    const eEditor = tinyMCE?.get(`cp-q-${group.id}-explanation`);
     const question = qEditor ? qEditor.getContent() : group.question;
     const explanation = eEditor ? eEditor.getContent() : group.explanation;
 
     let answers;
     if (usesTinyMCEAnswers(group.answerType)) {
       answers = group.answers.map((ans) => {
-        const aEditor = tinyMCE?.get(`css-q-${group.id}-answer-${ans.id}`);
+        const aEditor = tinyMCE?.get(`cp-q-${group.id}-answer-${ans.id}`);
         const text = aEditor ? aEditor.getContent() : ans.text;
         return { ...ans, text };
       });

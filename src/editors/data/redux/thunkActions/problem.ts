@@ -10,7 +10,7 @@ import { actions as problemActions } from '../problem';
 import { actions as requestActions } from '../requests';
 import { selectors as appSelectors } from '../app';
 import * as requests from './requests';
-import { AdvanceProblemKeys, customProblemOlxTypes, ProblemTypeKeys } from '../../constants/problem';
+import { AdvanceProblemKeys, ProblemTypeKeys } from '../../constants/problem';
 import { RequestKeys } from '../../constants/requests';
 
 // Similar to `import { actions, selectors } from '..';` but avoid circular imports:
@@ -61,7 +61,7 @@ export const isBlankProblem = ({ rawOLX }) => {
   return false;
 };
 
-const isCustomProblemOlx = (olxParser) => customProblemOlxTypes.includes(olxParser?.problem?.['@_x-custom-type']);
+const isCustomProblemOlx = (olxParser) => olxParser?.problem?.['@_x-custom-type'] === AdvanceProblemKeys.CUSTOMPROBLEM;
 
 export const getDataFromOlx = ({ rawOLX, rawSettings, defaultSettings }) => {
   let olxParser;

@@ -151,7 +151,7 @@ const QuestionGroup = ({
           )}
         </div>
         <GroupEditor
-          id={`css-q-${group.id}-question`}
+          id={`cp-q-${group.id}-question`}
           editorType="question"
           content={group.question}
           onUpdate={updateQuestion}
@@ -168,7 +168,7 @@ const QuestionGroup = ({
           <FormattedMessage {...messages.explanationHelperText} />
         </div>
         <GroupEditor
-          id={`css-q-${group.id}-explanation`}
+          id={`cp-q-${group.id}-explanation`}
           editorType="solution"
           content={group.explanation}
           onUpdate={updateExplanation}
@@ -223,7 +223,7 @@ const QuestionGroup = ({
                 </div>
                 <div className="ml-1 flex-grow-1">
                   <ExpandableTextArea
-                    id={`css-q-${group.id}-answer-${ans.id}`}
+                    id={`cp-q-${group.id}-answer-${ans.id}`}
                     value={ans.text}
                     setContent={(html) => updateAnswerText(ans.id, html)}
                     placeholder={intl.formatMessage(answerWidgetMessages.answerTextboxPlaceholder)}
@@ -297,7 +297,7 @@ const QuestionGroup = ({
         {/* Numerical input — textarea allows ranges like [1,10) and fractions like 3/2 */}
         {answerType === ANSWER_TYPES.NUMERICAL && (
           <div className="answers-container border border-light-700 rounded py-4 pl-4 pr-3">
-            <Form.Group controlId={`css-q-${group.id}-numerical-answer`} className="mb-0">
+            <Form.Group controlId={`cp-q-${group.id}-numerical-answer`} className="mb-0">
               <Form.Label className="small text-gray-500 mb-1">
                 <FormattedMessage {...messages.correctAnswerLabel} />
               </Form.Label>
@@ -317,7 +317,7 @@ const QuestionGroup = ({
         {/* Text input */}
         {answerType === ANSWER_TYPES.TEXT && (
           <div className="answers-container border border-light-700 rounded py-4 pl-4 pr-3">
-            <Form.Group controlId={`css-q-${group.id}-text-answer`} className="mb-0">
+            <Form.Group controlId={`cp-q-${group.id}-text-answer`} className="mb-0">
               <Form.Label className="small text-gray-500 mb-1">
                 <FormattedMessage {...messages.correctAnswerLabel} />
               </Form.Label>

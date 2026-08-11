@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { useIntl } from '@edx/frontend-platform/i18n';
 
-import { ProblemTypeKeys, getProblemTypes } from '@src/editors/data/constants/problem';
+import { AdvanceProblemKeys, ProblemTypeKeys, getProblemTypes } from '@src/editors/data/constants/problem';
 import SettingsOption from '../SettingsOption';
 import messages from '../messages';
 import TypeRow from './TypeRow';
@@ -20,7 +20,10 @@ const TypeCard = ({
   const localizedProblemTypes = getProblemTypes(intl.formatMessage);
   const problemTypeKeysArray = Object.values(ProblemTypeKeys).filter(key => key !== ProblemTypeKeys.ADVANCED);
 
-  if (problemType === ProblemTypeKeys.ADVANCED) { return null; }
+  if (
+    problemType === ProblemTypeKeys.ADVANCED
+    || problemType === AdvanceProblemKeys.CUSTOMPROBLEM
+  ) { return null; }
 
   return (
     <SettingsOption

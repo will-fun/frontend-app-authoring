@@ -10,7 +10,7 @@ import { actions as problemActions } from '../problem';
 import { actions as requestActions } from '../requests';
 import { selectors as appSelectors } from '../app';
 import * as requests from './requests';
-import { ProblemTypeKeys } from '../../constants/problem';
+import { AdvanceProblemKeys, ProblemTypeKeys } from '../../constants/problem';
 import { RequestKeys } from '../../constants/requests';
 
 // Similar to `import { actions, selectors } from '..';` but avoid circular imports:
@@ -61,6 +61,8 @@ export const isBlankProblem = ({ rawOLX }) => {
   return false;
 };
 
+const isCustomProblemOlx = (olxParser) => olxParser?.problem?.['@_x-custom-type'] === AdvanceProblemKeys.CUSTOMPROBLEM;
+
 export const getDataFromOlx = ({ rawOLX, rawSettings, defaultSettings }) => {
   let olxParser;
   let parsedProblem;
@@ -68,9 +70,25 @@ export const getDataFromOlx = ({ rawOLX, rawSettings, defaultSettings }) => {
     olxParser = new OLXParser(rawOLX);
     parsedProblem = olxParser.getParsedOLXData();
   } catch (error) {
+    // A custom problem can hold several response blocks, which the standard parser rejects.
+    // Check the marker attribute before falling back to the advanced editor.
+    if (isCustomProblemOlx(olxParser)) {
+      return {
+        problemType: AdvanceProblemKeys.CUSTOMPROBLEM,
+        rawOLX,
+        settings: parseSettings(rawSettings, defaultSettings),
+      };
+    }
     // eslint-disable-next-line no-console
     console.error('The Problem Could Not Be Parsed from OLX. redirecting to Advanced editor.', error);
     return { problemType: ProblemTypeKeys.ADVANCED, rawOLX, settings: parseSettings(rawSettings, defaultSettings) };
+  }
+  if (isCustomProblemOlx(olxParser)) {
+    return {
+      problemType: AdvanceProblemKeys.CUSTOMPROBLEM,
+      rawOLX,
+      settings: parseSettings(rawSettings, defaultSettings),
+    };
   }
   if (parsedProblem?.problemType === ProblemTypeKeys.ADVANCED) {
     return { problemType: ProblemTypeKeys.ADVANCED, rawOLX, settings: parseSettings(rawSettings, defaultSettings) };

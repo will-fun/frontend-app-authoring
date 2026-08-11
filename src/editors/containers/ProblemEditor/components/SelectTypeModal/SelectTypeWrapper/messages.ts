@@ -95,6 +95,11 @@ const messages = defineMessages({
     defaultMessage: 'Problem with adaptive hint',
     description: 'Title for problem with adaptive hint advanced problem type',
   },
+  customProblemTitle: {
+    id: 'authoring.problemeditor.advancedproblemtype.customproblem.title',
+    defaultMessage: 'Custom problem',
+    description: 'Title for custom problem advanced problem type',
+  },
 
   // Problem Type Descriptions
   singleSelectDescription: {

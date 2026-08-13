@@ -1,6 +1,7 @@
 import { camelCaseObject, ensureConfig, getConfig } from '@edx/frontend-platform';
 import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
 import { v4 as uuid } from 'uuid';
+import moment from 'moment';
 import { DivisionSchemes } from '../../../data/constants';
 
 import {
@@ -31,19 +32,40 @@ function normalizeLtiConfig(data) {
   };
 }
 
+// Discussion blackout dates are stored/sent to the API as UTC. Shift by a fixed +7h (GMT+7)
+// for display and shift back to real UTC before sending to the API.
+const GMT7_OFFSET_HOURS = 7;
+
+const shiftToGmt7 = (isoDateStr) => (
+  isoDateStr
+    ? moment.utc(isoDateStr.substring(0, 19)).add(GMT7_OFFSET_HOURS, 'hours').format('YYYY-MM-DDTHH:mm:ss')
+    : isoDateStr
+);
+
+const shiftToUtc = (isoDateStr) => (
+  isoDateStr
+    ? moment(isoDateStr.substring(0, 19)).subtract(GMT7_OFFSET_HOURS, 'hours').format('YYYY-MM-DDTHH:mm:ss')
+    : isoDateStr
+);
+
 export function normalizeRestrictedDates(data) {
   if (!data || Object.keys(data).length < 1) {
     return [];
   }
 
-  const normalizeData = data.map(([startDate, endDate]) => ({
-    id: uuid(),
-    startDate: normalizeDate(startDate),
-    startTime: getTime(startDate),
-    endDate: normalizeDate(endDate),
-    endTime: getTime(endDate),
-    status: checkStatus([startDate, endDate]),
-  }));
+  const normalizeData = data.map(([startDate, endDate]) => {
+    const gmt7StartDate = shiftToGmt7(startDate);
+    const gmt7EndDate = shiftToGmt7(endDate);
+
+    return {
+      id: uuid(),
+      startDate: normalizeDate(gmt7StartDate),
+      startTime: getTime(gmt7StartDate),
+      endDate: normalizeDate(gmt7EndDate),
+      endTime: getTime(gmt7EndDate),
+      status: checkStatus([startDate, endDate]),
+    };
+  });
 
   return [
     ...sortRestrictedDatesByStatus(normalizeData, constants.ACTIVE, 'desc'),
@@ -157,14 +179,14 @@ function normalizeSettings(data) {
 
 export function denormalizeRestrictedDate(restrictedPeriod) {
   return [
-    mergeDateTime(
+    shiftToUtc(mergeDateTime(
       normalizeDate(restrictedPeriod.startDate),
       normalizeTime(startOfDayTime(restrictedPeriod.startTime)),
-    ),
-    mergeDateTime(
+    )),
+    shiftToUtc(mergeDateTime(
       normalizeDate(restrictedPeriod.endDate),
       normalizeTime(endOfDayTime(restrictedPeriod.endTime)),
-    ),
+    )),
   ];
 }
 

@@ -265,34 +265,47 @@ export function setupYupExtensions() {
   });
 }
 
+// Studio stores/sends all schedule dates (release, due, start/end, certificate available, etc.)
+// as UTC. react-datepicker only knows how to display/edit "local" wall-clock digits, so the
+// helpers below shift by a fixed +7h (GMT+7) for display and shift back to real UTC on save.
+const GMT7_OFFSET_HOURS = 7;
+
 export const convertToDateFromString = (dateStr: string) => {
   /**
-   * Convert UTC to local time for react-datepicker
-   * Note: react-datepicker has a bug where it only interacts with local time
-   * @param {string} dateStr - YYYY-MM-DDTHH:MM:SSZ
-   * @return {Date} date in local time
+   * Convert UTC to GMT+7 for react-datepicker
+   * Note: react-datepicker has a bug where it only interacts with local time, so we shift the
+   * wall-clock digits by +7h and then hand them to plain (non-UTC) moment parsing — that way
+   * react-datepicker's local getters reproduce those exact GMT+7 digits regardless of the
+   * viewer's own machine timezone.
+   * @param {string} dateStr - YYYY-MM-DDTHH:MM:SSZ (UTC)
+   * @return {Date} date carrying GMT+7 wall-clock digits
    */
   if (!dateStr) {
     return '';
   }
 
   const stripTimeZone = (stringValue: string) => stringValue.substring(0, 19);
+  const gmt7Digits = moment.utc(stripTimeZone(String(dateStr)))
+    .add(GMT7_OFFSET_HOURS, 'hours')
+    .format('YYYY-MM-DDTHH:mm:ss');
 
-  return moment(stripTimeZone(String(dateStr))).toDate();
+  return moment(gmt7Digits).toDate();
 };
 
 export const convertToStringFromDate = (date: moment.MomentInput) => {
   /**
-   * Convert local time to UTC from react-datepicker
+   * Convert GMT+7 wall-clock digits from react-datepicker back to real UTC
    * Note: react-datepicker has a bug where it only interacts with local time
-   * @param {Date} date - date in local time
-   * @return {string} YYYY-MM-DDTHH:MM:SSZ
+   * @param {Date} date - date carrying GMT+7 wall-clock digits
+   * @return {string} YYYY-MM-DDTHH:MM:SSZ in UTC
    */
   if (!date) {
     return '';
   }
 
-  return moment(date).format(DATE_TIME_FORMAT);
+  const gmt7Digits = moment(date).format('YYYY-MM-DDTHH:mm:ss');
+
+  return moment.utc(gmt7Digits).subtract(GMT7_OFFSET_HOURS, 'hours').format(DATE_TIME_FORMAT);
 };
 
 export const isValidDate = (date: moment.MomentInput) => {

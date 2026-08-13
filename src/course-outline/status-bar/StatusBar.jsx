@@ -96,6 +96,7 @@ const StatusBar = ({
                 day="2-digit"
                 hour="numeric"
                 minute="numeric"
+                timeZone="Asia/Jakarta"
               />
             ) : courseReleaseDate}
           </Link>

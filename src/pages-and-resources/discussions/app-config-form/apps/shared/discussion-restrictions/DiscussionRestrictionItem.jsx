@@ -110,7 +110,7 @@ const DiscussionRestrictionItem = ({
         <RestrictDatesInput
           value={restrictedDate.startTime}
           type="time"
-          label={intl.formatMessage(messages.startTimeLabel, { zone: 'UTC' })}
+          label={intl.formatMessage(messages.startTimeLabel, { zone: 'GMT+7' })}
           helpText={intl.formatMessage(messages.restrictedStartTimeHelp)}
           fieldName="startTime"
           formGroupClasses="pr-md-0"
@@ -136,7 +136,7 @@ const DiscussionRestrictionItem = ({
         <RestrictDatesInput
           value={restrictedDate.endTime}
           type="time"
-          label={intl.formatMessage(messages.endTimeLabel, { zone: 'UTC' })}
+          label={intl.formatMessage(messages.endTimeLabel, { zone: 'GMT+7' })}
           helpText={intl.formatMessage(messages.restrictedEndTimeHelp)}
           fieldName="endTime"
           formGroupClasses="pr-md-0"

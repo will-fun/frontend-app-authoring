@@ -7,7 +7,7 @@ const messages = defineMessages({
   },
   datepickerUTC: {
     id: 'course-authoring.schedule.schedule-section.datepicker.utc',
-    defaultMessage: 'UTC',
+    defaultMessage: 'GMT+7',
   },
 });
 

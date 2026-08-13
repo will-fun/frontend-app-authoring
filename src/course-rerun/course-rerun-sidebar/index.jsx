@@ -19,6 +19,7 @@ const CourseRerunSideBar = () => {
       day="2-digit"
       hour="numeric"
       minute="numeric"
+      timeZone="Asia/Jakarta"
     />
   );
 

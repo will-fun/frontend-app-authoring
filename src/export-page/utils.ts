@@ -20,10 +20,10 @@ export const setExportCookie = (date: number, completed: boolean): void => {
  * Formats a Unix timestamp as a formatted success date string.
  *
  * @param {number} unixDate - Unix timestamp to be formatted.
- * @returns {string|null} Formatted success date string, including date and time in UTC, or null if the input is falsy.
+ * @returns {string|null} Formatted success date string, including date and time in GMT+7, or null if the input is falsy.
  */
 export const getFormattedSuccessDate = (unixDate) => {
-  const formattedDate = moment(unixDate).utc().format(SUCCESS_DATE_FORMAT);
-  const formattedTime = moment(unixDate).utc().format(TIME_FORMAT);
-  return unixDate ? ` (${formattedDate} at ${formattedTime} UTC)` : null;
+  const formattedDate = moment(unixDate).utcOffset(7 * 60).format(SUCCESS_DATE_FORMAT);
+  const formattedTime = moment(unixDate).utcOffset(7 * 60).format(TIME_FORMAT);
+  return unixDate ? ` (${formattedDate} at ${formattedTime} GMT+7)` : null;
 };

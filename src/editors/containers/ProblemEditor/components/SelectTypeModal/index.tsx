@@ -29,17 +29,21 @@ const SelectTypeModal: React.FC<Props> = ({
   );
   hooks.useArrowNav(selected, setSelected);
 
+  // Custom problem is an advanced type internally, but it is picked from the main list
+  // alongside the built-in types rather than from the advanced menu.
+  const showAdvancedMenu = isAdvancedProblemType(selected) && selected !== AdvanceProblemKeys.CUSTOMPROBLEM;
+
   return (
     <SelectTypeWrapper onClose={onClose} selected={selected}>
       <Row className="justify-content-center">
-        {(!isAdvancedProblemType(selected)) ?
+        {showAdvancedMenu ?
+          <AdvanceTypeSelect selected={selected} setSelected={setSelected} /> :
           (
             <Stack direction="horizontal" gap={4} className="flex-wrap mb-6">
               <ProblemTypeSelect selected={selected} setSelected={setSelected} />
               <Preview problemType={selected} />
             </Stack>
-          ) :
-          <AdvanceTypeSelect selected={selected} setSelected={setSelected} />}
+          )}
       </Row>
     </SelectTypeWrapper>
   );

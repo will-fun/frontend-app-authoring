@@ -6,6 +6,7 @@ import {
   ProblemTypes,
   getProblemTypes,
   getAdvanceProblems,
+  selectableProblemTypes,
 } from '@src/editors/data/constants/problem';
 import { snakeCaseKeys } from '../../../../utils';
 import { getDataFromOlx } from '../../../../data/redux/thunkActions/problem';
@@ -59,16 +60,17 @@ export const onSelect = ({
 
 export const useArrowNav = (selected, setSelected) => {
   const detectKeyDown = (e) => {
-    const problemTypeValues = Object.values(ProblemTypeKeys);
+    // Only the types listed in the main problem type list can be stepped through.
+    const isNavigable = selectableProblemTypes.includes(selected);
     switch (e.key) {
       case 'ArrowUp':
-        if (problemTypeValues.includes(selected) && ProblemTypes[selected].prev) {
+        if (isNavigable && ProblemTypes[selected].prev) {
           setSelected(ProblemTypes[selected].prev);
           document.getElementById(ProblemTypes[selected].prev).focus();
         }
         break;
       case 'ArrowDown':
-        if (problemTypeValues.includes(selected) && ProblemTypes[selected].next) {
+        if (isNavigable && ProblemTypes[selected].next) {
           setSelected(ProblemTypes[selected].next);
           document.getElementById(ProblemTypes[selected].next).focus();
         }

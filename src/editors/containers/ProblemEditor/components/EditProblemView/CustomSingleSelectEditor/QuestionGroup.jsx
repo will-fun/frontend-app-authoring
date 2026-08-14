@@ -20,7 +20,14 @@ import { ANSWER_TYPES, getDefaultAnswers } from './utils';
 
 // Thin wrapper so each group gets its own TinyMCE editor ref
 const GroupEditor = ({
-  id, editorType, content, onUpdate, minHeight, images, isLibrary, learningContextId,
+  id,
+  editorType,
+  content,
+  onUpdate,
+  minHeight,
+  images,
+  isLibrary,
+  learningContextId,
 }) => {
   const { editorRef, refReady, setEditorRef } = prepareEditorRef();
   if (!refReady) { return null; }
@@ -55,15 +62,21 @@ GroupEditor.propTypes = {
 const ANSWER_TYPE_DESCRIPTIONS = {
   [ANSWER_TYPES.SINGLECHOICE]: 'Tandai jawaban yang benar. Learner harus memilih satu jawaban.',
   [ANSWER_TYPES.MULTIPLECHOICE]: 'Tandai semua jawaban yang benar. Learner dapat memilih lebih dari satu.',
-  [ANSWER_TYPES.DROPDOWN]: 'Tandai satu pilihan yang benar. Learner memilih dari daftar dropdown (teks biasa, bukan rich text).',
-  [ANSWER_TYPES.NUMERICAL]: 'Masukkan angka sebagai jawaban yang benar. Bisa berupa angka biasa (42), pecahan (3/2), atau range ([1,10)).',
+  [ANSWER_TYPES.DROPDOWN]:
+    'Tandai satu pilihan yang benar. Learner memilih dari daftar dropdown (teks biasa, bukan rich text).',
+  [ANSWER_TYPES.NUMERICAL]:
+    'Masukkan angka sebagai jawaban yang benar. Bisa berupa angka biasa (42), pecahan (3/2), atau range ([1,10)).',
   [ANSWER_TYPES.TEXT]: 'Masukkan teks sebagai jawaban yang benar (tidak case-sensitive).',
 };
 
 // -
 
 const QuestionGroup = ({
-  group, index, onChange, onRemove, isOnly,
+  group,
+  index,
+  onChange,
+  onRemove,
+  isOnly,
 }) => {
   const intl = useIntl();
   const images = useSelector(selectors.app.images);
@@ -242,7 +255,9 @@ const QuestionGroup = ({
                   <Checker
                     hasSingleAnswer
                     answer={{ id: indexToLetterMap[ai], correct: ans.correct }}
-                    setAnswer={({ correct }) => { if (correct) { setSingleCorrectAnswer(ans.id); } }}
+                    setAnswer={({ correct }) => {
+                      if (correct) { setSingleCorrectAnswer(ans.id); }
+                    }}
                   />
                 </div>
                 <div className="ml-1 flex-grow-1">

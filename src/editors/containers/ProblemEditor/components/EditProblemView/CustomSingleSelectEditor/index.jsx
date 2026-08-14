@@ -1,5 +1,7 @@
 import React, {
-  useEffect, useRef, useState,
+  useEffect,
+  useRef,
+  useState,
 } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Button } from '@openedx/paragon';
@@ -7,7 +9,10 @@ import { Add } from '@openedx/paragon/icons';
 
 import { actions, selectors } from '../../../../../data/redux';
 import {
-  ANSWER_TYPES, buildOLX, createEmptyGroup, parseGroupsFromOLX,
+  ANSWER_TYPES,
+  buildOLX,
+  createEmptyGroup,
+  parseGroupsFromOLX,
 } from './utils';
 import QuestionGroup from './QuestionGroup';
 

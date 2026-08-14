@@ -1,11 +1,17 @@
 import { FormattedMessage, useIntl } from '@edx/frontend-platform/i18n';
 import {
-  ActionRow, Badge, Icon, Stack,
+  ActionRow,
+  Badge,
+  Icon,
+  Stack,
 } from '@openedx/paragon';
 import { Description } from '@openedx/paragon/icons';
 import classNames from 'classnames';
 import {
-  useCallback, useContext, useEffect, useState,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
 } from 'react';
 import { blockTypes } from '@src/editors/data/constants/app';
 import DraggableList, { SortableItem } from '@src/generic/DraggableList';
@@ -19,7 +25,8 @@ import Loading from '@src/generic/Loading';
 import TagCount from '@src/generic/tag-count';
 import { ToastContext } from '@src/generic/toast-context';
 import { skipIfUnwantedTarget, useRunOnNextRender } from '@src/utils';
-import { useLibraryContext } from '../common/context/LibraryContext';
+import { usePublishedFilterContext } from '@src/library-authoring/common/context/PublishedFilterContext';
+import { useOptionalLibraryContext } from '../common/context/LibraryContext';
 import ComponentMenu from '../components';
 import { LibraryBlockMetadata } from '../data/api';
 import {
@@ -55,7 +62,7 @@ interface ComponentBlockProps {
 /** Component header */
 const BlockHeader = ({ block, index, readOnly }: ComponentBlockProps) => {
   const intl = useIntl();
-  const { showOnlyPublished } = useLibraryContext();
+  const { showOnlyPublished } = usePublishedFilterContext();
   const { showToast } = useContext(ToastContext);
   const { setSidebarAction, openItemSidebar } = useSidebarContext();
 
@@ -69,7 +76,7 @@ const BlockHeader = ({ block, index, readOnly }: ComponentBlockProps) => {
         },
       });
       showToast(intl.formatMessage(messages.updateComponentSuccessMsg));
-    } catch (err) {
+    } catch {
       showToast(intl.formatMessage(messages.updateComponentErrorMsg));
     }
   };
@@ -127,9 +134,13 @@ const BlockHeader = ({ block, index, readOnly }: ComponentBlockProps) => {
 
 /** ComponentBlock to render preview of given component under Unit */
 const ComponentBlock = ({
-  block, readOnly, isDragging, index,
+  block,
+  readOnly,
+  isDragging,
+  index,
 }: ComponentBlockProps) => {
-  const { showOnlyPublished, openComponentEditor } = useLibraryContext();
+  const { openComponentEditor } = useOptionalLibraryContext();
+  const { showOnlyPublished } = usePublishedFilterContext();
 
   const { sidebarItemInfo, openItemSidebar } = useSidebarContext();
 
@@ -146,7 +157,7 @@ const ComponentBlock = ({
     const canEdit = canEditComponent(block.originalId);
     if (numberOfClicks > 1 && canEdit) {
       // Open editor on double click.
-      openComponentEditor(block.originalId);
+      openComponentEditor?.(block.originalId);
     }
   }, [block, openItemSidebar, canEditComponent, openComponentEditor, readOnly]);
 
@@ -195,7 +206,9 @@ const ComponentBlock = ({
           }
         }}
         disabled={readOnly}
-        cardClassName={sidebarItemInfo?.id === block.originalId && sidebarItemInfo?.index === index ? 'selected' : undefined}
+        cardClassName={sidebarItemInfo?.id === block.originalId && sidebarItemInfo?.index === index
+          ? 'selected'
+          : undefined}
       >
         {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
         <div
@@ -220,8 +233,8 @@ const ComponentBlock = ({
 interface LibraryUnitBlocksProps {
   unitId: string;
   /** set to true if it is rendered as preview
-  * This disables drag and drop, title edit and menus
-  */
+   * This disables drag and drop, title edit and menus
+   */
   readOnly?: boolean;
 }
 
@@ -232,7 +245,8 @@ export const LibraryUnitBlocks = ({ unitId, readOnly: componentReadOnly }: Libra
   const [hidePreviewFor, setHidePreviewFor] = useState<string | null>(null);
   const { showToast } = useContext(ToastContext);
 
-  const { readOnly: libraryReadOnly, showOnlyPublished } = useLibraryContext();
+  const { readOnly: libraryReadOnly } = useOptionalLibraryContext();
+  const { showOnlyPublished } = usePublishedFilterContext();
 
   const readOnly = componentReadOnly || libraryReadOnly;
 
@@ -252,7 +266,7 @@ export const LibraryUnitBlocks = ({ unitId, readOnly: componentReadOnly }: Libra
     try {
       await orderMutator.mutateAsync(usageKeys);
       showToast(intl.formatMessage(messages.orderUpdatedMsg));
-    } catch (e) {
+    } catch {
       showToast(intl.formatMessage(messages.failedOrderUpdatedMsg));
     }
   }, [orderMutator]);

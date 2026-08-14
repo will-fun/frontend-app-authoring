@@ -8,7 +8,7 @@ import { FormattedMessage, useIntl } from '@edx/frontend-platform/i18n';
 import { ActionRow, Button, StandardModal } from '@openedx/paragon';
 
 import { ToastContext } from '../../generic/toast-context';
-import { useLibraryContext } from '../common/context/LibraryContext';
+import { LibraryProvider, useLibraryContext } from '../common/context/LibraryContext';
 import type { SelectedComponent } from '../common/context/ComponentPickerContext';
 import { useAddItemsToCollection, useAddItemsToContainer } from '../data/apiHooks';
 import genericMessages from '../generic/messages';
@@ -34,7 +34,10 @@ export const PickLibraryContentModal: React.FC<PickLibraryContentModalProps> = (
   } = useLibraryContext();
 
   const {
-    insideCollection, insideUnit, insideSection, insideSubsection,
+    insideCollection,
+    insideUnit,
+    insideSection,
+    insideSubsection,
   } = useLibraryRoutes();
 
   const updateCollectionItemsMutation = useAddItemsToCollection(libraryId, collectionId);
@@ -110,7 +113,7 @@ export const PickLibraryContentModal: React.FC<PickLibraryContentModalProps> = (
       size="xl"
       isOpen={isOpen}
       onClose={onClose}
-      footerNode={(
+      footerNode={
         <ActionRow>
           <FormattedMessage
             {...contentMessages.selectedContent}
@@ -121,15 +124,20 @@ export const PickLibraryContentModal: React.FC<PickLibraryContentModalProps> = (
             {intl.formatMessage(contentMessages.addToButton)}
           </Button>
         </ActionRow>
-      )}
+      }
     >
-      <ComponentPicker
+      <LibraryProvider
         libraryId={libraryId}
-        componentPickerMode="multiple"
-        onChangeComponentSelection={setSelectedComponents}
-        extraFilter={extraFilter}
-        visibleTabs={visibleTabs}
-      />
+        skipUrlUpdate
+      >
+        <ComponentPicker
+          libraryId={libraryId}
+          componentPickerMode="multiple"
+          onChangeComponentSelection={setSelectedComponents}
+          extraFilter={extraFilter}
+          visibleTabs={visibleTabs}
+        />
+      </LibraryProvider>
     </StandardModal>
   );
 };

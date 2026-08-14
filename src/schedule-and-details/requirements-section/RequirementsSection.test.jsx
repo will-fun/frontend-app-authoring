@@ -1,6 +1,8 @@
 import React from 'react';
 import {
-  render, fireEvent, act,
+  render,
+  fireEvent,
+  act,
 } from '@testing-library/react';
 import { IntlProvider } from '@edx/frontend-platform/i18n';
 
@@ -54,7 +56,10 @@ const props = {
 describe('<RequirementsSection />', () => {
   it('renders successfully', () => {
     const {
-      getByText, getByLabelText, getByDisplayValue, getAllByRole,
+      getByText,
+      getByLabelText,
+      getByDisplayValue,
+      getAllByRole,
     } = render(<RootWrapper {...props} />);
     const checkboxList = getAllByRole('checkbox');
     expect(getByText(messages.requirementsTitle.defaultMessage)).toBeInTheDocument();
@@ -89,5 +94,16 @@ describe('<RequirementsSection />', () => {
     expect(queryAllByLabelText(messages.timepickerLabel.defaultMessage).length).toBe(0);
     expect(queryAllByLabelText(messages.dropdownLabel.defaultMessage).length).toBe(0);
     expect(queryAllByLabelText(entranceExamMessages.requirementsEntrance.defaultMessage).length).toBe(0);
+  });
+
+  it('disables effort input and prerequisite dropdown when isEditable is false', () => {
+    const { container, getByDisplayValue } = render(<RootWrapper {...props} isEditable={false} />);
+    expect(getByDisplayValue(props.effort)).toBeDisabled();
+    expect(container.querySelector('#prerequisiteDropdown')).toBeDisabled();
+  });
+
+  it('enables effort input when isEditable is true', () => {
+    const { getByDisplayValue } = render(<RootWrapper {...props} isEditable />);
+    expect(getByDisplayValue(props.effort)).not.toBeDisabled();
   });
 });

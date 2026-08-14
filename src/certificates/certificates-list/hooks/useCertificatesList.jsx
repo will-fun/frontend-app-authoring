@@ -3,7 +3,10 @@ import { useSelector, useDispatch } from 'react-redux';
 
 import { MODE_STATES } from '../../data/constants';
 import {
-  getCourseTitle, getCourseNumber, getCourseNumberOverride, getCertificates,
+  getCourseTitle,
+  getCourseNumber,
+  getCourseNumberOverride,
+  getCertificates,
 } from '../../data/selectors';
 import { updateCourseCertificate } from '../../data/thunks';
 import { setMode } from '../../data/slice';
@@ -25,6 +28,7 @@ const useCertificatesList = (courseId) => {
   }));
 
   const handleSubmit = async (values) => {
+    // oxlint-disable-next-line @typescript-eslint/await-thenable - this dispatch() IS returning a promise.
     await dispatch(updateCourseCertificate(courseId, values));
     setEditModes({});
     dispatch(setMode(MODE_STATES.view));

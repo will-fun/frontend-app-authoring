@@ -37,7 +37,7 @@ jest.mock('frontend-components-tinymce-advanced-plugins', () => ({ a11ycheckerCs
 
 const { libraryId } = mockContentLibrary;
 const render = (collectionId?: string) => {
-  const params: { libraryId: string, collectionId?: string } = { libraryId, collectionId };
+  const params: { libraryId: string; collectionId?: string; } = { libraryId, collectionId };
   return baseRender(<AddContent />, {
     path: '/library/:libraryId/collection/:collectionId?',
     params,
@@ -45,14 +45,14 @@ const render = (collectionId?: string) => {
       <LibraryProvider
         libraryId={libraryId}
       >
-        { children }
+        {children}
         <ComponentEditorModal />
       </LibraryProvider>
     ),
   });
 };
 const renderWithContainer = (containerId: string, containerType: 'unit' | 'section' | 'subsection' = 'unit') => {
-  const params: { libraryId: string, containerId?: string } = { libraryId, containerId };
+  const params: { libraryId: string; containerId?: string; } = { libraryId, containerId };
   return baseRender(<AddContent />, {
     path: `/library/:libraryId/${containerType}/:containerId?`,
     params,
@@ -60,7 +60,7 @@ const renderWithContainer = (containerId: string, containerType: 'unit' | 'secti
       <LibraryProvider
         libraryId={libraryId}
       >
-        { children }
+        {children}
         <ComponentEditorModal />
       </LibraryProvider>
     ),
@@ -68,7 +68,7 @@ const renderWithContainer = (containerId: string, containerType: 'unit' | 'secti
 };
 
 let axiosMock: MockAdapter;
-let mockShowToast: (message: string, action?: ToastActionData | undefined) => void;
+let mockShowToast: (message: string, action?: ToastActionData) => void;
 
 describe('<AddContent />', () => {
   beforeEach(() => {
@@ -88,12 +88,12 @@ describe('<AddContent />', () => {
     expect(screen.queryByRole('button', { name: /collection/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /text/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /problem/i })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /open reponse/i })).toBeInTheDocument(); // Excluded from MVP
+    expect(screen.queryByRole('button', { name: /open response/i })).toBeInTheDocument(); // Excluded from MVP
     expect(screen.queryByRole('button', { name: /drag drop/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /video/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /copy from clipboard/i })).not.toBeInTheDocument();
     expect(await screen.findByRole('button', { name: /advanced \/ other/i })).toBeInTheDocument();
-    expect(await screen.queryByRole('button', { name: /existing library content/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /existing library content/i })).not.toBeInTheDocument();
   });
 
   it('should render advanced content buttons', async () => {
@@ -319,7 +319,10 @@ describe('<AddContent />', () => {
       buttonName: /paste from clipboard/i,
     },
   ])('$label', async ({
-    mockUrl, mockResponse, buttonName, expectedError,
+    mockUrl,
+    mockResponse,
+    buttonName,
+    expectedError,
   }) => {
     userEvent.setup();
     axiosMock.onPost(mockUrl).reply(400, mockResponse);

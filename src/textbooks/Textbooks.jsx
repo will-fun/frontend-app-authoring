@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types';
 import { useIntl } from '@edx/frontend-platform/i18n';
 import {
   Breadcrumb,
@@ -8,18 +7,16 @@ import {
   Row,
 } from '@openedx/paragon';
 import { Add as AddIcon } from '@openedx/paragon/icons';
-import { useSelector } from 'react-redux';
 import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
+import { useCourseAuthoringContext } from '@src/CourseAuthoringContext';
+import { RequestStatus } from '@src/data/constants';
 
 import { useWaffleFlags } from '../data/apiHooks';
 import { SavingErrorAlert } from '../generic/saving-error-alert';
-import { getProcessingNotification } from '../generic/processing-notification/data/selectors';
-import { useModel } from '../generic/model-store';
 import { LoadingSpinner } from '../generic/Loading';
 import SubHeader from '../generic/sub-header/SubHeader';
 import ConnectionErrorAlert from '../generic/ConnectionErrorAlert';
-import ProcessingNotification from '../generic/processing-notification';
 import EmptyPlaceholder from './empty-placeholder/EmptyPlaceholder';
 import TextbookCard from './textbook-card/TextbooksCard';
 import TextbookSidebar from './textbook-sidebar/TextbookSidebar';
@@ -28,11 +25,10 @@ import { useTextbooks } from './hooks';
 import { getTextbookFormInitialValues } from './utils';
 import messages from './messages';
 
-const Textbooks = ({ courseId }) => {
+const Textbooks = () => {
   const intl = useIntl();
+  const { courseId, courseDetails } = useCourseAuthoringContext();
   const waffleFlags = useWaffleFlags(courseId);
-
-  const courseDetails = useModel('courseDetails', courseId);
 
   const {
     textbooks,
@@ -49,11 +45,6 @@ const Textbooks = ({ courseId }) => {
     handleTextbookEditFormSubmit,
     handleTextbookDeleteSubmit,
   } = useTextbooks(courseId, waffleFlags);
-
-  const {
-    isShow: showProcessingNotification,
-    title: processingNotificationTitle,
-  } = useSelector(getProcessingNotification);
 
   if (isLoadingFailed) {
     return (
@@ -82,14 +73,14 @@ const Textbooks = ({ courseId }) => {
         <section className="mb-4 mt-5">
           <SubHeader
             title={intl.formatMessage(messages.headingTitle)}
-            breadcrumbs={(
+            breadcrumbs={
               <Breadcrumb
                 linkAs={Link}
                 ariaLabel={intl.formatMessage(messages.breadcrumbAriaLabel)}
                 links={breadcrumbs}
               />
-            )}
-            headerActions={(
+            }
+            headerActions={
               <Button
                 iconBefore={AddIcon}
                 onClick={openTextbookForm}
@@ -97,7 +88,7 @@ const Textbooks = ({ courseId }) => {
               >
                 {intl.formatMessage(messages.newTextbookButton)}
               </Button>
-            )}
+            }
           />
           <Layout
             lg={[{ span: 9 }, { span: 3 }]}
@@ -110,26 +101,27 @@ const Textbooks = ({ courseId }) => {
               <article>
                 <section className="textbook-section">
                   <div className="pt-4">
-                    {textbooks.length ? textbooks.map((textbook, index) => (
-                      <TextbookCard
-                        key={textbook.id}
-                        textbook={textbook}
-                        courseId={courseId}
-                        handleSavingStatusDispatch={handleSavingStatusDispatch}
-                        onEditSubmit={handleTextbookEditFormSubmit}
-                        onDeleteSubmit={handleTextbookDeleteSubmit}
-                        textbookIndex={index}
-                      />
-                    )) : (
-                      !isTextbookFormOpen && <EmptyPlaceholder onCreateNewTextbook={openTextbookForm} />
-                    )}
+                    {textbooks.length ?
+                      textbooks.map((textbook, index) => (
+                        <TextbookCard
+                          key={textbook.id}
+                          textbook={textbook}
+                          courseId={courseId}
+                          handleSavingStatusDispatch={handleSavingStatusDispatch}
+                          onEditSubmit={handleTextbookEditFormSubmit}
+                          onDeleteSubmit={handleTextbookDeleteSubmit}
+                          textbookIndex={index}
+                        />
+                      )) :
+                      (
+                        !isTextbookFormOpen && <EmptyPlaceholder onCreateNewTextbook={openTextbookForm} />
+                      )}
                     {isTextbookFormOpen && (
                       <TextbookForm
                         closeTextbookForm={closeTextbookForm}
                         initialFormValues={getTextbookFormInitialValues()}
                         onSubmit={handleTextbookFormSubmit}
                         onSavingStatus={handleSavingStatusDispatch}
-                        courseId={courseId}
                       />
                     )}
                   </div>
@@ -142,22 +134,14 @@ const Textbooks = ({ courseId }) => {
           </Layout>
         </section>
       </Container>
-      <ProcessingNotification
-        isShow={showProcessingNotification}
-        title={processingNotificationTitle}
-      />
       <div className="alert-toast">
         <SavingErrorAlert
-          savingStatus={savingStatus}
+          isQueryFailed={savingStatus === RequestStatus.FAILED}
           errorMessage={errorMessage}
         />
       </div>
     </>
   );
-};
-
-Textbooks.propTypes = {
-  courseId: PropTypes.string.isRequired,
 };
 
 export default Textbooks;

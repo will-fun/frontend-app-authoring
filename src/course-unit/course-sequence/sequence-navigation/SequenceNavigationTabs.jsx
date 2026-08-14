@@ -5,21 +5,25 @@ import { Button } from '@openedx/paragon';
 import { Plus as PlusIcon, ContentPasteGo as ContentPasteGoIcon } from '@openedx/paragon/icons';
 import { useIntl } from '@edx/frontend-platform/i18n';
 
+import { useCourseAuthoringContext } from '@src/CourseAuthoringContext';
 import { changeEditTitleFormOpen, updateQueryPendingStatus } from '../../data/slice';
-import { getCourseUnitData, getCourseId, getSequenceId } from '../../data/selectors';
+import { getCourseUnitData, getSequenceId } from '../../data/selectors';
 import messages from '../messages';
 import { useIndexOfLastVisibleChild } from '../hooks';
 import SequenceNavigationDropdown from './SequenceNavigationDropdown';
 import UnitButton from './UnitButton';
 
 const SequenceNavigationTabs = ({
-  unitIds, unitId, handleCreateNewCourseXBlock, showPasteUnit,
+  unitIds,
+  unitId,
+  handleCreateNewCourseXBlock,
+  showPasteUnit,
 }) => {
   const intl = useIntl();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const sequenceId = useSelector(getSequenceId);
-  const courseId = useSelector(getCourseId);
+  const { courseId } = useCourseAuthoringContext();
   const courseUnit = useSelector(getCourseUnitData);
   const sequenceChildAddable = courseUnit?.ancestorInfo?.ancestors?.[0]?.actions?.childAddable;
 
@@ -32,10 +36,13 @@ const SequenceNavigationTabs = ({
 
   const handleAddNewSequenceUnit = () => {
     dispatch(updateQueryPendingStatus(true));
-    handleCreateNewCourseXBlock({ parentLocator: sequenceId, category: 'vertical', displayName: 'Unit' }, ({ courseKey, locator }) => {
-      navigate(`/course/${courseKey}/container/${locator}/${sequenceId}`, courseId);
-      dispatch(changeEditTitleFormOpen(true));
-    });
+    handleCreateNewCourseXBlock(
+      { parentLocator: sequenceId, category: 'vertical', displayName: 'Unit' },
+      ({ courseKey, locator }) => {
+        navigate(`/course/${courseKey}/container/${locator}/${sequenceId}`, courseId);
+        dispatch(changeEditTitleFormOpen(true));
+      },
+    );
   };
 
   const handlePasteNewSequenceUnit = () => {
@@ -61,14 +68,14 @@ const SequenceNavigationTabs = ({
             />
           ))}
           {sequenceChildAddable && (
-          <Button
-            className="sequence-navigation-tabs-action-btn"
-            variant="outline-primary"
-            iconBefore={PlusIcon}
-            onClick={handleAddNewSequenceUnit}
-          >
-            {intl.formatMessage(messages.newUnitBtnText)}
-          </Button>
+            <Button
+              className="sequence-navigation-tabs-action-btn"
+              variant="outline-primary"
+              iconBefore={PlusIcon}
+              onClick={handleAddNewSequenceUnit}
+            >
+              {intl.formatMessage(messages.newUnitBtnText)}
+            </Button>
           )}
           {showPasteUnit && (
             <Button

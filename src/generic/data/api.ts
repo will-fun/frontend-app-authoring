@@ -7,16 +7,18 @@ import { convertObjectToSnakeCase } from '@src/utils';
 
 export const getApiBaseUrl = () => getConfig().STUDIO_BASE_URL;
 export const getCreateOrRerunCourseUrl = () => new URL('course/', getApiBaseUrl()).href;
-export const getCourseRerunUrl = (courseId: string) => new URL(
-  `/api/contentstore/v1/course_rerun/${courseId}`,
-  getApiBaseUrl(),
-).href;
+export const getCourseRerunUrl = (courseId: string) =>
+  new URL(
+    `/api/contentstore/v1/course_rerun/${courseId}`,
+    getApiBaseUrl(),
+  ).href;
 export const getOrganizationsUrl = () => new URL('organizations', getApiBaseUrl()).href;
 export const getClipboardUrl = () => `${getApiBaseUrl()}/api/content-staging/v1/clipboard/`;
-export const getTagsCountApiUrl = (contentPattern: string) => new URL(
-  `api/content_tagging/v1/object_tag_counts/${contentPattern}/?count_implicit`,
-  getApiBaseUrl(),
-).href;
+export const getTagsCountApiUrl = (contentPattern: string) =>
+  new URL(
+    `api/content_tagging/v1/object_tag_counts/${contentPattern}/?count_implicit`,
+    getApiBaseUrl(),
+  ).href;
 
 /**
  * Get's organizations data. Returns list of organization names.
@@ -41,7 +43,7 @@ export async function getCourseRerun(courseId: string): Promise<unknown> {
 /**
  * Create or rerun course with data.
  */
-export async function createOrRerunCourse(courseData: Object): Promise<unknown> {
+export async function createOrRerunCourse(courseData: Record<string, any>): Promise<unknown> {
   const { data } = await getAuthenticatedHttpClient().post(
     getCreateOrRerunCourseUrl(),
     convertObjectToSnakeCase(courseData, true),
@@ -96,7 +98,7 @@ export async function updateClipboard(usageKey: string): Promise<ClipboardStatus
 
 /**
  * Gets the tags count of multiple content by id separated by commas or a pattern using a '*' wildcard.
-*/
+ */
 export async function getTagsCount(contentPattern?: string): Promise<Record<string, number>> {
   if (!contentPattern) {
     throw new Error('contentPattern is required');

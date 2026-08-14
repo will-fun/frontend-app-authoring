@@ -23,10 +23,7 @@ import { ContainerEditableTitle, FooterActions, HeaderActions } from '../contain
 export const LibraryUnitPage = () => {
   const intl = useIntl();
 
-  const {
-    libraryId,
-    containerId,
-  } = useLibraryContext();
+  const { libraryId, containerId, readOnly } = useLibraryContext();
 
   // istanbul ignore if: this should never happen
   if (!containerId) {
@@ -38,7 +35,10 @@ export const LibraryUnitPage = () => {
   const { data: libraryData, isPending: isLibPending } = useContentLibrary(libraryId);
   // fetch unitData from index as it includes its parent subsections as well.
   const {
-    hits, isPending, isError, error,
+    hits,
+    isPending,
+    isError,
+    error,
   } = useContentFromSearchIndex(containerId ? [containerId] : []);
   const unitData = (hits as ContainerHit[])?.[0];
 
@@ -64,13 +64,16 @@ export const LibraryUnitPage = () => {
   return (
     <div className="d-flex">
       <div className="flex-grow-1">
-        <Helmet><title>{libraryData.title} | {process.env.SITE_NAME}</title></Helmet>
+        <Helmet>
+          <title>{libraryData.title} | {process.env.SITE_NAME}</title>
+        </Helmet>
         <Header
           number={libraryData.slug}
           title={libraryData.title}
           org={libraryData.org}
           contextId={libraryId}
           isLibrary
+          readOnly={readOnly}
           containerProps={{
             size: undefined,
           }}
@@ -79,20 +82,20 @@ export const LibraryUnitPage = () => {
           <div className="px-4 bg-light-200 border-bottom mb-2">
             <SubHeader
               title={<SubHeaderTitle title={<ContainerEditableTitle containerId={containerId} />} />}
-              headerActions={(
+              headerActions={
                 <HeaderActions
                   containerKey={containerId}
                   infoBtnText={intl.formatMessage(messages.infoButtonText)}
                   addContentBtnText={intl.formatMessage(messages.addContentButton)}
                 />
-              )}
-              breadcrumbs={(
+              }
+              breadcrumbs={
                 <ParentBreadcrumbs
                   libraryData={libraryData}
                   parents={unitData.subsections}
                   containerType={ContainerType.Unit}
                 />
-              )}
+              }
               hideBorder
             />
           </div>

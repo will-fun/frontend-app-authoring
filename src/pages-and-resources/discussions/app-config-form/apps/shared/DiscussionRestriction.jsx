@@ -24,12 +24,14 @@ const DiscussionRestriction = () => {
     setSelectedRestrictionOption(value);
 
     if (value !== discussionRestriction.ENABLED) {
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       setFieldValue('postingRestrictions', value);
     }
   }, []);
 
   const handleConfirmation = useCallback(() => {
     setSelectedRestrictionOption(discussionRestriction.ENABLED);
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     setFieldValue('postingRestrictions', discussionRestriction.ENABLED);
   }, []);
 
@@ -37,19 +39,23 @@ const DiscussionRestriction = () => {
     setSelectedRestrictionOption(postingRestrictions);
   }, [postingRestrictions]);
 
-  const discussionRestrictionButtons = useMemo(() => discussionRestrictionOptions.map((restriction) => (
-    <Button
-      key={`restriction-${restriction.value}`}
-      data-testid={restriction.value}
-      variant="plain"
-      className={classNames('w-100 font-size-14 font-weight-500 line-height-20 py-7px border-light-400 unselected-button', {
-        'text-white bg-primary-500 selected-button': selectedRestrictionOption === restriction.value,
-      })}
-      onClick={() => handleClick(restriction.value)}
-    >
-      {restriction.label}
-    </Button>
-  )), [selectedRestrictionOption]);
+  const discussionRestrictionButtons = useMemo(() =>
+    discussionRestrictionOptions.map((restriction) => (
+      <Button
+        key={`restriction-${restriction.value}`}
+        data-testid={restriction.value}
+        variant="plain"
+        className={classNames(
+          'w-100 font-size-14 font-weight-500 line-height-20 py-7px border-light-400 unselected-button',
+          {
+            'text-white bg-primary-500 selected-button': selectedRestrictionOption === restriction.value,
+          },
+        )}
+        onClick={() => handleClick(restriction.value)}
+      >
+        {restriction.label}
+      </Button>
+    )), [selectedRestrictionOption]);
 
   const selectedRestrictionMessage = useMemo(() => (
     discussionRestrictionOptions.find(option => option.value === selectedRestrictionOption).message
@@ -67,8 +73,7 @@ const DiscussionRestriction = () => {
         {intl.formatMessage(selectedRestrictionMessage)}
       </div>
       {(postingRestrictions !== discussionRestriction.ENABLED
-        && selectedRestrictionOption === discussionRestriction.ENABLED
-      ) && (
+        && selectedRestrictionOption === discussionRestriction.ENABLED) && (
         <ConfirmationPopup
           label={intl.formatMessage(messages.enableRestrictedDatesConfirmationLabel)}
           bodyText={intl.formatMessage(messages.enableRestrictedDatesConfirmationHelp)}

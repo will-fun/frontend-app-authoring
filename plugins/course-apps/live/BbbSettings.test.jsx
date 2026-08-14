@@ -4,21 +4,16 @@ import {
   getByRole,
   getAllByRole,
   waitForElementToBeRemoved,
-} from '@testing-library/react';
+  initializeMocks,
+} from 'CourseAuthoring/testUtils';
 
 import ReactDOM from 'react-dom';
-import { Routes, Route, MemoryRouter } from 'react-router-dom';
-import { initializeMockApp } from '@edx/frontend-platform';
-import MockAdapter from 'axios-mock-adapter';
-import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
-import { AppProvider, PageWrap } from '@edx/frontend-platform/react';
-import { IntlProvider } from '@edx/frontend-platform/i18n';
 
 import userEvent from '@testing-library/user-event';
-import initializeStore from 'CourseAuthoring/store';
 import { executeThunk } from 'CourseAuthoring/utils';
 import PagesAndResourcesProvider from 'CourseAuthoring/pages-and-resources/PagesAndResourcesProvider';
 
+import { CourseAuthoringProvider } from 'CourseAuthoring/CourseAuthoringContext';
 import LiveSettings from './Settings';
 import {
   generateLiveConfigurationApiResponse,
@@ -40,17 +35,20 @@ ReactDOM.createPortal = jest.fn(node => node);
 
 const renderComponent = () => {
   const wrapper = render(
-    <IntlProvider locale="en">
-      <AppProvider store={store} wrapWithRouter={false}>
-        <PagesAndResourcesProvider courseId={courseId}>
-          <MemoryRouter initialEntries={[liveSettingsUrl]}>
-            <Routes>
-              <Route path={liveSettingsUrl} element={<PageWrap><LiveSettings onClose={() => {}} /></PageWrap>} />
-            </Routes>
-          </MemoryRouter>
-        </PagesAndResourcesProvider>
-      </AppProvider>
-    </IntlProvider>,
+    <CourseAuthoringProvider courseId={courseId}>
+      <PagesAndResourcesProvider courseId={courseId}>
+        <LiveSettings onClose={() => {}} />
+      </PagesAndResourcesProvider>
+    </CourseAuthoringProvider>,
+    {
+      path: liveSettingsUrl,
+      routerProps: {
+        initialEntries: [liveSettingsUrl],
+      },
+      params: {
+        courseId,
+      },
+    },
   );
   container = wrapper.container;
 };
@@ -65,8 +63,14 @@ const mockStore = async ({
   const fetchProviderConfigUrl = `${providersApiUrl}/${courseId}/`;
   const fetchLiveConfigUrl = `${providerConfigurationApiUrl}/${courseId}/`;
 
-  axiosMock.onGet(fetchProviderConfigUrl).reply(200, configurationProviders(emailSharing, usernameSharing, 'big_blue_button', isFreeTier));
-  axiosMock.onGet(fetchLiveConfigUrl).reply(200, generateLiveConfigurationApiResponse(enabled, piiSharingAllowed, 'bigBlueButton', isFreeTier));
+  axiosMock.onGet(fetchProviderConfigUrl).reply(
+    200,
+    configurationProviders(emailSharing, usernameSharing, 'big_blue_button', isFreeTier),
+  );
+  axiosMock.onGet(fetchLiveConfigUrl).reply(
+    200,
+    generateLiveConfigurationApiResponse(enabled, piiSharingAllowed, 'bigBlueButton', isFreeTier),
+  );
 
   await executeThunk(fetchLiveProviders(courseId), store.dispatch);
   await executeThunk(fetchLiveConfiguration(courseId), store.dispatch);
@@ -74,16 +78,9 @@ const mockStore = async ({
 
 describe('BBB Settings', () => {
   beforeEach(async () => {
-    initializeMockApp({
-      authenticatedUser: {
-        userId: 3,
-        username: 'abc123',
-        administrator: false,
-        roles: [],
-      },
-    });
-    store = initializeStore(initialState);
-    axiosMock = new MockAdapter(getAuthenticatedHttpClient());
+    const mocks = initializeMocks({ initialState });
+    store = mocks.reduxStore;
+    axiosMock = mocks.axiosMock;
   });
 
   test('Plan dropdown to be visible and enabled in UI', async () => {
@@ -97,14 +94,17 @@ describe('BBB Settings', () => {
     expect(container.querySelector('select[name="tierType"]')).not.toBeDisabled();
   });
 
-  test.each([[true, 3], [false, 2]])('Plan dropdown should display correct number of options', async (isFreeTier, noOfOptions) => {
-    await mockStore({ emailSharing: true, isFreeTier });
-    renderComponent();
-    const spinner = getByRole(container, 'status');
-    await waitForElementToBeRemoved(spinner);
-    const dropDown = queryByTestId(container, 'plansDropDown');
-    expect(getAllByRole(dropDown, 'option').length).toBe(noOfOptions);
-  });
+  test.each([[true, 3], [false, 2]])(
+    'Plan dropdown should display correct number of options',
+    async (isFreeTier, noOfOptions) => {
+      await mockStore({ emailSharing: true, isFreeTier });
+      renderComponent();
+      const spinner = getByRole(container, 'status');
+      await waitForElementToBeRemoved(spinner);
+      const dropDown = queryByTestId(container, 'plansDropDown');
+      expect(getAllByRole(dropDown, 'option').length).toBe(noOfOptions);
+    },
+  );
 
   test(
     'Connect to support and PII sharing message is visible and plans selection is disabled, When pii sharing is disabled, ',

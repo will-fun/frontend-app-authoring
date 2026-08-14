@@ -6,7 +6,8 @@ import {
   screen,
   waitFor,
   initializeMocks,
-} from '../../testUtils';
+} from '@src/testUtils';
+
 import { mockContentLibrary } from '../data/api.mocks';
 import { getContentLibraryApiUrl } from '../data/api';
 import { LibraryProvider } from '../common/context/LibraryContext';
@@ -14,9 +15,10 @@ import LibraryInfoHeader from './LibraryInfoHeader';
 
 const { libraryId: mockLibraryId, libraryIdReadOnly, libraryData } = mockContentLibrary;
 
-const render = (libraryId: string = mockLibraryId) => baseRender(<LibraryInfoHeader />, {
-  extraWrapper: ({ children }) => <LibraryProvider libraryId={libraryId}>{ children }</LibraryProvider>,
-});
+const render = (libraryId: string = mockLibraryId) =>
+  baseRender(<LibraryInfoHeader />, {
+    extraWrapper: ({ children }) => <LibraryProvider libraryId={libraryId}>{children}</LibraryProvider>,
+  });
 
 let axiosMock: MockAdapter;
 let mockShowToast: (message: string) => void;

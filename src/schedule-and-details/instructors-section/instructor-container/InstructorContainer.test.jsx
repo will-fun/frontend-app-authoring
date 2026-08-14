@@ -23,13 +23,14 @@ jest.mock('react-router', () => ({
 }));
 
 // Mock the TextareaAutosize component
-jest.mock('react-textarea-autosize', () => jest.fn((props) => (
-  <textarea
-    {...props}
-    onFocus={() => {}}
-    onBlur={() => {}}
-  />
-)));
+jest.mock('react-textarea-autosize', () =>
+  jest.fn((props) => (
+    <textarea
+      {...props}
+      onFocus={() => {}}
+      onBlur={() => {}}
+    />
+  )));
 
 const RootWrapper = (props) => (
   <IntlProvider locale="en">
@@ -121,5 +122,19 @@ describe('<InstructorContainer />', () => {
     const deleteBtn = getByRole('button', { name: messages.instructorDelete.defaultMessage });
     fireEvent.click(deleteBtn);
     expect(onDeleteMock).toHaveBeenCalledWith(props.idx);
+  });
+
+  it('disables all inputs and delete button when isEditable is false', () => {
+    const { getAllByRole, getByRole } = render(<RootWrapper {...props} isEditable={false} />);
+    const textboxes = getAllByRole('textbox');
+    textboxes.forEach((input) => expect(input).toBeDisabled());
+    expect(getByRole('button', { name: messages.instructorDelete.defaultMessage })).toBeDisabled();
+  });
+
+  it('enables all inputs and delete button when isEditable is true', () => {
+    const { getAllByRole, getByRole } = render(<RootWrapper {...props} isEditable />);
+    const textboxes = getAllByRole('textbox');
+    textboxes.forEach((input) => expect(input).not.toBeDisabled());
+    expect(getByRole('button', { name: messages.instructorDelete.defaultMessage })).not.toBeDisabled();
   });
 });

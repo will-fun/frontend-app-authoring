@@ -1,3 +1,4 @@
+// oxlint-disable unicorn/no-thenable
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { camelCase } from 'lodash';
@@ -11,6 +12,7 @@ import AppSettingsModal from 'CourseAuthoring/pages-and-resources/app-settings-m
 import { useModel } from 'CourseAuthoring/generic/model-store';
 import Loading from 'CourseAuthoring/generic/Loading';
 import { RequestStatus } from 'CourseAuthoring/data/constants';
+import { useCourseAuthoringContext } from 'CourseAuthoring/CourseAuthoringContext';
 
 import { fetchLiveData, saveLiveConfiguration, saveLiveConfigurationAsDraft } from './data/thunks';
 import { selectApp } from './data/slice';
@@ -25,10 +27,13 @@ const LiveSettings = ({
   const intl = useIntl();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const courseId = useSelector(state => state.courseDetail.courseId);
+  const { courseId } = useCourseAuthoringContext();
   const availableProviders = useSelector((state) => state.live.appIds);
   const {
-    piiSharingAllowed, selectedAppId, enabled, status,
+    piiSharingAllowed,
+    selectedAppId,
+    enabled,
+    status,
   } = useSelector(state => state.live);
 
   const appConfig = useModel('liveAppConfigs', selectedAppId);
@@ -50,15 +55,18 @@ const LiveSettings = ({
   const validationSchema = {
     enabled: Yup.boolean(),
     consumerKey: Yup.string().when(['provider', 'tierType'], {
-      is: (provider, tier) => provider === 'zoom' || (provider === 'big_blue_button' && tier === bbbPlanTypes.commercial),
+      is: (provider, tier) =>
+        provider === 'zoom' || (provider === 'big_blue_button' && tier === bbbPlanTypes.commercial),
       then: Yup.string().required(intl.formatMessage(messages.consumerKeyRequired)),
     }),
     consumerSecret: Yup.string().when(['provider', 'tierType'], {
-      is: (provider, tier) => provider === 'zoom' || (provider === 'big_blue_button' && tier === bbbPlanTypes.commercial),
+      is: (provider, tier) =>
+        provider === 'zoom' || (provider === 'big_blue_button' && tier === bbbPlanTypes.commercial),
       then: Yup.string().notRequired(intl.formatMessage(messages.consumerSecretRequired)),
     }),
     launchUrl: Yup.string().when(['provider', 'tierType'], {
-      is: (provider, tier) => provider === 'zoom' || (provider === 'big_blue_button' && tier === bbbPlanTypes.commercial),
+      is: (provider, tier) =>
+        provider === 'zoom' || (provider === 'big_blue_button' && tier === bbbPlanTypes.commercial),
       then: Yup.string().required(intl.formatMessage(messages.launchUrlRequired)),
     }),
     launchEmail: Yup.string(),
@@ -71,6 +79,7 @@ const LiveSettings = ({
   };
 
   const handleSettingsSave = async (values) => {
+    // oxlint-disable-next-line @typescript-eslint/await-thenable - this dispatch() IS returning a promise.
     await dispatch(saveLiveConfiguration(courseId, values, navigate));
   };
 
@@ -93,9 +102,7 @@ const LiveSettings = ({
       enableReinitialize
     >
       {({ values, setFieldValue }) => (
-        (status === RequestStatus.IN_PROGRESS) ? (
-          <Loading />
-        ) : (
+        (status === RequestStatus.IN_PROGRESS) ? <Loading /> : (
           <>
             <h4 className="my-3">{intl.formatMessage(messages.selectProvider)}</h4>
             <SelectableBox.Set
@@ -115,7 +122,8 @@ const LiveSettings = ({
                 </SelectableBox>
               ))}
             </SelectableBox.Set>
-            {values.provider === 'zoom' ? <ZoomSettings values={values} />
+            {values.provider === 'zoom' ?
+              <ZoomSettings values={values} />
               : (
                 <BBBSettings
                   values={values}

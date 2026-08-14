@@ -1,12 +1,13 @@
-import React from 'react';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import { Button } from '@openedx/paragon';
 import messages from './messages';
 import { useSearchContext } from './SearchManager';
 
 type ClearFiltersButtonProps = {
-  variant?: 'link' | 'primary',
-  size?: 'sm' | 'md' | 'lg' | 'inline',
+  variant?: 'link' | 'primary';
+  size?: 'sm' | 'md' | 'lg' | 'inline';
+  onClear?: () => void;
+  canClear?: boolean;
 };
 
 /**
@@ -15,11 +16,17 @@ type ClearFiltersButtonProps = {
 const ClearFiltersButton = ({
   variant = 'link',
   size = 'sm',
+  onClear,
+  canClear,
 }: ClearFiltersButtonProps) => {
   const { canClearFilters, clearFilters } = useSearchContext();
-  if (canClearFilters) {
+  const onClick = () => {
+    clearFilters();
+    onClear?.();
+  };
+  if (canClearFilters || canClear) {
     return (
-      <Button variant={variant} size={size} onClick={clearFilters}>
+      <Button variant={variant} size={size} onClick={onClick}>
         <FormattedMessage {...messages.clearFilters} />
       </Button>
     );

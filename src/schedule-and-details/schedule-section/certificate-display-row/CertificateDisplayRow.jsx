@@ -2,7 +2,10 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { useIntl } from '@edx/frontend-platform/i18n';
 import {
-  Dropdown, Form, Collapsible, Icon,
+  Dropdown,
+  Form,
+  Collapsible,
+  Icon,
 } from '@openedx/paragon';
 import { InfoOutline } from '@openedx/paragon/icons';
 
@@ -21,6 +24,7 @@ const CertificateDisplayRow = ({
   availableDateErrorFeedback,
   certificatesDisplayBehavior,
   displayBehaviorErrorFeedback,
+  isEditable = true,
   onChange,
 }) => {
   const intl = useIntl();
@@ -53,7 +57,7 @@ const CertificateDisplayRow = ({
 
   const handleOnChange = (optionId) => {
     if (optionId !== CERTIFICATE_DISPLAY_BEHAVIOR.endWithDate) {
-      onChange('', 'certificateAvailableDate');
+      onChange(null, 'certificateAvailableDate');
     }
     onChange(optionId, 'certificatesDisplayBehavior');
   };
@@ -126,12 +130,17 @@ const CertificateDisplayRow = ({
             {intl.formatMessage(messages.certificateBehaviorLabel)}
           </Form.Label>
           <Dropdown claswsName="bg-white">
-            <Dropdown.Toggle id="certificate-behavior-dropdown" variant="outline-primary">
+            <Dropdown.Toggle id="certificate-behavior-dropdown" variant="outline-primary" disabled={!isEditable}>
               {certificateDisplayValue}
             </Dropdown.Toggle>
             <Dropdown.Menu>
               {dropdownOptions.map(({ id, label }) => (
-                <Dropdown.Item key={id} onClick={() => handleOnChange(id)}>
+                <Dropdown.Item
+                  key={id}
+                  onClick={isEditable
+                    ? () => handleOnChange(id)
+                    : undefined}
+                >
                   {label}
                 </Dropdown.Item>
               ))}
@@ -148,6 +157,7 @@ const CertificateDisplayRow = ({
               onChange={(date) => onChange(date, 'certificateAvailableDate')}
               isInvalid={!!availableDateErrorFeedback}
               controlName="certificateAvailableDate"
+              readonly={!isEditable}
             />
           )}
           {availableDateErrorFeedback && (

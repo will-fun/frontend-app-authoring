@@ -9,8 +9,12 @@ import {
   screen,
   waitFor,
   within,
-} from '../testUtils';
-import { mockContentSearchConfig } from '../search-manager/data/api.mock';
+} from '@src/testUtils';
+import { mockContentSearchConfig } from '@src/search-manager/data/api.mock';
+import { type ToastActionData } from '@src/generic/toast-context';
+import { libraryBlockChangesUrl } from '@src/course-unit/data/api';
+import { CourseAuthoringProvider } from '@src/CourseAuthoringContext';
+import { useCourseUserPermissions } from '@src/authz/hooks';
 import { CourseLibraries } from './CourseLibraries';
 import {
   mockGetEntityLinks,
@@ -18,8 +22,6 @@ import {
   mockFetchIndexDocuments,
   mockUseLibBlockMetadata,
 } from './data/api.mocks';
-import { libraryBlockChangesUrl } from '../course-unit/data/api';
-import { type ToastActionData } from '../generic/toast-context';
 
 mockContentSearchConfig.applyMock();
 mockGetEntityLinks.applyMock();
@@ -28,7 +30,7 @@ mockUseLibBlockMetadata.applyMock();
 
 const searchParamsGetMock = jest.fn();
 let axiosMock: MockAdapter;
-let mockShowToast: (message: string, action?: ToastActionData | undefined) => void;
+let mockShowToast: (message: string, action?: ToastActionData) => void;
 let queryClient: QueryClient;
 
 jest.mock('../studio-home/hooks', () => ({
@@ -47,6 +49,18 @@ jest.mock('react-router-dom', () => ({
   }],
 }));
 
+jest.mock('@src/authz/hooks', () => ({
+  useCourseUserPermissions: jest.fn(),
+}));
+
+const mockPermissions = (overrides = {}) =>
+  jest.mocked(useCourseUserPermissions).mockReturnValue({
+    isLoading: false,
+    isAuthzEnabled: true,
+    canManageLibraryUpdates: true,
+    ...overrides,
+  } as ReturnType<typeof useCourseUserPermissions>);
+
 describe('<CourseLibraries />', () => {
   beforeEach(() => {
     initializeMocks();
@@ -54,11 +68,16 @@ describe('<CourseLibraries />', () => {
     mockFetchIndexDocuments.applyMock();
     localStorage.clear();
     searchParamsGetMock.mockReturnValue('all');
+    mockPermissions();
   });
 
   const renderCourseLibrariesPage = async (courseKey?: string) => {
     const courseId = courseKey || mockGetEntityLinks.courseKey;
-    render(<CourseLibraries courseId={courseId} />);
+    render(
+      <CourseAuthoringProvider courseId={courseId}>
+        <CourseLibraries />
+      </CourseAuthoringProvider>,
+    );
   };
 
   it('shows the spinner before the query is complete', async () => {
@@ -74,6 +93,21 @@ describe('<CourseLibraries />', () => {
     expect(emptyMsg).toBeInTheDocument();
   });
 
+  it('shows PermissionDeniedAlert when user lacks manage library updates permission', async () => {
+    mockPermissions({ canManageLibraryUpdates: false });
+    await renderCourseLibrariesPage();
+    expect(await screen.findByTestId('permissionDeniedAlert')).toBeInTheDocument();
+    expect(screen.queryByText('Libraries')).not.toBeInTheDocument();
+  });
+
+  it('shows a loading spinner while permissions are loading', async () => {
+    mockPermissions({ isLoading: true, canManageLibraryUpdates: false });
+    await renderCourseLibrariesPage();
+    expect(await screen.findByRole('status')).toBeInTheDocument();
+    expect(screen.queryByTestId('permissionDeniedAlert')).not.toBeInTheDocument();
+    expect(screen.queryByText('Libraries')).not.toBeInTheDocument();
+  });
+
   it('shows alert when out of sync components are present', async () => {
     const user = userEvent.setup();
     await renderCourseLibrariesPage(mockGetEntityLinks.courseKey);
@@ -84,16 +118,21 @@ describe('<CourseLibraries />', () => {
 
     await user.click(allTab);
     const alert = await screen.findByRole('alert');
-    expect(await within(alert).findByText(
-      '7 library components are out of sync. Review updates to accept or ignore changes',
-    )).toBeInTheDocument();
+    expect(
+      await within(alert).findByText(
+        '7 library components are out of sync. Review updates to accept or ignore changes',
+      ),
+    ).toBeInTheDocument();
     expect(allTab).toHaveAttribute('aria-selected', 'true');
 
     const reviewBtn = await screen.findByRole('button', { name: 'Review' });
     await user.click(reviewBtn);
 
     expect(allTab).toHaveAttribute('aria-selected', 'false');
-    expect(await screen.findByRole('tab', { name: 'Review Content Updates 7' })).toHaveAttribute('aria-selected', 'true');
+    expect(await screen.findByRole('tab', { name: 'Review Content Updates 7' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
     expect(alert).not.toBeInTheDocument();
   });
 
@@ -108,9 +147,11 @@ describe('<CourseLibraries />', () => {
     expect(allTab).toHaveAttribute('aria-selected', 'true');
 
     const alert = await screen.findByRole('alert');
-    expect(await within(alert).findByText(
-      '7 library components are out of sync. Review updates to accept or ignore changes',
-    )).toBeInTheDocument();
+    expect(
+      await within(alert).findByText(
+        '7 library components are out of sync. Review updates to accept or ignore changes',
+      ),
+    ).toBeInTheDocument();
     const dismissBtn = await screen.findByRole('button', { name: 'Dismiss' });
     await user.click(dismissBtn);
     expect(allTab).toHaveAttribute('aria-selected', 'true');
@@ -118,7 +159,10 @@ describe('<CourseLibraries />', () => {
     // review updates button
     const reviewActionBtn = await screen.findByRole('button', { name: 'Review Updates' });
     await user.click(reviewActionBtn);
-    expect(await screen.findByRole('tab', { name: 'Review Content Updates 7' })).toHaveAttribute('aria-selected', 'true');
+    expect(await screen.findByRole('tab', { name: 'Review Content Updates 7' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
   });
 
   it('show alert if max lastPublishedDate is greated than the local storage value', async () => {
@@ -137,9 +181,11 @@ describe('<CourseLibraries />', () => {
 
     await user.click(allTab);
     const alert = await screen.findByRole('alert');
-    expect(await within(alert).findByText(
-      '7 library components are out of sync. Review updates to accept or ignore changes',
-    )).toBeInTheDocument();
+    expect(
+      await within(alert).findByText(
+        '7 library components are out of sync. Review updates to accept or ignore changes',
+      ),
+    ).toBeInTheDocument();
   });
 
   it('doesnt show alert if max lastPublishedDate is less than the local storage value', async () => {
@@ -176,7 +222,11 @@ describe('<CourseLibraries ReviewTab />', () => {
 
   const renderCourseLibrariesReviewPage = async (courseKey?: string) => {
     const courseId = courseKey || mockGetEntityLinks.courseKey;
-    render(<CourseLibraries courseId={courseId} />);
+    render(
+      <CourseAuthoringProvider courseId={courseId}>
+        <CourseLibraries />
+      </CourseAuthoringProvider>,
+    );
   };
 
   it('shows the spinner before the query is complete', async () => {
@@ -225,7 +275,9 @@ describe('<CourseLibraries ReviewTab />', () => {
     });
     expect(axiosMock.history.post[0].url).toEqual(libraryBlockChangesUrl(usageKey));
     expect(mockShowToast).toHaveBeenCalledWith(expectedToastMsg);
-    expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: ['courseLibraries', 'course-v1:OpenEdx+DemoX+CourseX'] });
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({
+      queryKey: ['courseLibraries', 'course-v1:OpenEdx+DemoX+CourseX'],
+    });
   });
 
   test.each([
@@ -256,19 +308,23 @@ describe('<CourseLibraries ReviewTab />', () => {
     });
     expect(axiosMock.history.post[0].url).toEqual(libraryBlockChangesUrl(usageKey));
     expect(mockShowToast).toHaveBeenCalledWith(expectedToastMsg);
-    expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: ['courseLibraries', 'course-v1:OpenEdx+DemoX+CourseX'] });
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({
+      queryKey: ['courseLibraries', 'course-v1:OpenEdx+DemoX+CourseX'],
+    });
   });
 
   test.each([
     {
       label: 'ignore change works with components',
       itemIndex: 0,
-      expectedToastMsg: '"Dropdown" will remain out of sync with library content. You will be notified when this component is updated again.',
+      expectedToastMsg:
+        '"Dropdown" will remain out of sync with library content. You will be notified when this component is updated again.',
     },
     {
       label: 'ignore change works with containers',
       itemIndex: 5,
-      expectedToastMsg: '"Unit 1" will remain out of sync with library content. You will be notified when this component is updated again.',
+      expectedToastMsg:
+        '"Unit 1" will remain out of sync with library content. You will be notified when this component is updated again.',
     },
   ])('$label', async ({ itemIndex, expectedToastMsg }) => {
     const user = userEvent.setup();
@@ -289,19 +345,23 @@ describe('<CourseLibraries ReviewTab />', () => {
     });
     expect(axiosMock.history.delete[0].url).toEqual(libraryBlockChangesUrl(usageKey));
     expect(mockShowToast).toHaveBeenCalledWith(expectedToastMsg);
-    expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: ['courseLibraries', 'course-v1:OpenEdx+DemoX+CourseX'] });
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({
+      queryKey: ['courseLibraries', 'course-v1:OpenEdx+DemoX+CourseX'],
+    });
   });
 
   test.each([
     {
       label: 'ignore change works with components',
       itemIndex: 0,
-      expectedToastMsg: '"Dropdown" will remain out of sync with library content. You will be notified when this component is updated again.',
+      expectedToastMsg:
+        '"Dropdown" will remain out of sync with library content. You will be notified when this component is updated again.',
     },
     {
       label: 'ignore change works with containers',
       itemIndex: 5,
-      expectedToastMsg: '"Unit 1" will remain out of sync with library content. You will be notified when this component is updated again.',
+      expectedToastMsg:
+        '"Unit 1" will remain out of sync with library content. You will be notified when this component is updated again.',
     },
   ])('$label', async ({ itemIndex, expectedToastMsg }) => {
     const user = userEvent.setup();
@@ -325,7 +385,9 @@ describe('<CourseLibraries ReviewTab />', () => {
     });
     expect(axiosMock.history.delete[0].url).toEqual(libraryBlockChangesUrl(usageKey));
     expect(mockShowToast).toHaveBeenCalledWith(expectedToastMsg);
-    expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: ['courseLibraries', 'course-v1:OpenEdx+DemoX+CourseX'] });
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({
+      queryKey: ['courseLibraries', 'course-v1:OpenEdx+DemoX+CourseX'],
+    });
   });
 
   it('should show sync modal with local changes', async () => {

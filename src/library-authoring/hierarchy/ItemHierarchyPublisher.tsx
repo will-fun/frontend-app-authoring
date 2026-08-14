@@ -81,35 +81,10 @@ export const ItemHierarchyPublisher = ({
     );
   };
 
-  const parentWarningMessage = () => {
-    let parentCount: number;
-    let parentMessage: MessageDescriptor;
-
-    switch (itemType) {
-      case ContainerType.Section:
-        // Section has no parents
-        return undefined;
-      case ContainerType.Subsection:
-        parentMessage = messages.publishSubsectionWithParentWarning;
-        parentCount = hierarchy.sections.length;
-        break;
-      case ContainerType.Unit:
-        parentMessage = messages.publishUnitWithParentWarning;
-        parentCount = hierarchy.subsections.length;
-        break;
-      default: // The item is a component
-        parentMessage = messages.publishComponentsWithParentWarning;
-        parentCount = hierarchy.units.length;
-    }
-    return intl.formatMessage(parentMessage, { parentCount, highlight });
-  };
-
   return (
-    <Container
-      className="p-3 status-box draft-status"
-    >
+    <Container className="p-3 status-box draft-status">
       <h4>{intl.formatMessage(messages.publishConfirmHeading)}</h4>
-      <p>{childWarningMessage()} {parentWarningMessage()}</p>
+      <p>{childWarningMessage()}</p>
       <ItemHierarchy showPublishStatus />
       <ActionRow>
         <Button
@@ -123,10 +98,10 @@ export const ItemHierarchyPublisher = ({
           {intl.formatMessage(messages.publishCancel)}
         </Button>
         <LoadingButton
-          onClick={async (e) => {
+          onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            await handlePublish();
+            handlePublish();
           }}
           variant="primary rounded-0"
           label={intl.formatMessage(messages.publishConfirm)}

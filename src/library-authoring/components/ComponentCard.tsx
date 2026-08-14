@@ -3,22 +3,22 @@ import {
   ActionRow,
 } from '@openedx/paragon';
 
+import { usePublishedFilterContext } from '@src/library-authoring/common/context/PublishedFilterContext';
 import { type ContentHit, PublishStatus } from '../../search-manager';
 import { useComponentPickerContext } from '../common/context/ComponentPickerContext';
-import { useLibraryContext } from '../common/context/LibraryContext';
 import { SidebarBodyItemId, useSidebarContext } from '../common/context/SidebarContext';
 import AddComponentWidget from './AddComponentWidget';
 import BaseCard from './BaseCard';
 import { ComponentMenu } from './ComponentMenu';
 
 type ComponentCardProps = {
-  hit: ContentHit,
+  hit: ContentHit;
 };
 
 const ComponentCard = ({ hit }: ComponentCardProps) => {
-  const { showOnlyPublished } = useLibraryContext();
   const { openComponentInfoSidebar, openItemSidebar, sidebarItemInfo } = useSidebarContext();
   const { componentPickerMode } = useComponentPickerContext();
+  const { showOnlyPublished } = usePublishedFilterContext();
 
   const {
     blockType,
@@ -53,15 +53,13 @@ const ComponentCard = ({ hit }: ComponentCardProps) => {
       displayName={displayName}
       description={componentDescription}
       tags={tags}
-      actions={(
+      actions={
         <ActionRow>
-          {componentPickerMode ? (
-            <AddComponentWidget usageKey={usageKey} blockType={blockType} />
-          ) : (
-            <ComponentMenu usageKey={usageKey} />
-          )}
+          {componentPickerMode ?
+            <AddComponentWidget usageKey={usageKey} blockType={blockType} /> :
+            <ComponentMenu usageKey={usageKey} />}
         </ActionRow>
-      )}
+      }
       hasUnpublishedChanges={publishStatus !== PublishStatus.Published}
       onSelect={selectComponent}
       selected={selected}

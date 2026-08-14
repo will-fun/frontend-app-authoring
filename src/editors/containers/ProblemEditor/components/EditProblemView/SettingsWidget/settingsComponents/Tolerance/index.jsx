@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { injectIntl, FormattedMessage, intlShape } from '@edx/frontend-platform/i18n';
+import { FormattedMessage, useIntl } from '@edx/frontend-platform/i18n';
 import { Alert, Form } from '@openedx/paragon';
 import PropTypes from 'prop-types';
 import SettingsOption from '../../SettingsOption';
@@ -46,18 +46,19 @@ export const getSummary = ({ tolerance, intl }) => {
   }
 };
 
-const ToleranceCard = ({
+export const ToleranceCard = ({
   tolerance,
   answers,
   updateSettings,
   correctAnswerCount,
-  // inject
-  intl,
 }) => {
+  const intl = useIntl();
   const isAnswerRange = isAnswerRangeSet({ answers });
   const hasMultipleCorrectAnswers = correctAnswerCount > 1;
   let summary = getSummary({ tolerance, intl });
-  useEffect(() => { summary = getSummary({ tolerance, intl }); }, [tolerance]);
+  useEffect(() => {
+    summary = getSummary({ tolerance, intl });
+  }, [tolerance]);
   useEffect(() => {
     if (hasMultipleCorrectAnswers) {
       updateSettings({ tolerance: { value: null, type: ToleranceTypes.none.type } });
@@ -70,24 +71,18 @@ const ToleranceCard = ({
       summary={summary}
       none={tolerance.type === ToleranceTypes.none.type}
     >
-      { isAnswerRange
-       && (
-       <Alert
-         variant="info"
-       >
-         <FormattedMessage {...messages.toleranceAnswerRangeWarning} />
-       </Alert>
-       )}
-      {
-        hasMultipleCorrectAnswers
+      {isAnswerRange
         && (
-          <Alert
-            variant="info"
-          >
+          <Alert variant="info">
+            <FormattedMessage {...messages.toleranceAnswerRangeWarning} />
+          </Alert>
+        )}
+      {hasMultipleCorrectAnswers
+        && (
+          <Alert variant="info">
             <FormattedMessage {...messages.toleranceMultipleAnswersWarning} />
           </Alert>
-        )
-      }
+        )}
       <div className="mb-3">
         <span>
           <FormattedMessage {...messages.toleranceSettingText} />
@@ -109,20 +104,19 @@ const ToleranceCard = ({
             </option>
           ))}
         </Form.Control>
-        { tolerance?.type !== ToleranceTypes.none.type && (!isAnswerRange || !hasMultipleCorrectAnswers)
+        {tolerance?.type !== ToleranceTypes.none.type && (!isAnswerRange || !hasMultipleCorrectAnswers)
           && (
-          <Form.Control
-            className="mt-4"
-            type="number"
-            min={0}
-            step={0.1}
-            value={tolerance.value}
-            onChange={handleToleranceValueChange({ updateSettings, tolerance, answers })}
-            floatingLabel={intl.formatMessage(messages.toleranceValueInputLabel)}
-          />
+            <Form.Control
+              className="mt-4"
+              type="number"
+              min={0}
+              step={0.1}
+              value={tolerance.value}
+              onChange={handleToleranceValueChange({ updateSettings, tolerance, answers })}
+              floatingLabel={intl.formatMessage(messages.toleranceValueInputLabel)}
+            />
           )}
       </Form.Group>
-
     </SettingsOption>
   );
 };
@@ -141,8 +135,4 @@ ToleranceCard.propTypes = {
     unselectedFeedback: PropTypes.string,
   })).isRequired,
   updateSettings: PropTypes.func.isRequired,
-  intl: intlShape.isRequired,
 };
-
-export const ToleranceCardInternal = ToleranceCard; // For testing only
-export default injectIntl(ToleranceCard);

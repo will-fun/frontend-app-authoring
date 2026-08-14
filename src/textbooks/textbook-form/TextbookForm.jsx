@@ -17,11 +17,11 @@ import {
   useToggle,
 } from '@openedx/paragon';
 
-import FormikControl from '../../generic/FormikControl';
-import PromptIfDirty from '../../generic/prompt-if-dirty/PromptIfDirty';
-import ModalDropzone from '../../generic/modal-dropzone/ModalDropzone';
-import { useModel } from '../../generic/model-store';
-import { UPLOAD_FILE_MAX_SIZE } from '../../constants';
+import { useCourseAuthoringContext } from '@src/CourseAuthoringContext';
+import FormikControl from '@src/generic/FormikControl';
+import PromptIfDirty from '@src/generic/prompt-if-dirty/PromptIfDirty';
+import ModalDropzone from '@src/generic/modal-dropzone/ModalDropzone';
+import { UPLOAD_FILE_MAX_SIZE } from '@src/constants';
 import textbookFormValidationSchema from './validations';
 import messages from './messages';
 
@@ -30,11 +30,10 @@ const TextbookForm = ({
   initialFormValues,
   onSubmit,
   onSavingStatus,
-  courseId,
 }) => {
   const intl = useIntl();
 
-  const courseDetail = useModel('courseDetails', courseId);
+  const { courseDetail } = useCourseAuthoringContext();
   const courseTitle = courseDetail ? courseDetail?.name : '';
 
   const [currentTextbookIndex, setCurrentTextbookIndex] = useState(0);
@@ -61,7 +60,11 @@ const TextbookForm = ({
         validateOnMount
       >
         {({
-          values, handleSubmit, isValid, dirty, setFieldValue,
+          values,
+          handleSubmit,
+          isValid,
+          dirty,
+          setFieldValue,
         }) => (
           <>
             <Form.Group size="sm" className="form-field">
@@ -82,7 +85,8 @@ const TextbookForm = ({
               render={(arrayHelpers) => (
                 <>
                   {!!values?.chapters.length && values.chapters.map(({ title, url }, index) => (
-                    <div className="form-chapters-fields" data-testid="form-chapters-fields">
+                    // eslint-disable-next-line react/no-array-index-key
+                    <div className="form-chapters-fields" data-testid="form-chapters-fields" key={index}>
                       <Form.Group size="sm" className="form-field">
                         <Form.Label size="sm" className="form-label font-weight-bold required text-black">
                           {intl.formatMessage(messages.chapterTitleLabel)} *
@@ -174,12 +178,12 @@ const TextbookForm = ({
                 { maxSize: UPLOAD_FILE_MAX_SIZE / (1000 * 1000) },
               )}
               onSelectFile={setSelectedFile}
-              previewComponent={(
+              previewComponent={
                 <div className="modal-preview">
                   <Icon src={PdfIcon} className="modal-preview-icon" />
                   <span className="modal-preview-text">{selectedFile}</span>
                 </div>
-              )}
+              }
               maxSize={UPLOAD_FILE_MAX_SIZE}
             />
             <PromptIfDirty dirty={dirty} />
@@ -195,7 +199,6 @@ TextbookForm.propTypes = {
   initialFormValues: PropTypes.shape({}).isRequired,
   onSubmit: PropTypes.func.isRequired,
   onSavingStatus: PropTypes.func.isRequired,
-  courseId: PropTypes.string.isRequired,
 };
 
 export default TextbookForm;

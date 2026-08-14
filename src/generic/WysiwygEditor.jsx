@@ -1,6 +1,5 @@
-import React from 'react';
 import PropTypes from 'prop-types';
-import { useSelector } from 'react-redux';
+import { useCourseAuthoringContext } from '@src/CourseAuthoringContext';
 import TinyMceWidget, { prepareEditorRef } from '../editors/sharedComponents/TinyMceWidget';
 
 import { DEFAULT_EMPTY_WYSIWYG_VALUE } from '../constants';
@@ -11,10 +10,14 @@ export const SUPPORTED_TEXT_EDITORS = {
 };
 
 export const WysiwygEditor = ({
-  initialValue, editorType, onChange, minHeight,
+  initialValue,
+  editorType,
+  onChange,
+  minHeight,
+  disabled = false,
 }) => {
   const { editorRef, refReady, setEditorRef } = prepareEditorRef();
-  const { courseId } = useSelector((state) => state.courseDetail);
+  const { courseId } = useCourseAuthoringContext();
   const isEquivalentCodeExtraSpaces = (first, second) => {
     // Utils allows to compare code extra spaces
     const removeWhitespace = (str) => str.replace(/\s/g, '');
@@ -28,7 +31,8 @@ export const WysiwygEditor = ({
   };
 
   // default initial string returned onEditorChange if empty input
-  const needToChange = (value) => !isEquivalentCodeQuotes(initialValue, value)
+  const needToChange = (value) =>
+    !isEquivalentCodeQuotes(initialValue, value)
     && !isEquivalentCodeExtraSpaces(initialValue, value)
     && (initialValue !== DEFAULT_EMPTY_WYSIWYG_VALUE || value !== '');
 
@@ -61,6 +65,7 @@ export const WysiwygEditor = ({
       images={{}}
       enableImageUpload={false}
       onEditorChange={() => ({})}
+      disabled={disabled}
     />
   );
 };

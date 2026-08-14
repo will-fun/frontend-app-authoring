@@ -1,6 +1,9 @@
 import React, { useMemo } from 'react';
 import {
-  render, screen, within, fireEvent,
+  render,
+  screen,
+  within,
+  fireEvent,
 } from '@testing-library/react';
 import { IntlProvider } from '@edx/frontend-platform/i18n';
 import TagsTree from './TagsTree';
@@ -56,5 +59,18 @@ describe('<TagsTree>', () => {
     });
     fireEvent.click(xButton);
     expect(mockRemoveTagHandler).toHaveBeenCalled();
+  });
+
+  it('should render library lock icon', async () => {
+    render(
+      <RootWrapper
+        tags={contentTaxonomyTagsTreeMock}
+        removeTagHandler={mockRemoveTagHandler}
+        isEditMode
+      />,
+    );
+
+    const view = screen.getByText(/hierarchical taxonomy tag 3\.4\.50/i);
+    expect(within(view).getByTestId('lock-icon')).toBeInTheDocument();
   });
 });

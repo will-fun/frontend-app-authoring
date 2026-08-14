@@ -1,10 +1,16 @@
 import { camelCaseObject, getConfig } from '@edx/frontend-platform';
 import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
+import type { UsageKeyBlock, UserTaskStatusWithUuid } from '@src/data/types';
 
 const getApiBaseUrl = () => getConfig().STUDIO_BASE_URL;
 
 export const getEntityLinksByDownstreamContextUrl = () => `${getApiBaseUrl()}/api/contentstore/v2/downstreams/`;
-export const getEntityLinksSummaryByDownstreamContextUrl = (downstreamContextKey: string) => `${getApiBaseUrl()}/api/contentstore/v2/downstreams/${downstreamContextKey}/summary`;
+export const getEntityLinksSummaryByDownstreamContextUrl = (downstreamContextKey: string) =>
+  `${getApiBaseUrl()}/api/contentstore/v2/downstreams/${downstreamContextKey}/summary`;
+export const courseLegacyLibraryContentBlocks = (courseId: string) =>
+  `${getApiBaseUrl()}/api/courses/v1/migrate_legacy_content_blocks/${courseId}/`;
+export const courseLegacyLibraryContentTaskStatus = (courseId: string, taskId: string) =>
+  `${courseLegacyLibraryContentBlocks(courseId)}${taskId}/`;
 
 export interface PaginatedData<T> {
   next: string | null;
@@ -14,7 +20,7 @@ export interface PaginatedData<T> {
   count: number;
   numPages: number;
   currentPage: number;
-  results: T,
+  results: T;
 }
 
 export interface BasePublishableEntityLink {
@@ -81,3 +87,39 @@ export const getEntityLinksSummaryByDownstreamContext = async (
     .get(getEntityLinksSummaryByDownstreamContextUrl(downstreamContextKey));
   return camelCaseObject(data);
 };
+
+/**
+ * Get all legacy library blocks that ready to migrate to library v2 item bank in given course
+ */
+export async function getCourseReadyToMigrateLegacyLibContentBlocks(courseId: string): Promise<UsageKeyBlock[]> {
+  const { data } = await getAuthenticatedHttpClient()
+    .get(courseLegacyLibraryContentBlocks(courseId));
+
+  return camelCaseObject(data);
+}
+
+// istanbul ignore next
+/**
+ * Migrate legacy library blocks that ready to migrate to library v2 item bank in given course
+ */
+export async function migrateCourseReadyToMigrateLegacyLibContentBlocks(
+  courseId: string,
+): Promise<UserTaskStatusWithUuid> {
+  const { data } = await getAuthenticatedHttpClient()
+    .post(courseLegacyLibraryContentBlocks(courseId));
+
+  return camelCaseObject(data);
+}
+
+/**
+ * Get task status of legacy library blocks reference update task.
+ */
+export async function getCourseLegacyLibRefUpdateTaskStatus(
+  courseId: string,
+  taskId: string,
+): Promise<UserTaskStatusWithUuid> {
+  const { data } = await getAuthenticatedHttpClient()
+    .get(courseLegacyLibraryContentTaskStatus(courseId, taskId));
+
+  return camelCaseObject(data);
+}

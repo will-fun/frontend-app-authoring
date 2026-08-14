@@ -7,10 +7,10 @@ import {
   useState,
 } from 'react';
 import { useParams } from 'react-router-dom';
-import { useStateWithUrlSearchParam } from '../../../hooks';
+import { useStateWithUrlSearchParam } from '@src/hooks';
+import { LibQueryParamKeys, useLibraryRoutes } from '@src/library-authoring/routes';
 import { useComponentPickerContext } from './ComponentPickerContext';
-import { useLibraryContext } from './LibraryContext';
-import { useLibraryRoutes } from '../../routes';
+import { useOptionalLibraryContext } from './LibraryContext';
 
 export enum SidebarBodyItemId {
   AddContent = 'add-content',
@@ -45,6 +45,7 @@ export const CONTAINER_INFO_TABS = {
   Manage: 'manage',
   Usage: 'usage',
   Settings: 'settings',
+  Details: 'details',
 } as const;
 export type ContainerInfoTab = typeof CONTAINER_INFO_TABS[keyof typeof CONTAINER_INFO_TABS];
 export const isContainerInfoTab = (tab: string): tab is ContainerInfoTab => (
@@ -60,7 +61,8 @@ const DEFAULT_TAB = {
 type SidebarInfoTab = ComponentInfoTab | CollectionInfoTab | ContainerInfoTab;
 const toSidebarInfoTab = (tab: string): SidebarInfoTab | undefined => (
   isComponentInfoTab(tab) || isCollectionInfoTab(tab) || isContainerInfoTab(tab)
-    ? tab : undefined
+    ? tab :
+    undefined
 );
 
 export interface DefaultTabs {
@@ -104,7 +106,6 @@ export type SidebarContextData = {
  * Sidebar Context.
  *
  * Get this using `useSidebarContext()`
- *
  */
 const SidebarContext = createContext<SidebarContextData | undefined>(undefined);
 
@@ -130,14 +131,14 @@ export const SidebarProvider = ({
 
   const [sidebarTab, setSidebarTab] = useStateWithUrlSearchParam<SidebarInfoTab>(
     defaultTab.component,
-    'st',
+    LibQueryParamKeys.SidebarTab,
     (value: string) => toSidebarInfoTab(value),
     (value: SidebarInfoTab) => value.toString(),
   );
 
   const [sidebarAction, setSidebarAction] = useStateWithUrlSearchParam<SidebarActions>(
     SidebarActions.None,
-    'sa',
+    LibQueryParamKeys.SidebarActions,
     (value: string) => Object.values(SidebarActions).find((enumValue) => value === enumValue),
     (value: SidebarActions) => value.toString(),
   );
@@ -187,7 +188,7 @@ export const SidebarProvider = ({
 
   // Set the initial sidebar state based on the URL parameters and context.
   const { selectedItemId, index: indexParam } = useParams();
-  const { collectionId, containerId } = useLibraryContext();
+  const { collectionId, containerId } = useOptionalLibraryContext();
   const { componentPickerMode } = useComponentPickerContext();
 
   useEffect(() => {

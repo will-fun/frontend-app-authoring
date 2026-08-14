@@ -13,6 +13,11 @@ const messages = defineMessages({
     id: 'course-authoring.studio-home.add-new-library.btn.text',
     defaultMessage: 'New library',
   },
+  addRolesPermissionsBtnText: {
+    id: 'course-authoring.studio-home.add-roles-permissions.btn.text',
+    defaultMessage: 'Roles and permissions',
+    description: 'Text for the button that links to the Admin Console Roles and Permissions page.',
+  },
   homePageLoadFailedMessage: {
     id: 'course-authoring.studio-home.page-load.failed.message',
     defaultMessage: 'Failed to load Studio home. Please try again later.',
@@ -72,11 +77,6 @@ const messages = defineMessages({
   organizationInputNoOptions: {
     id: 'course-authoring.studio-home.organization.input.no-options',
     defaultMessage: 'No options',
-  },
-  libraryMigrationStatusText: {
-    id: 'course-authoring.studio-home.library-v1.card.status',
-    description: 'Status text in v1 library card in studio informing user of its migration status',
-    defaultMessage: 'Previously migrated library. Any problem bank links were already moved to',
   },
 });
 

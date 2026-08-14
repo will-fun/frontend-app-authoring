@@ -8,7 +8,7 @@ import DeleteModal from '@src/generic/delete-modal/DeleteModal';
 import { ToastContext } from '@src/generic/toast-context';
 import { type ContentHit } from '@src/search-manager';
 import { useSidebarContext } from '../common/context/SidebarContext';
-import { useLibraryContext } from '../common/context/LibraryContext';
+import { useOptionalLibraryContext } from '../common/context/LibraryContext';
 import {
   useContentFromSearchIndex,
   useDeleteLibraryBlock,
@@ -25,18 +25,21 @@ const ComponentDeleter = ({ usageKey, close }: Props) => {
   const intl = useIntl();
   const { sidebarItemInfo, closeLibrarySidebar } = useSidebarContext();
   const { showToast } = useContext(ToastContext);
-  const { containerId: currentUnitId } = useLibraryContext();
+  const { containerId: currentUnitId } = useOptionalLibraryContext();
   const sidebarComponentUsageKey = sidebarItemInfo?.id;
 
   const restoreComponentMutation = useRestoreLibraryBlock();
-  const { data: dataDownstreamLinks, isPending: isPendingLinks } = useEntityLinks({ upstreamKey: usageKey, contentType: 'components' });
+  const { data: dataDownstreamLinks, isPending: isPendingLinks } = useEntityLinks({
+    upstreamKey: usageKey,
+    contentType: 'components',
+  });
   const downstreamCount = dataDownstreamLinks?.length ?? 0;
 
   const restoreComponent = useCallback(async () => {
     try {
       await restoreComponentMutation.mutateAsync({ usageKey });
       showToast(intl.formatMessage(messages.undoDeleteComponentToastSuccess));
-    } catch (e) {
+    } catch {
       showToast(intl.formatMessage(messages.undoDeleteComponentToastFailed));
     }
   }, []);

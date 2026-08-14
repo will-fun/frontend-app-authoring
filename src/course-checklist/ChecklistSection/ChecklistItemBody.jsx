@@ -5,24 +5,22 @@ import { ActionRow, Button, Icon } from '@openedx/paragon';
 import { CheckCircle, RadioButtonUnchecked } from '@openedx/paragon/icons';
 import { getConfig } from '@edx/frontend-platform';
 
-import { useWaffleFlags } from '../../data/apiHooks';
+import { useWaffleFlags } from '@src/data/apiHooks';
+
 import messages from './messages';
 
 const getUpdateLinks = (courseId, waffleFlags) => {
   const baseUrl = getConfig().STUDIO_BASE_URL;
-  const isLegacyGradingUrl = !waffleFlags.useNewGradingPage;
   const isLegacyCertificateUrl = !waffleFlags.useNewCertificatesPage;
-  const isLegacyCourseDatesUrl = !waffleFlags.useNewScheduleDetailsPage;
   const isLegacyOutlineUrl = !waffleFlags.useNewCourseOutlinePage;
 
   return {
     welcomeMessage: `/course/${courseId}/course_info`,
-    gradingPolicy: isLegacyGradingUrl
-      ? `${baseUrl}/settings/grading/${courseId}` : `/course/${courseId}/settings/grading`,
+    gradingPolicy: `/course/${courseId}/settings/grading`,
     certificate: isLegacyCertificateUrl
-      ? `${baseUrl}/certificates/${courseId}` : `/course/${courseId}/certificates`,
-    courseDates: isLegacyCourseDatesUrl
-      ? `${baseUrl}/settings/details/${courseId}#schedule` : `/course/${courseId}/settings/details/#schedule`,
+      ? `${baseUrl}/certificates/${courseId}` :
+      `/course/${courseId}/certificates`,
+    courseDates: `/course/${courseId}/settings/details/#schedule`,
     proctoringEmail: `${baseUrl}/pages-and-resources/proctoring/settings`,
     outline: isLegacyOutlineUrl ? `${baseUrl}/course/${courseId}` : `/course/${courseId}`,
   };
@@ -40,22 +38,24 @@ const ChecklistItemBody = ({
   return (
     <ActionRow>
       <div className="mr-3" id={`icon-${checkId}`} data-testid={`icon-${checkId}`}>
-        {isCompleted ? (
-          <Icon
-            data-testid="completed-icon"
-            src={CheckCircle}
-            className="text-success"
-            style={{ height: '32px', width: '32px' }}
-            screenReaderText={intl.formatMessage(messages.completedItemLabel)}
-          />
-        ) : (
-          <Icon
-            data-testid="uncompleted-icon"
-            src={RadioButtonUnchecked}
-            style={{ height: '32px', width: '32px' }}
-            screenReaderText={intl.formatMessage(messages.uncompletedItemLabel)}
-          />
-        )}
+        {isCompleted ?
+          (
+            <Icon
+              data-testid="completed-icon"
+              src={CheckCircle}
+              className="text-success"
+              style={{ height: '32px', width: '32px' }}
+              screenReaderText={intl.formatMessage(messages.completedItemLabel)}
+            />
+          ) :
+          (
+            <Icon
+              data-testid="uncompleted-icon"
+              src={RadioButtonUnchecked}
+              style={{ height: '32px', width: '32px' }}
+              screenReaderText={intl.formatMessage(messages.uncompletedItemLabel)}
+            />
+          )}
       </div>
       <div>
         <div>

@@ -4,7 +4,8 @@ import classNames from 'classnames';
 import { breakpoints, useWindowSize } from '@openedx/paragon';
 import { useIntl } from '@edx/frontend-platform/i18n';
 
-import Loading from '../../generic/Loading';
+import Loading from '@src/generic/Loading';
+
 import { RequestStatus } from '../../data/constants';
 import SequenceNavigation from './sequence-navigation/SequenceNavigation';
 import messages from './messages';
@@ -23,7 +24,9 @@ const Sequence = ({
 
   const defaultContent = (
     <div className="sequence-container d-inline-flex flex-row">
-      <div className={classNames('sequence w-100', { 'position-relative': shouldDisplayNotificationTriggerInSequence })}>
+      <div
+        className={classNames('sequence w-100', { 'position-relative': shouldDisplayNotificationTriggerInSequence })}
+      >
         <SequenceNavigation
           sequenceId={sequenceId}
           unitId={unitId}
@@ -40,7 +43,7 @@ const Sequence = ({
   const isLoading = sequenceStatus === IN_PROGRESS || (sequenceStatus === FAILED && sequenceMightBeUnit);
   if (isLoading) {
     if (!sequenceId) {
-      return (<div>{intl.formatMessage(messages.sequenceNoContent)}</div>);
+      return <div>{intl.formatMessage(messages.sequenceNoContent)}</div>;
     }
 
     return <Loading />;

@@ -1,9 +1,13 @@
 import { camelCaseObject } from '@edx/frontend-platform';
 
 import {
-  initializeMocks, render, screen, within,
-} from '../../testUtils';
-import { getApiWaffleFlagsUrl } from '../../data/api';
+  initializeMocks,
+  render,
+  screen,
+  within,
+} from '@src/testUtils';
+import { getApiWaffleFlagsUrl } from '@src/data/api';
+
 import { generateCourseLaunchData } from '../factories/mockApiResponses';
 import { checklistItems } from './utils/courseChecklistData';
 import messages from './messages';
@@ -36,9 +40,7 @@ describe('ChecklistSection', () => {
     axiosMock
       .onGet(getApiWaffleFlagsUrl(courseId))
       .reply(200, {
-        useNewGradingPage: true,
         useNewCertificatesPage: true,
-        useNewScheduleDetailsPage: true,
         useNewCourseOutlinePage: true,
       });
   });

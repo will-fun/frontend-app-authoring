@@ -1,16 +1,25 @@
 import { useCallback, useState } from 'react';
 import { FormattedMessage, useIntl } from '@edx/frontend-platform/i18n';
 import {
-  ActionRow, Form, Icon, Menu, MenuItem, Pagination, Row, SearchField,
+  ActionRow,
+  Form,
+  Icon,
+  Menu,
+  MenuItem,
+  Pagination,
+  Row,
+  SearchField,
+  Stack,
 } from '@openedx/paragon';
-import { Error, FilterList } from '@openedx/paragon/icons';
+import { Error, FilterList, AccessTime } from '@openedx/paragon/icons';
 
 import { LoadingSpinner } from '@src/generic/Loading';
 import AlertMessage from '@src/generic/alert-message';
 import { useLibrariesV1Data } from '@src/studio-home/data/apiHooks';
-import CardItem from '@src/studio-home/card-item';
+import { CardItem, MakeLinkOrSpan, PrevToNextName } from '@src/studio-home/card-item';
 import SearchFilterWidget from '@src/search-manager/SearchFilterWidget';
 import type { LibraryV1Data } from '@src/studio-home/data/api';
+import { parseLibraryKey } from '@src/generic/key-utils';
 
 import messages from '../messages';
 import { MigrateLegacyLibrariesAlert } from './MigrateLegacyLibrariesAlert';
@@ -20,24 +29,41 @@ const CardList = ({
   inSelectMode,
   selectedIds,
 }: {
-  data: LibraryV1Data[],
-  inSelectMode: boolean,
+  data: LibraryV1Data[];
+  inSelectMode: boolean;
   selectedIds?: string[];
 }) => (
   // eslint-disable-next-line react/jsx-no-useless-fragment
   <>
-    {
-      data?.map(({
-        displayName,
-        org,
-        number,
-        url,
-        isMigrated,
-        migratedToKey,
-        migratedToTitle,
-        migratedToCollectionKey,
-        libraryKey,
-      }) => (
+    {data?.map(({
+      displayName,
+      org,
+      number,
+      url,
+      isMigrated,
+      migratedToKey,
+      migratedToTitle,
+      migratedToCollectionKey,
+      libraryKey,
+    }) => {
+      const collectionLink = () => {
+        let libUrl = `/library/${migratedToKey}`;
+        if (migratedToCollectionKey) {
+          libUrl += `/collection/${migratedToCollectionKey}`;
+        }
+        return libUrl;
+      };
+
+      const migratedToKeyObj = migratedToKey ? parseLibraryKey(migratedToKey) : undefined;
+
+      const subtitleWrapper = (subtitle) => (
+        <PrevToNextName
+          from={subtitle}
+          to={<>{migratedToKeyObj?.org} / {migratedToKeyObj?.lib}</>}
+        />
+      );
+
+      return (
         <CardItem
           key={`${org}+${number}`}
           isLibraries
@@ -47,21 +73,51 @@ const CardList = ({
           url={url}
           itemId={libraryKey}
           selectMode={inSelectMode ? 'multiple' : undefined}
+          selectPosition={inSelectMode ? 'title' : undefined}
           isSelected={selectedIds?.includes(libraryKey)}
-          isMigrated={isMigrated}
-          migratedToKey={migratedToKey}
-          migratedToTitle={migratedToTitle}
-          migratedToCollectionKey={migratedToCollectionKey}
+          subtitleWrapper={isMigrated ? subtitleWrapper : null}
+          titleSecondaryLink={(isMigrated && migratedToTitle) ?
+            (
+              <MakeLinkOrSpan
+                when={!inSelectMode}
+                to={`/library/${migratedToKey}`}
+                className="card-item-title"
+              >
+                {migratedToTitle}
+              </MakeLinkOrSpan>
+            ) :
+            null}
+          cardStatusWidget={(isMigrated && migratedToKey) ?
+            (
+              <Stack direction="horizontal" gap={2}>
+                <Icon src={AccessTime} size="sm" className="mb-1" />
+                <FormattedMessage {...messages.libraryMigrationStatusText} />
+                <b>
+                  <MakeLinkOrSpan
+                    when
+                    to={collectionLink()}
+                    className="text-info-500"
+                  >
+                    {migratedToTitle}
+                  </MakeLinkOrSpan>
+                </b>
+              </Stack>
+            ) :
+            null}
         />
-      ))
-    }
+      );
+    })}
   </>
 );
 
 function findInValues<T extends {}>(arr: T[] | undefined, searchValue: string) {
-  return arr?.filter(o => Object.values(o).some(value => String(value).toLowerCase().includes(
-    String(searchValue).toLowerCase().trim(),
-  )));
+  return arr?.filter(o =>
+    Object.values(o).some(value =>
+      String(value).toLowerCase().includes(
+        String(searchValue).toLowerCase().trim(),
+      )
+    )
+  );
 }
 
 export enum Filter {
@@ -85,7 +141,7 @@ const MigrationFilter = ({ filters, setFilters }: MigrationFilterProps) => {
 
   let label = intl.formatMessage(messages.librariesV1TabMigrationFilterLabel);
   // Set appliedFilters to empty list to indicate clear state
-  let appliedFilters: { label: string }[] = [];
+  let appliedFilters: { label: string; }[] = [];
   if (filters.length === 1) {
     // Update label to display selected filter item, i.e., Migrated or Unmigrated
     label = filterLabels[filters[0]];
@@ -107,16 +163,19 @@ const MigrationFilter = ({ filters, setFilters }: MigrationFilterProps) => {
     });
   }, [setFilters]);
 
-  const menuItems = useCallback(() => BaseFilterState.map((item) => (
-    <MenuItem
-      key={item}
-      as={Form.Checkbox}
-      value={item}
-      onChange={() => { toggleFilter(item); }}
-    >
-      {filterLabels[item]}
-    </MenuItem>
-  )), [toggleFilter, BaseFilterState]);
+  const menuItems = useCallback(() =>
+    BaseFilterState.map((item) => (
+      <MenuItem
+        key={item}
+        as={Form.Checkbox}
+        value={item}
+        onChange={() => {
+          toggleFilter(item);
+        }}
+      >
+        {filterLabels[item]}
+      </MenuItem>
+    )), [toggleFilter, BaseFilterState]);
 
   return (
     <SearchFilterWidget
@@ -214,19 +273,19 @@ export const LibrariesList = ({
     return (
       <AlertMessage
         variant="danger"
-        description={(
+        description={
           <Row className="m-0 align-items-center">
             <Icon src={Error} className="text-danger-500 mr-1" />
             <span>{intl.formatMessage(messages.librariesTabErrorMessage)}</span>
           </Row>
-        )}
+        }
       />
     );
   }
 
   return (
     <>
-      {!hideMigationAlert && (<MigrateLegacyLibrariesAlert />)}
+      {!hideMigationAlert && <MigrateLegacyLibrariesAlert />}
       <div className="courses-tab">
         <ActionRow className="my-3">
           {inSelectMode && (
@@ -259,36 +318,36 @@ export const LibrariesList = ({
               </>
             )}
         </ActionRow>
-        {inSelectMode ? (
-          <Form.CheckboxSet
-            name="libraries-list-checkboxset"
-            onChange={handleChangeCheckboxSet}
-            value={selectedIds}
-          >
+        {inSelectMode ?
+          (
+            <Form.CheckboxSet
+              name="libraries-list-checkboxset"
+              onChange={handleChangeCheckboxSet}
+              value={selectedIds}
+            >
+              <CardList
+                data={currentPageData}
+                inSelectMode={inSelectMode}
+                selectedIds={selectedIds}
+              />
+            </Form.CheckboxSet>
+          ) :
+          (
             <CardList
               data={currentPageData}
               inSelectMode={inSelectMode}
-              selectedIds={selectedIds}
             />
-          </Form.CheckboxSet>
-        ) : (
-          <CardList
-            data={currentPageData}
-            inSelectMode={inSelectMode}
-          />
-        )}
-        {
-          totalPages > 1
-            && (
-              <Pagination
-                className="d-flex justify-content-center"
-                paginationLabel="pagination navigation"
-                pageCount={totalPages}
-                currentPage={currentPage}
-                onPageSelect={setCurrentPage}
-              />
-            )
-        }
+          )}
+        {totalPages > 1
+          && (
+            <Pagination
+              className="d-flex justify-content-center"
+              paginationLabel="pagination navigation"
+              pageCount={totalPages}
+              currentPage={currentPage}
+              onPageSelect={setCurrentPage}
+            />
+          )}
       </div>
     </>
   );

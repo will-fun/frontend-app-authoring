@@ -7,11 +7,13 @@ import {
   MailtoLink,
   Row,
 } from '@openedx/paragon';
-import { Add as AddIcon, Error } from '@openedx/paragon/icons';
+import { Add as AddIcon, Error, ManageAccounts } from '@openedx/paragon/icons';
 import { useIntl } from '@edx/frontend-platform/i18n';
+import { getConfig } from '@edx/frontend-platform';
 import { StudioFooterSlot } from '@edx/frontend-component-footer';
 import { useLocation, useNavigate } from 'react-router-dom';
 
+import { useWaffleFlags } from '@src/data/apiHooks';
 import Loading from '../generic/Loading';
 import InternetConnectionAlert from '../generic/internet-connection-alert';
 import Header from '../header';
@@ -47,6 +49,10 @@ const StudioHome = () => {
     librariesV2Enabled,
   } = useStudioHome();
 
+  const waffleFlags = useWaffleFlags();
+  const isAuthzEnabled = waffleFlags?.enableAuthzCourseAuthoring ?? false;
+  const adminConsoleUrl = `${getConfig().ADMIN_CONSOLE_URL}/authz`;
+
   const v1LibraryTab = librariesV1Enabled && location?.pathname.split('/').pop() === 'libraries-v1';
   const showV2LibraryURL = librariesV2Enabled && !v1LibraryTab;
 
@@ -68,6 +74,23 @@ const StudioHome = () => {
     if (isShowEmailStaff) {
       headerButtons.push(
         <MailtoLink to={studioRequestEmail}>{intl.formatMessage(messages.emailStaffBtnText)}</MailtoLink>,
+      );
+    }
+
+    if (isAuthzEnabled && getConfig().ADMIN_CONSOLE_URL) {
+      headerButtons.push(
+        <div className="border-right mr-3 pr-4 py-2">
+          <Button
+            as="a"
+            href={adminConsoleUrl}
+            variant="primary"
+            iconBefore={ManageAccounts}
+            size="sm"
+            target="_blank"
+          >
+            {intl.formatMessage(messages.addRolesPermissionsBtnText)}
+          </Button>
+        </div>,
       );
     }
 
@@ -107,11 +130,11 @@ const StudioHome = () => {
     }
 
     return headerButtons;
-  }, [location, userIsActive, isFailedLoadingPage]);
+  }, [location, userIsActive, isFailedLoadingPage, isAuthzEnabled]);
 
   const headerButtons = userIsActive ? getHeaderButtons() : [];
   if (isLoadingPage && !isFiltered) {
-    return (<Loading />);
+    return <Loading />;
   }
 
   const getMainBody = () => {
@@ -119,12 +142,12 @@ const StudioHome = () => {
       return (
         <AlertMessage
           variant="danger"
-          description={(
+          description={
             <Row className="m-0 align-items-center">
               <Icon src={Error} className="text-danger-500 mr-1" />
               <span>{intl.formatMessage(messages.homePageLoadFailedMessage)}</span>
             </Row>
-          )}
+          }
         />
       );
     }

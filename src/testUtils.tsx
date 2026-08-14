@@ -13,7 +13,7 @@ import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
 import { IntlProvider } from '@edx/frontend-platform/i18n';
 import { AppProvider } from '@edx/frontend-platform/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, type RenderResult } from '@testing-library/react';
+import { render, screen, type RenderResult } from '@testing-library/react';
 import MockAdapter from 'axios-mock-adapter';
 import {
   generatePath,
@@ -113,9 +113,7 @@ const RouterAndRoute: React.FC<RouteOptions> = ({
       </MemoryRouter>
     );
   }
-  return (
-    <MemoryRouter {...routerProps}>{children}</MemoryRouter>
-  );
+  return <MemoryRouter {...routerProps}>{children}</MemoryRouter>;
 };
 
 function makeWrapper({ extraWrapper, ...routeArgs }: WrapperOptions & RouteOptions = {}) {
@@ -158,13 +156,13 @@ const defaultUser = {
  * Returns the new `axiosMock` in case you need to mock out axios requests.
  */
 export function initializeMocks({ user = defaultUser, initialState = undefined }: {
-  user?: { userId: number, username: string },
-  initialState?: Partial<DeprecatedReduxState>
+  user?: { userId: number; username: string; };
+  initialState?: Partial<DeprecatedReduxState>;
 } = {}) {
   initializeMockApp({
     authenticatedUser: user,
   });
-  reduxStore = initializeReduxStore(initialState as any);
+  reduxStore = initializeReduxStore(initialState);
   queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -202,6 +200,7 @@ export function initializeMocks({ user = defaultUser, initialState = undefined }
     reduxStore,
     axiosMock,
     mockShowToast: mockToastContext.showToast,
+    mockCloseToast: mockToastContext.closeToast,
     mockToastAction: mockToastContext.toastAction,
     queryClient,
     validateUserPermissionsMock,
@@ -212,7 +211,7 @@ export * from '@testing-library/react';
 export { customRender as render, makeWrapper };
 
 /** Simulate a real Axios error (such as we'd see in response to a 404) */
-export function createAxiosError({ code, message, path }: { code: number, message: string, path: string }) {
+export function createAxiosError({ code, message, path }: { code: number; message: string; path: string; }) {
   const request = { path };
   const config = { headers: new AxiosHeaders() };
   const error = new AxiosError(
@@ -230,3 +229,54 @@ export function createAxiosError({ code, message, path }: { code: number, messag
   );
   return error;
 }
+
+/*
+ * Utility to get the inner text of an element safely.
+ */
+const getInnerText = (element: Element | null): string => {
+  if (!element) {
+    return '';
+  }
+  return (element.textContent ?? '')
+    .split('\n')
+    .filter((text) => text && !/^\s+$/.test(text))
+    .map((text) => text.trim())
+    .join(' ');
+};
+
+/**
+ * Returns a matcher for `getByText`/`findByText` that checks exact text match and element type.
+ * - Requires specifying the element's nodeName (e.g. 'P', 'DIV').
+ * - Uses exact string comparison (no regex).
+ *
+ * For partial/regex matching when text is split across child elements,
+ * use `findByDeepTextContent` instead.
+ */
+export const matchInnerText = (
+  nodeName: string,
+  textToMatch: string,
+) =>
+(_: string, element: Element | null) =>
+  !!element
+  && element.nodeName === nodeName
+  && getInnerText(element) === textToMatch;
+
+/**
+ * Finds the innermost element whose full textContent (normalized whitespace) matches a regex.
+ * Unlike `matchInnerText`, this:
+ * - Accepts a `RegExp` for partial/pattern matching.
+ * - Does NOT require specifying the element type.
+ * - Normalizes whitespace (collapses multiple spaces/newlines into one).
+ * - Returns the deepest matching element (excludes elements where a direct child also matches).
+ *
+ * Useful when text is split across child elements (e.g. by an icon or inline tag).
+ */
+export const findByDeepTextContent = (pattern: RegExp) =>
+  screen.findByText((_, el) => {
+    if (!el) { return false; }
+    const normalizedText = (el.textContent ?? '').replace(/\s+/g, ' ').trim();
+    if (!pattern.test(normalizedText)) { return false; }
+    return !Array.from(el.children).some(
+      (child) => pattern.test(((child as Element).textContent ?? '').replace(/\s+/g, ' ').trim()),
+    );
+  });

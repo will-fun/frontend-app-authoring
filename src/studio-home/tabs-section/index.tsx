@@ -1,23 +1,26 @@
 import { useMemo, useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import PropTypes from 'prop-types';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  Badge,
   Stack,
   Tab,
   Tabs,
 } from '@openedx/paragon';
 import { getConfig } from '@edx/frontend-platform';
 import { useIntl } from '@edx/frontend-platform/i18n';
-import { useNavigate, useLocation } from 'react-router-dom';
 
-import { RequestStatus } from '@src/data/constants';
-import { getLoadingStatuses, getStudioHomeData } from '../data/selectors';
 import messages from './messages';
 import { BaseFilterState, Filter, LibrariesList } from './libraries-tab';
 import LibrariesV2List from './libraries-v2-tab/index';
-import CoursesTab from './courses-tab';
+import { CoursesList } from './courses-tab';
 import { WelcomeLibrariesV2Alert } from './libraries-v2-tab/WelcomeLibrariesV2Alert';
+
+interface Props {
+  showNewCourseContainer: boolean;
+  onClickNewCourse: () => void;
+  isShowProcessing: boolean;
+  librariesV1Enabled?: boolean;
+  librariesV2Enabled?: boolean;
+}
 
 const TabsSection = ({
   showNewCourseContainer,
@@ -25,7 +28,7 @@ const TabsSection = ({
   isShowProcessing,
   librariesV1Enabled,
   librariesV2Enabled,
-}) => {
+}: Props) => {
   const intl = useIntl();
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -61,13 +64,6 @@ const TabsSection = ({
     setTabKey(initTabKeyState(pathname));
   }, [pathname]);
 
-  const { courses, numPages, coursesCount } = useSelector(getStudioHomeData);
-  const {
-    courseLoadingStatus,
-  } = useSelector(getLoadingStatuses);
-  const isLoadingCourses = courseLoadingStatus === RequestStatus.IN_PROGRESS;
-  const isFailedCoursesPage = courseLoadingStatus === RequestStatus.FAILED;
-
   // Controlling the visibility of tabs when using conditional rendering is necessary for
   // the correct operation of iterating over child elements inside the Paragon Tabs component.
   const visibleTabs = useMemo(() => {
@@ -78,15 +74,10 @@ const TabsSection = ({
         eventKey={TABS_LIST.courses}
         title={intl.formatMessage(messages.coursesTabTitle)}
       >
-        <CoursesTab
-          coursesDataItems={courses}
+        <CoursesList
           showNewCourseContainer={showNewCourseContainer}
           onClickNewCourse={onClickNewCourse}
           isShowProcessing={isShowProcessing}
-          isLoading={isLoadingCourses}
-          isFailed={isFailedCoursesPage}
-          numPages={numPages}
-          coursesCount={coursesCount}
         />
       </Tab>,
     );
@@ -96,12 +87,11 @@ const TabsSection = ({
         <Tab
           key={TABS_LIST.libraries}
           eventKey={TABS_LIST.libraries}
-          title={(
+          title={
             <Stack gap={2} direction="horizontal">
               {intl.formatMessage(messages.librariesTabTitle)}
-              <Badge variant="info">{intl.formatMessage(messages.librariesV2TabBetaBadge)}</Badge>
             </Stack>
-          )}
+          }
         >
           <div>
             <WelcomeLibrariesV2Alert />
@@ -141,7 +131,7 @@ const TabsSection = ({
     }
 
     return tabs;
-  }, [showNewCourseContainer, isLoadingCourses, migrationFilter]);
+  }, [showNewCourseContainer, migrationFilter, isShowProcessing]);
 
   const handleSelectTab = (tab: TabKeyType) => {
     if (tab === TABS_LIST.courses) {
@@ -166,14 +156,6 @@ const TabsSection = ({
       {visibleTabs}
     </Tabs>
   );
-};
-
-TabsSection.propTypes = {
-  showNewCourseContainer: PropTypes.bool.isRequired,
-  onClickNewCourse: PropTypes.func.isRequired,
-  isShowProcessing: PropTypes.bool.isRequired,
-  librariesV1Enabled: PropTypes.bool,
-  librariesV2Enabled: PropTypes.bool,
 };
 
 export default TabsSection;

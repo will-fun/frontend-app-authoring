@@ -1,5 +1,8 @@
 import React, {
-  useCallback, useEffect, useMemo, useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
 } from 'react';
 import { Helmet } from 'react-helmet';
 import { getConfig } from '@edx/frontend-platform';
@@ -17,26 +20,29 @@ import {
   Tabs,
 } from '@openedx/paragon';
 import {
-  Cached, CheckCircle, Launch, Loop,
+  Cached,
+  CheckCircle,
+  Launch,
+  Loop,
 } from '@openedx/paragon/icons';
 
 import sumBy from 'lodash/sumBy';
 import { useSearchParams } from 'react-router-dom';
-import getPageHeadTitle from '../generic/utils';
-import { useModel } from '../generic/model-store';
+import { useCourseAuthoringContext } from '@src/CourseAuthoringContext';
+import { useCourseUserPermissions } from '@src/authz/hooks';
+import { getLibraryUpdatesPermissions } from '@src/authz/permissionHelpers';
+import { useStudioHome } from '@src/studio-home/hooks';
+import NewsstandIcon from '@src/generic/NewsstandIcon';
+import getPageHeadTitle from '@src/generic/utils';
+import SubHeader from '@src/generic/sub-header/SubHeader';
+import Loading from '@src/generic/Loading';
+import PermissionDeniedAlert from '@src/generic/PermissionDeniedAlert';
 import messages from './messages';
-import SubHeader from '../generic/sub-header/SubHeader';
 import { useEntityLinksSummaryByDownstreamContext } from './data/apiHooks';
 import type { PublishableEntityLinkSummary } from './data/api';
-import Loading from '../generic/Loading';
-import { useStudioHome } from '../studio-home/hooks';
-import NewsstandIcon from '../generic/NewsstandIcon';
 import ReviewTabContent from './ReviewTabContent';
 import { OutOfSyncAlert } from './OutOfSyncAlert';
-
-interface Props {
-  courseId: string;
-}
+import LegacyLibContentBlockAlert from './LegacyLibContentBlockAlert';
 
 interface LibraryCardProps {
   linkSummary: PublishableEntityLinkSummary;
@@ -53,13 +59,13 @@ const LibraryCard = ({ linkSummary }: LibraryCardProps) => {
   return (
     <Card className="my-3 border-light-500 border shadow-none">
       <Card.Header
-        title={(
+        title={
           <Stack direction="horizontal" gap={2}>
             <Icon src={NewsstandIcon} />
             {linkSummary.upstreamContextTitle}
           </Stack>
-        )}
-        actions={(
+        }
+        actions={
           <ActionRow>
             <Button
               destination={`${getConfig().PUBLIC_PATH}library/${linkSummary.upstreamContextKey}`}
@@ -74,7 +80,7 @@ const LibraryCard = ({ linkSummary }: LibraryCardProps) => {
               View Library
             </Button>
           </ActionRow>
-        )}
+        }
         size="sm"
       />
       <Card.Section>
@@ -100,9 +106,9 @@ const LibraryCard = ({ linkSummary }: LibraryCardProps) => {
   );
 };
 
-export const CourseLibraries: React.FC<Props> = ({ courseId }) => {
+export const CourseLibraries = () => {
   const intl = useIntl();
-  const courseDetails = useModel('courseDetails', courseId);
+  const { courseId, courseDetails } = useCourseAuthoringContext();
   const [searchParams] = useSearchParams();
   const [tabKey, setTabKey] = useState<CourseLibraryTabs>(
     () => searchParams.get('tab') as CourseLibraryTabs,
@@ -115,6 +121,11 @@ export const CourseLibraries: React.FC<Props> = ({ courseId }) => {
     isFailedLoadingPage: isFailedLoadingStudioHome,
     librariesV2Enabled,
   } = useStudioHome();
+
+  const {
+    isLoading: isLoadingUserPermissions,
+    canManageLibraryUpdates,
+  } = useCourseUserPermissions(courseId, getLibraryUpdatesPermissions(courseId));
 
   const onAlertReview = () => {
     setTabKey(CourseLibraryTabs.review);
@@ -142,11 +153,17 @@ export const CourseLibraries: React.FC<Props> = ({ courseId }) => {
       return <Loading />;
     }
     if (libraries?.length === 0) {
-      return <small><FormattedMessage {...messages.homeTabDescriptionEmpty} /></small>;
+      return (
+        <small>
+          <FormattedMessage {...messages.homeTabDescriptionEmpty} />
+        </small>
+      );
     }
     return (
       <>
-        <small><FormattedMessage {...messages.homeTabDescription} /></small>
+        <small>
+          <FormattedMessage {...messages.homeTabDescription} />
+        </small>
         {libraries?.map((library) => (
           <LibraryCard
             linkSummary={library}
@@ -177,6 +194,14 @@ export const CourseLibraries: React.FC<Props> = ({ courseId }) => {
     return <ReviewTabContent courseId={courseId} />;
   }, [outOfSyncCount, isLoading, tabKey]);
 
+  if (isLoadingUserPermissions) {
+    return <Loading />;
+  }
+
+  if (!canManageLibraryUpdates) {
+    return <PermissionDeniedAlert />;
+  }
+
   if (!isLoadingStudioHome && (!librariesV2Enabled || isFailedLoadingStudioHome)) {
     return (
       <Alert variant="danger">
@@ -189,7 +214,7 @@ export const CourseLibraries: React.FC<Props> = ({ courseId }) => {
     <>
       <Helmet>
         <title>
-          {getPageHeadTitle(courseDetails?.name, intl.formatMessage(messages.headingTitle))}
+          {getPageHeadTitle(courseDetails?.name || '', intl.formatMessage(messages.headingTitle))}
         </title>
       </Helmet>
       <Container size="xl" className="px-4 pt-4 mt-3">
@@ -202,15 +227,17 @@ export const CourseLibraries: React.FC<Props> = ({ courseId }) => {
         <SubHeader
           title={intl.formatMessage(messages.headingTitle)}
           subtitle={intl.formatMessage(messages.headingSubtitle)}
-          headerActions={!showReviewAlert && outOfSyncCount > 0 && tabKey === CourseLibraryTabs.all && (
-            <Button
-              variant="primary"
-              onClick={onAlertReview}
-              iconBefore={Cached}
-            >
-              {intl.formatMessage(messages.reviewUpdatesBtn)}
-            </Button>
-          )}
+          headerActions={(!showReviewAlert && outOfSyncCount > 0 && tabKey === CourseLibraryTabs.all) ?
+            (
+              <Button
+                variant="primary"
+                onClick={onAlertReview}
+                iconBefore={Cached}
+              >
+                {intl.formatMessage(messages.reviewUpdatesBtn)}
+              </Button>
+            ) :
+            null}
           hideBorder
         />
         <section className="mb-4">
@@ -228,15 +255,16 @@ export const CourseLibraries: React.FC<Props> = ({ courseId }) => {
             </Tab>
             <Tab
               eventKey={CourseLibraryTabs.review}
-              title={(
+              title={
                 <Stack direction="horizontal" gap={1}>
                   <Icon src={Loop} />
                   {intl.formatMessage(messages.reviewTabTitle)}
                 </Stack>
-              )}
+              }
               notification={outOfSyncCount}
               className="px-2 mt-3"
             >
+              <LegacyLibContentBlockAlert courseId={courseId} />
               {renderReviewTabContent()}
             </Tab>
           </Tabs>

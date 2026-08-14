@@ -13,7 +13,11 @@ import { getCourseAppSettingValue, getLoadingStatus } from './pages-and-resource
 import { fetchCourseAppSettings, updateCourseAppSetting } from './pages-and-resources/data/thunks';
 import { PagesAndResourcesContext } from './pages-and-resources/PagesAndResourcesProvider';
 import {
-  hasValidDateFormat, hasValidTimeFormat, decodeDateTime, endOfDayTime, startOfDayTime,
+  hasValidDateFormat,
+  hasValidTimeFormat,
+  decodeDateTime,
+  endOfDayTime,
+  startOfDayTime,
 } from './pages-and-resources/discussions/app-config-form/utils';
 import { DATE_TIME_FORMAT } from './constants';
 
@@ -34,7 +38,7 @@ export function useIsDesktop() {
   return useMediaQuery({ query: '(min-width: 992px)' });
 }
 
-export function convertObjectToSnakeCase(obj: Object, unpacked = false) {
+export function convertObjectToSnakeCase(obj: Record<string, any>, unpacked = false) {
   return Object.keys(obj).reduce((snakeCaseObj, key) => {
     const snakeCaseKey = snakeCase(key);
     const value = unpacked ? obj[key] : { value: obj[key] };
@@ -45,7 +49,7 @@ export function convertObjectToSnakeCase(obj: Object, unpacked = false) {
   }, {});
 }
 
-export function deepConvertingKeysToCamelCase(obj: any[] | Object | null) {
+export function deepConvertingKeysToCamelCase(obj: any[] | Record<string, any> | null) {
   if (typeof obj !== 'object' || obj === null) {
     return obj;
   }
@@ -62,7 +66,7 @@ export function deepConvertingKeysToCamelCase(obj: any[] | Object | null) {
   return camelCaseObj;
 }
 
-export function deepConvertingKeysToSnakeCase(obj: any[] | Object | null) {
+export function deepConvertingKeysToSnakeCase(obj: any[] | Record<string, any> | null) {
   if (typeof obj !== 'object' || obj === null) {
     return obj;
   }
@@ -93,7 +97,7 @@ export function parseArrayOrObjectValues(obj: { [s: string]: string; } | ArrayLi
       } else {
         result[key] = JSON.parse(value);
       }
-    } catch (e) {
+    } catch {
       result[key] = value;
     }
   });
@@ -213,7 +217,8 @@ export function setupYupExtensions() {
       // of if startTime or endTime is not present for time comparison
       // or startDate or endDate is not present for date comparison
 
-      if (!this.parent
+      if (
+        !this.parent
         || (!(this.parent.startTime && this.parent.endTime) && type === 'time')
         || (!(this.parent.startDate && this.parent.endDate) && type === 'date')
       ) {
@@ -270,7 +275,7 @@ export function setupYupExtensions() {
 // helpers below shift by a fixed +7h (GMT+7) for display and shift back to real UTC on save.
 const GMT7_OFFSET_HOURS = 7;
 
-export const convertToDateFromString = (dateStr: string) => {
+export const convertToDateFromString = (dateStr: string): Date | undefined => {
   /**
    * Convert UTC to GMT+7 for react-datepicker
    * Note: react-datepicker has a bug where it only interacts with local time, so we shift the
@@ -281,7 +286,7 @@ export const convertToDateFromString = (dateStr: string) => {
    * @return {Date} date carrying GMT+7 wall-clock digits
    */
   if (!dateStr) {
-    return '';
+    return undefined;
   }
 
   const stripTimeZone = (stringValue: string) => stringValue.substring(0, 19);
@@ -292,7 +297,7 @@ export const convertToDateFromString = (dateStr: string) => {
   return moment(gmt7Digits).toDate();
 };
 
-export const convertToStringFromDate = (date: moment.MomentInput) => {
+export const convertToStringFromDate = (date: moment.MomentInput): string => {
   /**
    * Convert GMT+7 wall-clock digits from react-datepicker back to real UTC
    * Note: react-datepicker has a bug where it only interacts with local time
@@ -327,9 +332,9 @@ export const getFileSizeToClosestByte = (fileSize: any) => {
 };
 
 /**
-* A generic hook to run callback on next render cycle.
-* @param {} callback - Callback function that needs to be run later
-*/
+ * A generic hook to run callback on next render cycle.
+ * @param {} callback - Callback function that needs to be run later
+ */
 export const useRunOnNextRender = (callback: () => void) => {
   const [scheduled, setScheduled] = useState(false);
 
@@ -362,3 +367,5 @@ export const skipIfUnwantedTarget = (
 };
 
 export const BoldText = (chunk: string[]) => <b>{chunk}</b>;
+export const Div = (chunk: string[]) => <div>{chunk}</div>;
+export const Paragraph = (chunk: string[]) => <p>{chunk}</p>;

@@ -2,8 +2,10 @@ import { getConfig } from '@edx/frontend-platform';
 import React from 'react';
 
 import { useQueryClient } from '@tanstack/react-query';
-import EditorPage from '../../editors/EditorPage';
-import { getBlockType } from '../../generic/key-utils';
+
+import EditorPage from '@src/editors/EditorPage';
+import { getBlockType } from '@src/generic/key-utils';
+
 import { useLibraryContext } from '../common/context/LibraryContext';
 import { invalidateComponentData } from '../data/apiHooks';
 
@@ -27,7 +29,7 @@ export const ComponentEditorModal: React.FC<Record<never, never>> = () => {
   }
   const blockType = componentBeingEdited.blockType || getBlockType(componentBeingEdited.usageKey);
 
-  const onClose = (data?:any) => {
+  const onClose = (data?: any) => {
     closeComponentEditor(data);
     invalidateComponentData(queryClient, libraryId, componentBeingEdited.usageKey);
   };

@@ -3,10 +3,13 @@ import { getConfig } from '@edx/frontend-platform';
 import { useIntl } from '@edx/frontend-platform/i18n';
 import { Collapsible, Icon, Stack } from '@openedx/paragon';
 import {
-  BookOpen, ExpandLess, ExpandMore, Tag,
+  BookOpen,
+  ExpandLess,
+  ExpandMore,
+  Tag,
 } from '@openedx/paragon/icons';
 
-import { useLibraryContext } from '../common/context/LibraryContext';
+import { useOptionalLibraryContext } from '../common/context/LibraryContext';
 import { SidebarActions, useSidebarContext } from '../common/context/SidebarContext';
 import { ContentTagsDrawer, useContentTaxonomyTagsData } from '../../content-tags-drawer';
 import { useLibraryBlockMetadata, useUpdateComponentCollections } from '../data/apiHooks';
@@ -16,7 +19,7 @@ import messages from './messages';
 
 const ComponentManagement = () => {
   const intl = useIntl();
-  const { readOnly, isLoadingLibraryData } = useLibraryContext();
+  const { readOnly, isLoadingLibraryData } = useOptionalLibraryContext();
   const { sidebarItemInfo, sidebarAction, resetSidebarAction } = useSidebarContext();
   const jumpToCollections = sidebarAction === SidebarActions.JumpToManageCollections;
   const jumpToTags = sidebarAction === SidebarActions.JumpToManageTags;
@@ -56,7 +59,7 @@ const ComponentManagement = () => {
     }
     let result = 0;
     componentTags.taxonomies.forEach((taxonomy) => {
-      const countedTags : string[] = [];
+      const countedTags: string[] = [];
       taxonomy.tags.forEach((tagData) => {
         tagData.lineage.forEach((tag) => {
           if (!countedTags.includes(tag)) {

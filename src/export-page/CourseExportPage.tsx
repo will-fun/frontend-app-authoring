@@ -1,54 +1,58 @@
-import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { useIntl } from '@edx/frontend-platform/i18n';
 import {
-  Container, Layout, Button, Card,
+  Container,
+  Layout,
+  Button,
+  Card,
 } from '@openedx/paragon';
 import { ArrowCircleDown as ArrowCircleDownIcon } from '@openedx/paragon/icons';
-import Cookies from 'universal-cookie';
 import { getConfig } from '@edx/frontend-platform';
 import { Helmet } from 'react-helmet';
 
-import InternetConnectionAlert from '../generic/internet-connection-alert';
-import ConnectionErrorAlert from '../generic/ConnectionErrorAlert';
-import SubHeader from '../generic/sub-header/SubHeader';
-import { RequestStatus } from '../data/constants';
-import { useModel } from '../generic/model-store';
+import { useCourseAuthoringContext } from '@src/CourseAuthoringContext';
+import InternetConnectionAlert from '@src/generic/internet-connection-alert';
+import ConnectionErrorAlert from '@src/generic/ConnectionErrorAlert';
+import Loading from '@src/generic/Loading';
+import PermissionDeniedAlert from '@src/generic/PermissionDeniedAlert';
+import SubHeader from '@src/generic/sub-header/SubHeader';
+import { useCourseUserPermissions } from '@src/authz/hooks';
+import { getImportExportPermissions } from '@src/authz/permissionHelpers';
+
 import messages from './messages';
 import ExportSidebar from './export-sidebar/ExportSidebar';
-import {
-  getCurrentStage, getError, getExportTriggered, getLoadingStatus, getSavingStatus,
-} from './data/selectors';
-import { startExportingCourse } from './data/thunks';
-import { EXPORT_STAGES, LAST_EXPORT_COOKIE_NAME } from './data/constants';
-import { updateExportTriggered, updateSavingStatus, updateSuccessDate } from './data/slice';
+import { EXPORT_STAGES } from './data/constants';
 import ExportModalError from './export-modal-error/ExportModalError';
 import ExportFooter from './export-footer/ExportFooter';
 import ExportStepper from './export-stepper/ExportStepper';
+import { useCourseExportContext } from './CourseExportContext';
 
-const CourseExportPage = ({ courseId }: { courseId: string }) => {
+const CourseExportPage = () => {
   const intl = useIntl();
-  const dispatch = useDispatch();
-  const exportTriggered = useSelector(getExportTriggered);
-  const courseDetails = useModel('courseDetails', courseId);
-  const currentStage = useSelector(getCurrentStage);
-  const { msg: errorMessage } = useSelector(getError);
-  const loadingStatus = useSelector(getLoadingStatus);
-  const savingStatus = useSelector(getSavingStatus);
-  const cookies = new Cookies();
-  const isShowExportButton = !exportTriggered || errorMessage || currentStage === EXPORT_STAGES.SUCCESS;
-  const anyRequestFailed = savingStatus === RequestStatus.FAILED || loadingStatus === RequestStatus.FAILED;
-  const isLoadingDenied = loadingStatus === RequestStatus.DENIED;
-  const anyRequestInProgress = savingStatus === RequestStatus.PENDING || loadingStatus === RequestStatus.IN_PROGRESS;
+  const { courseId, courseDetails } = useCourseAuthoringContext();
+  const {
+    currentStage,
+    exportTriggered,
+    fetchExportErrorMessage,
+    anyRequestFailed,
+    isLoadingDenied,
+    anyRequestInProgress,
+    handleStartExportingCourse,
+  } = useCourseExportContext();
 
-  useEffect(() => {
-    const cookieData = cookies.get(LAST_EXPORT_COOKIE_NAME);
-    if (cookieData) {
-      dispatch(updateSavingStatus({ status: RequestStatus.SUCCESSFUL }));
-      dispatch(updateExportTriggered(true));
-      dispatch(updateSuccessDate(cookieData.date));
-    }
-  }, []);
+  const isShowExportButton = !exportTriggered || fetchExportErrorMessage || currentStage === EXPORT_STAGES.SUCCESS;
+
+  const {
+    isLoading: isLoadingUserPermissions,
+    canExportCourse,
+  } = useCourseUserPermissions(courseId, getImportExportPermissions(courseId));
+
+  if (isLoadingUserPermissions) {
+    return <Loading />;
+  }
+
+  if (!canExportCourse) {
+    return <PermissionDeniedAlert />;
+  }
 
   if (isLoadingDenied) {
     return (
@@ -84,7 +88,9 @@ const CourseExportPage = ({ courseId }: { courseId: string }) => {
                   title={intl.formatMessage(messages.headingTitle)}
                   subtitle={intl.formatMessage(messages.headingSubtitle)}
                 />
-                <p className="small">{intl.formatMessage(messages.description1, { studioShortName: getConfig().STUDIO_SHORT_NAME })}</p>
+                <p className="small">
+                  {intl.formatMessage(messages.description1, { studioShortName: getConfig().STUDIO_SHORT_NAME })}
+                </p>
                 <p className="small">{intl.formatMessage(messages.description2)}</p>
                 <Card>
                   <Card.Header
@@ -97,7 +103,7 @@ const CourseExportPage = ({ courseId }: { courseId: string }) => {
                         size="lg"
                         block
                         className="mb-4"
-                        onClick={() => dispatch(startExportingCourse(courseId))}
+                        onClick={handleStartExportingCourse}
                         iconBefore={ArrowCircleDownIcon}
                       >
                         {intl.formatMessage(messages.buttonTitle)}
@@ -105,16 +111,16 @@ const CourseExportPage = ({ courseId }: { courseId: string }) => {
                     </Card.Section>
                   )}
                 </Card>
-                {exportTriggered && <ExportStepper courseId={courseId} />}
+                {exportTriggered && <ExportStepper />}
                 <ExportFooter />
               </article>
             </Layout.Element>
             <Layout.Element>
-              <ExportSidebar courseId={courseId} />
+              <ExportSidebar />
             </Layout.Element>
           </Layout>
         </section>
-        <ExportModalError courseId={courseId} />
+        <ExportModalError />
       </Container>
       <div className="alert-toast">
         <InternetConnectionAlert

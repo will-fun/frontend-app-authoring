@@ -1,5 +1,7 @@
 import {
-  render, screen, waitFor,
+  render,
+  screen,
+  waitFor,
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { IntlProvider } from '@edx/frontend-platform/i18n';
@@ -44,7 +46,9 @@ describe('<EntranceExam />', () => {
     onChangeMock.mockClear();
     const ui = render(<RootWrapper {...props} />);
     const user = userEvent.setup();
-    const checkbox = screen.getByRole('checkbox', { name: 'Require students to pass an exam before beginning the course.' });
+    const checkbox = screen.getByRole('checkbox', {
+      name: 'Require students to pass an exam before beginning the course.',
+    });
 
     expect(checkbox).toBeChecked();
     expect(screen.queryByText('Grade requirements')).toBeInTheDocument();
@@ -56,5 +60,17 @@ describe('<EntranceExam />', () => {
       expect(checkbox).not.toBeChecked();
       expect(screen.queryByText('Grade requirements')).not.toBeInTheDocument();
     });
+  });
+
+  it('disables checkbox when isEditable is false', () => {
+    render(<RootWrapper {...props} isEditable={false} />);
+    const checkbox = screen.getByRole('checkbox');
+    expect(checkbox).toBeDisabled();
+  });
+
+  it('enables checkbox when isEditable is true', () => {
+    render(<RootWrapper {...props} isEditable />);
+    const checkbox = screen.getByRole('checkbox');
+    expect(checkbox).not.toBeDisabled();
   });
 });

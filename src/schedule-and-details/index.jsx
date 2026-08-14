@@ -1,8 +1,9 @@
-import React from 'react';
-import PropTypes from 'prop-types';
 import { useSelector } from 'react-redux';
 import {
-  Container, Button, Layout, StatefulButton,
+  Container,
+  Button,
+  Layout,
+  StatefulButton,
 } from '@openedx/paragon';
 import {
   CheckCircle as CheckCircleIcon,
@@ -11,14 +12,18 @@ import {
 } from '@openedx/paragon/icons';
 import { useIntl } from '@edx/frontend-platform/i18n';
 
-import Placeholder from '../editors/Placeholder';
-import { RequestStatus } from '../data/constants';
-import { useModel } from '../generic/model-store';
-import AlertMessage from '../generic/alert-message';
-import InternetConnectionAlert from '../generic/internet-connection-alert';
-import { STATEFUL_BUTTON_STATES } from '../constants';
-import getPageHeadTitle from '../generic/utils';
-import { useScrollToHashElement } from '../hooks';
+import Placeholder from '@src/editors/Placeholder';
+import { RequestStatus } from '@src/data/constants';
+import AlertMessage from '@src/generic/alert-message';
+import InternetConnectionAlert from '@src/generic/internet-connection-alert';
+import { STATEFUL_BUTTON_STATES } from '@src/constants';
+import getPageHeadTitle from '@src/generic/utils';
+import { useScrollToHashElement } from '@src/hooks';
+import { useCourseAuthoringContext } from '@src/CourseAuthoringContext';
+import { useCourseUserPermissions } from '@src/authz/hooks';
+import { getScheduleAndDetailsPermissions } from '@src/authz/permissionHelpers';
+import PermissionDeniedAlert from '@src/generic/PermissionDeniedAlert';
+
 import {
   fetchCourseSettingsQuery,
   fetchCourseDetailsQuery,
@@ -44,17 +49,26 @@ import ScheduleSidebar from './schedule-sidebar';
 import messages from './messages';
 import { useLoadValuesPrompt, useSaveValuesPrompt } from './hooks';
 
-const ScheduleAndDetails = ({ courseId }) => {
+const ScheduleAndDetails = () => {
   const intl = useIntl();
   const courseSettings = useSelector(getCourseSettings);
   const courseDetails = useSelector(getCourseDetails);
   const loadingDetailsStatus = useSelector(getLoadingDetailsStatus);
   const loadingSettingsStatus = useSelector(getLoadingSettingsStatus);
-  const isLoading = loadingDetailsStatus === RequestStatus.IN_PROGRESS
-    || loadingSettingsStatus === RequestStatus.IN_PROGRESS;
 
-  const course = useModel('courseDetails', courseId);
-  document.title = getPageHeadTitle(course?.name, intl.formatMessage(messages.headingTitle));
+  const { courseId, courseDetails: course } = useCourseAuthoringContext();
+  document.title = getPageHeadTitle(course?.name || '', intl.formatMessage(messages.headingTitle));
+
+  const {
+    isLoading: isLoadingUserPermissions,
+    canViewScheduleAndDetails,
+    canEditSchedule,
+    canEditDetails,
+  } = useCourseUserPermissions(courseId, getScheduleAndDetailsPermissions(courseId));
+
+  const isLoading = loadingDetailsStatus === RequestStatus.IN_PROGRESS
+    || loadingSettingsStatus === RequestStatus.IN_PROGRESS
+    || isLoadingUserPermissions;
 
   const {
     platformName,
@@ -150,6 +164,10 @@ const ScheduleAndDetails = ({ courseId }) => {
     return <></>;
   }
 
+  if (!canViewScheduleAndDetails) {
+    return <PermissionDeniedAlert />;
+  }
+
   if (loadingDetailsStatus === RequestStatus.DENIED || loadingSettingsStatus === RequestStatus.DENIED) {
     return (
       <div className="row justify-content-center m-6">
@@ -157,6 +175,8 @@ const ScheduleAndDetails = ({ courseId }) => {
       </div>
     );
   }
+
+  const canEdit = canEditSchedule || canEditDetails;
 
   const showCreditSection = creditEligibilityEnabled && isCreditCourse;
   const showRequirementsSection = aboutPageEditable || isPrerequisiteCoursesEnabled || isEntranceExamsEnabled;
@@ -256,6 +276,7 @@ const ScheduleAndDetails = ({ courseId }) => {
                   <PacingSection
                     selfPaced={selfPaced}
                     startDate={startDate}
+                    isEditable={canEditDetails}
                     onChange={handleValuesChange}
                   />
                   <ScheduleSection
@@ -270,12 +291,14 @@ const ScheduleAndDetails = ({ courseId }) => {
                     certificateAvailableDate={certificateAvailableDate}
                     certificatesDisplayBehavior={certificatesDisplayBehavior}
                     canShowCertificateAvailableDateField={canShowCertificateAvailableDateField}
+                    isEditable={canEditSchedule}
                     onChange={handleValuesChange}
                   />
                   {aboutPageEditable && (
                     <DetailsSection
                       language={language}
                       languageOptions={languageOptions}
+                      isEditable={canEditDetails}
                       onChange={handleValuesChange}
                     />
                   )}
@@ -296,16 +319,19 @@ const ScheduleAndDetails = ({ courseId }) => {
                     shortDescriptionEditable={shortDescriptionEditable}
                     enableExtendedCourseDetails={enableExtendedCourseDetails}
                     videoThumbnailImageAssetPath={videoThumbnailImageAssetPath}
+                    isEditable={canEditDetails}
                     onChange={handleValuesChange}
                   />
                   {enableExtendedCourseDetails && (
                     <>
                       <LearningOutcomesSection
                         learningInfo={learningInfo}
+                        isEditable={canEditDetails}
                         onChange={handleValuesChange}
                       />
                       <InstructorsSection
                         instructors={instructorInfo?.instructors}
+                        isEditable={canEditDetails}
                         onChange={handleValuesChange}
                       />
                     </>
@@ -320,15 +346,15 @@ const ScheduleAndDetails = ({ courseId }) => {
                       isEntranceExamsEnabled={isEntranceExamsEnabled}
                       possiblePreRequisiteCourses={possiblePreRequisiteCourses}
                       entranceExamMinimumScorePct={entranceExamMinimumScorePct}
-                      isPrerequisiteCoursesEnabled={
-                        isPrerequisiteCoursesEnabled
-                      }
+                      isPrerequisiteCoursesEnabled={isPrerequisiteCoursesEnabled}
+                      isEditable={canEditDetails}
                       onChange={handleValuesChange}
                     />
                   )}
                   {licensingEnabled && (
                     <LicenseSection
                       license={license}
+                      isEditable={canEditDetails}
                       onChange={handleValuesChange}
                     />
                   )}
@@ -376,12 +402,10 @@ const ScheduleAndDetails = ({ courseId }) => {
             <StatefulButton
               key="save-button"
               onClick={handleUpdateValues}
-              disabled={hasErrors}
-              state={
-                isQueryPending
-                  ? STATEFUL_BUTTON_STATES.pending
-                  : STATEFUL_BUTTON_STATES.default
-              }
+              disabled={hasErrors || !canEdit}
+              state={isQueryPending
+                ? STATEFUL_BUTTON_STATES.pending
+                : STATEFUL_BUTTON_STATES.default}
               {...updateValuesButtonState}
             />,
           ].filter(Boolean)}
@@ -393,10 +417,6 @@ const ScheduleAndDetails = ({ courseId }) => {
       </div>
     </>
   );
-};
-
-ScheduleAndDetails.propTypes = {
-  courseId: PropTypes.string.isRequired,
 };
 
 export default ScheduleAndDetails;

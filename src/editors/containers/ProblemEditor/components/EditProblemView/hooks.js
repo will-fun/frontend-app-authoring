@@ -5,7 +5,8 @@ import ReactStateSettingsParser from '../../data/ReactStateSettingsParser';
 import ReactStateOLXParser from '../../data/ReactStateOLXParser';
 import { setAssetToStaticUrl } from '../../../../sharedComponents/TinyMceWidget/hooks';
 import { AdvanceProblemKeys, ProblemTypeKeys } from '../../../../data/constants/problem';
-import { buildOLXFromTinyMCEEditors } from './CustomSingleSelectEditor/utils';
+import { buildOLXFromTinyMCEEditors as buildCustomSingleSelectOLX } from './CustomSingleSelectEditor/utils';
+import { buildOLXFromTinyMCEEditors as buildCustomProblemOLX } from './CustomProblemEditor/utils';
 
 export const state = StrictDict({
   // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -70,12 +71,16 @@ export const parseState = ({
   problem,
   isAdvanced,
   isCustomSingleSelect,
+  isCustomProblem,
   isMarkdownEditorEnabled,
   ref,
   lmsEndpointUrl,
-}) => () => {
-  if (isCustomSingleSelect) {
-    const olx = buildOLXFromTinyMCEEditors(problem.rawOLX);
+}) =>
+() => {
+  if (isCustomSingleSelect || isCustomProblem) {
+    const olx = isCustomSingleSelect
+      ? buildCustomSingleSelectOLX(problem.rawOLX)
+      : buildCustomProblemOLX(problem.rawOLX);
     const reactSettingsParser = new ReactStateSettingsParser({ problem, rawOLX: olx });
     const settings = reactSettingsParser.parseRawOlxSettings();
     return {
@@ -160,7 +165,10 @@ export const checkForNoAnswers = ({ openSaveWarningModal, problem }) => {
 };
 
 export const checkForSettingDiscrepancy = ({
-  problem, ref, openSaveWarningModal, isMarkdownEditorEnabled,
+  problem,
+  ref,
+  openSaveWarningModal,
+  isMarkdownEditorEnabled,
 }) => {
   const contentString = ref?.current?.state.doc.toString();
   const rawOLX = isMarkdownEditorEnabled ? convertMarkdownToXml(contentString) : contentString;
@@ -186,6 +194,10 @@ export const isCustomSingleSelectType = (problemType) => (
   problemType === AdvanceProblemKeys.CUSTOMSINGLESELECT
 );
 
+export const isCustomProblemType = (problemType) => (
+  problemType === AdvanceProblemKeys.CUSTOMPROBLEM
+);
+
 export const getContent = ({
   problemState,
   openSaveWarningModal,
@@ -196,9 +208,13 @@ export const getContent = ({
 }) => {
   const problem = problemState;
   const isCustomSingleSelect = isCustomSingleSelectType(problem.problemType);
-  const hasNoAnswers = isAdvancedProblemType || isMarkdownEditorEnabled || isCustomSingleSelect
-    ? false
-    : checkForNoAnswers({ problem, openSaveWarningModal });
+  const isCustomProblem = isCustomProblemType(problem.problemType);
+  const skipAnswerCheck = isAdvancedProblemType || isMarkdownEditorEnabled
+    || isCustomSingleSelect || isCustomProblem;
+  const hasNoAnswers = skipAnswerCheck ? false : checkForNoAnswers({
+    problem,
+    openSaveWarningModal,
+  });
   const hasMismatchedSettings = isAdvancedProblemType || isMarkdownEditorEnabled
     ? checkForSettingDiscrepancy({
       ref: editorRef,
@@ -211,6 +227,7 @@ export const getContent = ({
     const data = parseState({
       isAdvanced: isAdvancedProblemType,
       isCustomSingleSelect,
+      isCustomProblem,
       ref: editorRef,
       isMarkdownEditorEnabled,
       problem,

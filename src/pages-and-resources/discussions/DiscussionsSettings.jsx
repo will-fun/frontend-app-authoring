@@ -1,15 +1,23 @@
 import React, {
-  useCallback, useContext, useEffect, useState,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
 } from 'react';
-import PropTypes from 'prop-types';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useIntl } from '@edx/frontend-platform/i18n';
 import {
-  Alert, Button, FullscreenModal, Stepper,
+  Alert,
+  Button,
+  FullscreenModal,
+  Stepper,
 } from '@openedx/paragon';
 
-import { PagesAndResourcesContext } from '../PagesAndResourcesProvider';
+import { useCourseAuthoringContext } from '@src/CourseAuthoringContext';
+import ConnectionErrorAlert from '@src/generic/ConnectionErrorAlert';
+import PermissionDeniedAlert from '@src/generic/PermissionDeniedAlert';
+import Loading from '@src/generic/Loading';
 
 import messages from './messages';
 import DiscussionsProvider from './DiscussionsProvider';
@@ -17,22 +25,18 @@ import { fetchProviders } from './data/thunks';
 import AppList from './app-list';
 import AppConfigForm from './app-config-form';
 import { DENIED, FAILED } from './data/slice';
-import ConnectionErrorAlert from '../../generic/ConnectionErrorAlert';
-import { useModel } from '../../generic/model-store';
-import PermissionDeniedAlert from '../../generic/PermissionDeniedAlert';
-import Loading from '../../generic/Loading';
+import { PagesAndResourcesContext } from '../PagesAndResourcesProvider';
 
 const SELECTION_STEP = 'selection';
 const SETTINGS_STEP = 'settings';
 
-const DiscussionsSettings = ({ courseId }) => {
+const DiscussionsSettings = () => {
   const intl = useIntl();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { path: pagesAndResourcesPath } = useContext(PagesAndResourcesContext);
   const { status, hasValidationError } = useSelector(state => state.discussions);
-  const { canChangeProviders } = useSelector(state => state.courseDetail);
-  const courseDetail = useModel('courseDetails', courseId);
+  const { courseId, courseDetails, canChangeProviders } = useCourseAuthoringContext();
 
   useEffect(() => {
     dispatch(fetchProviders(courseId));
@@ -56,7 +60,7 @@ const DiscussionsSettings = ({ courseId }) => {
     navigate(discussionsPath);
   }, [discussionsPath]);
 
-  if (!courseDetail) {
+  if (!courseDetails) {
     return <Loading />;
   }
 
@@ -98,7 +102,7 @@ const DiscussionsSettings = ({ courseId }) => {
             isOpen
             beforeBodyNode={<Stepper.Header className="border-bottom border-light" />}
             isOverflowVisible={false}
-            footerNode={(
+            footerNode={
               <>
                 <Stepper.ActionRow eventKey={SELECTION_STEP}>
                   <AppList.NextButton />
@@ -115,19 +119,17 @@ const DiscussionsSettings = ({ courseId }) => {
                   </div>
                 </Stepper.ActionRow>
               </>
-            )}
+            }
           >
             <Stepper.Step
               eventKey={SELECTION_STEP}
               title={intl.formatMessage(messages.providerSelection)}
             >
-              {
-                !canChangeProviders && (
-                  <Alert variant="warning">
-                    {intl.formatMessage(messages.noProviderSwitchAfterCourseStarted)}
-                  </Alert>
-                )
-              }
+              {!canChangeProviders && (
+                <Alert variant="warning">
+                  {intl.formatMessage(messages.noProviderSwitchAfterCourseStarted)}
+                </Alert>
+              )}
               <AppList />
             </Stepper.Step>
             <Stepper.Step
@@ -145,10 +147,6 @@ const DiscussionsSettings = ({ courseId }) => {
       </AppConfigForm.Provider>
     </DiscussionsProvider>
   );
-};
-
-DiscussionsSettings.propTypes = {
-  courseId: PropTypes.string.isRequired,
 };
 
 export default DiscussionsSettings;

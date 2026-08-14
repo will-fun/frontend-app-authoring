@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLibraryContext } from '../../common/context/LibraryContext';
+import { usePublishedFilterContext } from '@src/library-authoring/common/context/PublishedFilterContext';
 import { FilterByPublished, PublishStatus } from '../../../search-manager';
 
 /**
@@ -8,16 +8,11 @@ import { FilterByPublished, PublishStatus } from '../../../search-manager';
  * never show results. This component removes that option from FilterByPublished
  * when not relevant.
  */
-const LibraryFilterByPublished : React.FC<Record<never, never>> = () => {
-  const { showOnlyPublished } = useLibraryContext();
+const LibraryFilterByPublished: React.FC<Record<never, never>> = () => {
+  const { showOnlyPublished } = usePublishedFilterContext();
 
   if (showOnlyPublished) {
-    return (
-      <FilterByPublished visibleFilters={
-        [PublishStatus.Published, PublishStatus.Modified]
-      }
-      />
-    );
+    return <FilterByPublished visibleFilters={[PublishStatus.Published, PublishStatus.Modified]} />;
   }
 
   return <FilterByPublished />;

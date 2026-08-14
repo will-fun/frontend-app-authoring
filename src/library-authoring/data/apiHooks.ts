@@ -7,6 +7,8 @@ import {
   type QueryClient,
   replaceEqualDeep,
   keepPreviousData,
+  skipToken,
+  UseQueryResult,
 } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { type MeiliSearch } from 'meilisearch';
@@ -89,6 +91,33 @@ export const libraryAuthoringQueryKeys = {
     }
     return ['hierarchy'];
   },
+  containerCreationEntry: (containerId: string) => [
+    ...libraryAuthoringQueryKeys.container(containerId),
+    'creationEntry',
+  ],
+  containerDraftHistory: (containerId: string) => [
+    ...libraryAuthoringQueryKeys.container(containerId),
+    'draftHistory',
+  ],
+  containerPublishHistory: (containerId: string) => [
+    ...libraryAuthoringQueryKeys.container(containerId),
+    'publishHistory',
+  ],
+  courseImports: (libraryId: string) => [
+    ...libraryAuthoringQueryKeys.contentLibrary(libraryId),
+    'courseImports',
+  ],
+  allMigrationInfo: () => [...libraryAuthoringQueryKeys.all, 'migrationInfo'],
+  migrationInfo: (sourceKeys: string[]) => [
+    ...libraryAuthoringQueryKeys.allMigrationInfo(),
+    ...sourceKeys,
+  ],
+  migrationBlocksInfo: (libraryId: string, collectionId?: string, isFailed?: boolean) => [
+    ...libraryAuthoringQueryKeys.allMigrationInfo(),
+    libraryId,
+    collectionId,
+    isFailed,
+  ],
 };
 
 export const xblockQueryKeys = {
@@ -98,13 +127,23 @@ export const xblockQueryKeys = {
    */
   xblock: (usageKey?: string) => [...xblockQueryKeys.all, usageKey],
   /** Fields (i.e. the content, display name, etc.) of an XBlock */
-  xblockFields: (usageKey: string, version: VersionSpec = 'draft') => [...xblockQueryKeys.xblock(usageKey), 'fields', version],
+  xblockFields: (
+    usageKey: string,
+    version: VersionSpec = 'draft',
+  ) => [...xblockQueryKeys.xblock(usageKey), 'fields', version],
   /** OLX (XML representation of the fields/content) */
   xblockOLX: (usageKey: string) => [...xblockQueryKeys.xblock(usageKey), 'OLX'],
   /** assets (static files) */
   xblockAssets: (usageKey: string) => [...xblockQueryKeys.xblock(usageKey), 'assets'],
   componentMetadata: (usageKey: string) => [...xblockQueryKeys.xblock(usageKey), 'componentMetadata'],
   componentDownstreamLinks: (usageKey: string) => [...xblockQueryKeys.xblock(usageKey), 'downstreamLinks'],
+  draftHistory: (usageKey: string) => [...xblockQueryKeys.xblock(usageKey), 'draftHistory'],
+  publishHistory: (usageKey: string) => [...xblockQueryKeys.xblock(usageKey), 'publishHistory'],
+  publishHistoryEntries: (
+    usageKey: string,
+    publishGroupUuid: string,
+  ) => [...xblockQueryKeys.xblock(usageKey), 'publishHistory', publishGroupUuid, 'entries'],
+  creationEntry: (usageKey: string) => [...xblockQueryKeys.xblock(usageKey), 'creationEntry'],
 
   /**
    * Predicate used to invalidate all metadata only (not OLX, fields, assets, etc.).
@@ -112,6 +151,8 @@ export const xblockQueryKeys = {
    * introspecting the usage keys.
    */
   allComponentMetadata: (query: Query) => query.queryKey[0] === 'xblock' && query.queryKey[2] === 'componentMetadata',
+  allDraftHistory: (query: Query) => query.queryKey[0] === 'xblock' && query.queryKey[2] === 'draftHistory',
+  allPublishHistory: (query: Query) => query.queryKey[0] === 'xblock' && query.queryKey[2] === 'publishHistory',
   componentHierarchy: (usageKey?: string) => {
     if (usageKey) {
       return [
@@ -141,6 +182,24 @@ export function invalidateComponentData(queryClient: QueryClient, contentLibrary
   // This might fail in case this helper is called after deleting the block.
   queryClient.invalidateQueries({ queryKey: libraryAuthoringQueryKeys.contentLibrary(contentLibraryId) });
   queryClient.invalidateQueries({ predicate: (query) => libraryQueryPredicate(query, contentLibraryId) });
+  queryClient.invalidateQueries({ queryKey: xblockQueryKeys.draftHistory(usageKey) });
+  queryClient.invalidateQueries({ queryKey: xblockQueryKeys.publishHistory(usageKey) });
+}
+
+/**
+ * Tell react-query to refresh its cache of component-related data across all components in all libraries.
+ *
+ * Use this when a bulk operation (e.g. publish all, revert all) affects an unknown set of components
+ * and it's not practical to invalidate them individually.
+ *
+ * @param queryClient The query client - get it via useQueryClient()
+ */
+export function invalidateAllComponentData(queryClient: QueryClient) {
+  // For XBlocks, the only thing we need to invalidate is the metadata which includes "has unpublished changes"
+  queryClient.invalidateQueries({ predicate: xblockQueryKeys.allComponentMetadata });
+  // For XBlocks, to invalidate the history log queries to refresh the history
+  queryClient.invalidateQueries({ predicate: xblockQueryKeys.allDraftHistory });
+  queryClient.invalidateQueries({ predicate: xblockQueryKeys.allPublishHistory });
 }
 
 /**
@@ -149,8 +208,7 @@ export function invalidateComponentData(queryClient: QueryClient, contentLibrary
 export const useContentLibrary = (libraryId: string | undefined) => (
   useQuery({
     queryKey: libraryAuthoringQueryKeys.contentLibrary(libraryId),
-    queryFn: () => api.getContentLibrary(libraryId!),
-    enabled: libraryId !== undefined,
+    queryFn: libraryId ? () => api.getContentLibrary(libraryId!) : skipToken,
   })
 );
 
@@ -228,13 +286,24 @@ export const useUpdateLibraryMetadata = () => {
 /**
  * Builds the query to fetch list of V2 Libraries
  */
-export const useContentLibraryV2List = (customParams: api.GetLibrariesV2CustomParams) => (
-  useQuery({
+export function useContentLibraryV2List(
+  customParams: api.GetLibrariesV2CustomParamsPagination,
+): UseQueryResult<api.LibrariesV2Response, Error>;
+export function useContentLibraryV2List(
+  customParams: api.GetLibrariesV2CustomParamsNoPagination,
+): UseQueryResult<api.ContentLibrary[], Error>;
+export function useContentLibraryV2List(
+  customParams: api.GetLibrariesV2CustomParams,
+): UseQueryResult<api.LibrariesV2Response | api.ContentLibrary[], Error>;
+export function useContentLibraryV2List(
+  customParams: api.GetLibrariesV2CustomParams,
+): UseQueryResult<api.LibrariesV2Response | api.ContentLibrary[], Error> {
+  return useQuery({
     queryKey: libraryAuthoringQueryKeys.contentLibraryList(customParams),
     queryFn: () => api.getContentLibraryV2List(customParams),
     placeholderData: keepPreviousData,
-  })
-);
+  });
+}
 
 /** Publish all changes in the library. */
 export const useCommitLibraryChanges = () => {
@@ -245,8 +314,7 @@ export const useCommitLibraryChanges = () => {
       // Invalidate all content-related metadata and search results for the whole library.
       queryClient.invalidateQueries({ queryKey: libraryAuthoringQueryKeys.contentLibrary(libraryId) });
       queryClient.invalidateQueries({ predicate: (query) => libraryQueryPredicate(query, libraryId) });
-      // For XBlocks, the only thing we need to invalidate is the metadata which includes "has unpublished changes"
-      queryClient.invalidateQueries({ predicate: xblockQueryKeys.allComponentMetadata });
+      invalidateAllComponentData(queryClient);
     },
   });
 };
@@ -260,8 +328,7 @@ export const useRevertLibraryChanges = () => {
       // Invalidate all content-related metadata and search results for the whole library.
       queryClient.invalidateQueries({ queryKey: libraryAuthoringQueryKeys.contentLibrary(libraryId) });
       queryClient.invalidateQueries({ predicate: (query) => libraryQueryPredicate(query, libraryId) });
-      // For XBlocks, the only thing we need to invalidate is the metadata which includes "has unpublished changes"
-      queryClient.invalidateQueries({ predicate: xblockQueryKeys.allComponentMetadata });
+      invalidateAllComponentData(queryClient);
     },
   });
 };
@@ -501,40 +568,47 @@ export const useDeleteXBlockAsset = (usageKey: string) => {
 /**
  * Get the metadata for a collection in a library
  */
-export const useCollection = (libraryId: string, collectionId?: string) => (
+export const useCollection = (libraryId?: string, collectionId?: string) => (
   useQuery({
-    enabled: !!libraryId && !!collectionId,
     queryKey: libraryAuthoringQueryKeys.collection(libraryId, collectionId),
-    queryFn: () => api.getCollectionMetadata(libraryId!, collectionId!),
+    queryFn: (!!libraryId && !!collectionId)
+      ? () => api.getCollectionMetadata(libraryId!, collectionId!)
+      : skipToken,
   })
 );
 
 /**
  * Use this mutation to update the fields of a collection in a library
  */
-export const useUpdateCollection = (libraryId: string, collectionId: string) => {
+export const useUpdateCollection = () => {
   const queryClient = useQueryClient();
-  const collectionQueryKey = libraryAuthoringQueryKeys.collection(libraryId, collectionId);
   return useMutation({
-    mutationFn: (data: api.UpdateCollectionComponentsRequest) => (
+    mutationFn: async ({ libraryId, collectionId, data }: {
+      libraryId: string;
+      collectionId: string;
+      data: api.UpdateCollectionComponentsRequest;
+    }) => (
       api.updateCollectionMetadata(libraryId, collectionId, data)
     ),
-    onMutate: (data) => {
+    onMutate: (variables) => {
+      const collectionQueryKey = libraryAuthoringQueryKeys.collection(variables.libraryId, variables.collectionId);
       const previousData = queryClient.getQueryData(collectionQueryKey) as api.CollectionMetadata;
       queryClient.setQueryData(collectionQueryKey, {
         ...previousData,
-        ...data,
+        ...variables.data,
       });
 
       return { previousData };
     },
-    onError: (_err, _data, context) => {
+    onError: (_err, variables, context) => {
+      const collectionQueryKey = libraryAuthoringQueryKeys.collection(variables.libraryId, variables.collectionId);
       queryClient.setQueryData(collectionQueryKey, context?.previousData);
     },
-    onSettled: () => {
+    onSettled: (_data, _err, variables) => {
       // NOTE: We invalidate the library query here because we need to update the library's
       // collection list.
-      queryClient.invalidateQueries({ predicate: (query) => libraryQueryPredicate(query, libraryId) });
+      const collectionQueryKey = libraryAuthoringQueryKeys.collection(variables.libraryId, variables.collectionId);
+      queryClient.invalidateQueries({ predicate: (query) => libraryQueryPredicate(query, variables.libraryId) });
       queryClient.invalidateQueries({ queryKey: collectionQueryKey });
     },
   });
@@ -674,9 +748,12 @@ export const useUpdateContainer = (containerId: string, affectedParentContainerI
         const childrenQueryKey = libraryAuthoringQueryKeys.containerChildren(affectedParentContainerId);
         childrenPreviousData = queryClient.getQueryData(childrenQueryKey) as api.Container[];
         if (childrenPreviousData) {
-          queryClient.setQueryData(childrenQueryKey, childrenPreviousData.map(item => (
-            item.id === containerId ? { ...item, ...data } : item
-          )));
+          queryClient.setQueryData(
+            childrenQueryKey,
+            childrenPreviousData.map(item => (
+              item.id === containerId ? { ...item, ...data } : item
+            )),
+          );
         }
       }
 
@@ -736,35 +813,37 @@ export const useRestoreContainer = (containerId: string) => {
 /**
  * Get the metadata and children for a container in a library
  */
-export const useContainerChildren = <ChildType extends {
-  id: string;
-  isNew?: boolean;
-} = api.LibraryBlockMetadata | api.Container>(
-    containerId?: string,
-    published: boolean = false,
-  ) => (
-    useQuery({
-      enabled: !!containerId,
-      queryKey: libraryAuthoringQueryKeys.containerChildren(containerId!),
-      queryFn: () => api.getLibraryContainerChildren<ChildType>(containerId!, published),
-      structuralSharing: (oldData: ChildType[], newData: ChildType[]) => {
+export const useContainerChildren = <
+  ChildType extends {
+    id: string;
+    isNew?: boolean;
+  } = api.LibraryBlockMetadata | api.Container,
+>(
+  containerId?: string,
+  published: boolean = false,
+) => (
+  useQuery({
+    enabled: !!containerId,
+    queryKey: libraryAuthoringQueryKeys.containerChildren(containerId!),
+    queryFn: () => api.getLibraryContainerChildren<ChildType>(containerId!, published),
+    structuralSharing: (oldData: ChildType[], newData: ChildType[]) => {
       // This just sets `isNew` flag to new children components
-        if (oldData) {
-          const oldDataIds = oldData.map((obj) => obj.id);
-          // eslint-disable-next-line no-param-reassign
-          newData = newData.map((newObj) => {
-            if (!oldDataIds.includes(newObj.id)) {
+      if (oldData) {
+        const oldDataIds = oldData.map((obj) => obj.id);
+        // eslint-disable-next-line no-param-reassign
+        newData = newData.map((newObj) => {
+          if (!oldDataIds.includes(newObj.id)) {
             // Set isNew = true if we have new child on refetch
             // eslint-disable-next-line no-param-reassign
-              newObj.isNew = true;
-            }
-            return newObj;
-          });
-        }
-        return replaceEqualDeep(oldData, newData);
-      },
-    })
-  );
+            newObj.isNew = true;
+          }
+          return newObj;
+        });
+      }
+      return replaceEqualDeep(oldData, newData);
+    },
+  })
+);
 
 /**
  * If you work with `useContentFromSearchIndex`, you can use this
@@ -905,8 +984,8 @@ export const useRemoveContainerChildren = (containerId?: string) => {
 };
 
 /**
-  * Use this mutation to publish changes to a container and any children within it
-  */
+ * Use this mutation to publish changes to a container and any children within it
+ */
 export const usePublishContainer = (containerId: string) => {
   const queryClient = useQueryClient();
   const libraryId = getLibraryId(containerId);
@@ -919,8 +998,7 @@ export const usePublishContainer = (containerId: string) => {
       queryClient.invalidateQueries({ queryKey: libraryAuthoringQueryKeys.contentLibraryContent(libraryId) });
       queryClient.invalidateQueries({ queryKey: libraryAuthoringQueryKeys.containerHierarchy(containerId) });
       queryClient.invalidateQueries({ predicate: (query) => libraryQueryPredicate(query, libraryId) });
-      // For XBlocks, the only thing we need to invalidate is the metadata which includes "has unpublished changes"
-      queryClient.invalidateQueries({ predicate: xblockQueryKeys.allComponentMetadata });
+      invalidateAllComponentData(queryClient);
     },
   });
 };
@@ -951,3 +1029,123 @@ export const useContentFromSearchIndex = (contentIds: string[]) => {
     skipBlockTypeFetch: true,
   });
 };
+
+/**
+ * Returns the course imports which had this library as destination.
+ */
+export const useCourseImports = (libraryId: string) => (
+  useQuery({
+    queryKey: libraryAuthoringQueryKeys.courseImports(libraryId),
+    queryFn: () => api.getCourseImports(libraryId),
+  })
+);
+
+/**
+ * Returns the migration info of a given source list
+ */
+export const useMigrationInfo = (sourcesKeys: string[], enabled: boolean = true) => (
+  useQuery({
+    queryKey: libraryAuthoringQueryKeys.migrationInfo(sourcesKeys),
+    queryFn: enabled ? () => api.getMigrationInfo(sourcesKeys) : skipToken,
+  })
+);
+
+/**
+ * Returns the draft history of a library block.
+ */
+export const useLibraryBlockDraftHistory = (usageKey?: string) => (
+  useQuery({
+    queryKey: xblockQueryKeys.draftHistory(usageKey!),
+    queryFn: usageKey ? () => api.getLibraryBlockDraftHistory(usageKey) : skipToken,
+  })
+);
+
+/**
+ * Returns the publish history of a library block.
+ */
+export const useLibraryBlockPublishHistory = (usageKey?: string) => (
+  useQuery({
+    queryKey: xblockQueryKeys.publishHistory(usageKey!),
+    queryFn: usageKey ? () => api.getLibraryBlockPublishHistory(usageKey) : skipToken,
+  })
+);
+
+/**
+ * Returns the entries for a publish history group of a library item.
+ */
+export const useLibraryPublishHistoryEntries = (
+  usageKey?: string,
+  publishGroupUuid?: string,
+  enabled: boolean = true,
+) => (
+  useQuery({
+    queryKey: xblockQueryKeys.publishHistoryEntries(usageKey!, publishGroupUuid!),
+    queryFn: (usageKey && publishGroupUuid && enabled)
+      ? () => api.getLibraryPublishHistoryEntries(getLibraryId(usageKey), usageKey, publishGroupUuid)
+      : skipToken,
+  })
+);
+
+/**
+ * Returns the creation entry for a library block.
+ */
+export const useLibraryBlockCreationEntry = (usageKey?: string) => (
+  useQuery({
+    queryKey: xblockQueryKeys.creationEntry(usageKey!),
+    queryFn: usageKey ? () => api.getLibraryBlockCreationEntry(usageKey) : skipToken,
+  })
+);
+
+/**
+ * Hook to fetch the publish history groups for a library container (unit, section, subsection).
+ */
+export const useLibraryContainerPublishHistory = (containerKey?: string) => (
+  useQuery({
+    queryKey: libraryAuthoringQueryKeys.containerPublishHistory(containerKey!),
+    queryFn: containerKey ? () => api.getLibraryContainerPublishHistory(containerKey) : skipToken,
+  })
+);
+
+/**
+ * Hook to fetch the draft history entries for a library container (unit, section, subsection).
+ */
+export const useLibraryContainerDraftHistory = (containerKey?: string) => (
+  useQuery({
+    queryKey: libraryAuthoringQueryKeys.containerDraftHistory(containerKey!),
+    queryFn: containerKey ? () => api.getLibraryContainerDraftHistory(containerKey) : skipToken,
+  })
+);
+
+/**
+ * Hook to fetch the creation entry for a library container (unit, section, subsection).
+ */
+export const useLibraryContainerCreationEntry = (containerKey?: string) => (
+  useQuery({
+    queryKey: libraryAuthoringQueryKeys.containerCreationEntry(containerKey!),
+    queryFn: containerKey ? () => api.getLibraryContainerCreationEntry(containerKey) : skipToken,
+  })
+);
+
+/**
+ * Returns the migration blocks info of a given library
+ */
+export const useMigrationBlocksInfo = (
+  libraryId: string,
+  collectionId?: string,
+  isFailed?: boolean,
+  taskUuid?: string,
+  enabled = true,
+) => (
+  useQuery({
+    queryKey: libraryAuthoringQueryKeys.migrationBlocksInfo(libraryId, collectionId, isFailed),
+    queryFn: enabled ?
+      () =>
+        api.getModulestoreMigrationBlocksInfo(
+          libraryId,
+          collectionId,
+          isFailed,
+          taskUuid,
+        ) :
+      skipToken,
+  })
+);

@@ -1,7 +1,6 @@
 import { defineMessages } from '@edx/frontend-platform/i18n';
 
 const messages = defineMessages({
-
   advanceProblemButtonLabel: {
     id: 'authoring.problemEditor.problemSelect.advanceButton.label',
     defaultMessage: 'Advanced problem types',
@@ -58,6 +57,11 @@ const messages = defineMessages({
     id: 'authoring.problemeditor.advancedproblemtype.customsingleselect.title',
     defaultMessage: 'Custom single select',
     description: 'Title for custom single select advanced problem type',
+  },
+  'problemType.customproblem.title': {
+    id: 'authoring.problemeditor.advancedproblemtype.customproblem.title',
+    defaultMessage: 'Custom problem',
+    description: 'Title for custom problem advanced problem type',
   },
 
   // Basic Problem Type Messages by Key
@@ -134,10 +138,10 @@ const messages = defineMessages({
         or of the content that can be provided using these tools.
         \n \n
         Test these tools thoroughly before using them in your course, especially in graded
-        sections. Complete documentstion might not be available for provisionally supported
+        sections. Complete documentation might not be available for provisionally supported
         tools, or documentation might be available from sources other than edX.}
       Not_supported {Tools with no support are not maintained by edX, and might be deprecated
-        in the future. They are not recommened for use in courses due to non-compliance with one
+        in the future. They are not recommended for use in courses due to non-compliance with one
         or more of the base requirements, such as testing, accessibility, internationalization,
         and documentation.}
       other { }

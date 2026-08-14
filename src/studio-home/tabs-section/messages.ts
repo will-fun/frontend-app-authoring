@@ -50,19 +50,6 @@ const messages = defineMessages({
     defaultMessage: 'Taxonomies',
     description: 'Title of Taxonomies tab on the home page',
   },
-  libraryV2PlaceholderTitle: {
-    id: 'course-authoring.studio-home.libraries.placeholder.title',
-    defaultMessage: 'Library V2 Placeholder',
-  },
-  libraryV2PlaceholderBody: {
-    id: 'course-authoring.studio-home.libraries.placeholder.body',
-    defaultMessage: 'This is a placeholder page, as the Library Authoring MFE is not enabled.',
-  },
-  librariesV2TabBetaBadge: {
-    id: 'course-authoring.studio-home.libraries.tab.library.beta-badge',
-    defaultMessage: 'Beta',
-    description: 'Text used to mark the Libraries v2 feature as "in beta"',
-  },
   librariesV2TabLibrarySearchPlaceholder: {
     id: 'course-authoring.studio-home.libraries.tab.library.search-placeholder',
     defaultMessage: 'Search',
@@ -135,6 +122,11 @@ const messages = defineMessages({
     id: 'studio-home.libraries.migrate.select-all',
     defaultMessage: 'Select All',
     description: 'Button to select all libraries when migrate legacy libraries.',
+  },
+  libraryMigrationStatusText: {
+    id: 'course-authoring.studio-home.library-v1.card.status',
+    description: 'Status text in v1 library card in studio informing user of its migration status',
+    defaultMessage: 'Previously migrated library. Any problem bank links were already moved to',
   },
 });
 

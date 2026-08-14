@@ -1,27 +1,24 @@
-import React from 'react';
 import {
   render,
   fireEvent,
   waitFor,
   act,
-} from '@testing-library/react';
-import { AppProvider } from '@edx/frontend-platform/react';
-import { IntlProvider } from '@edx/frontend-platform/i18n';
-import { initializeMockApp } from '@edx/frontend-platform';
+  initializeMocks,
+} from '@src/testUtils';
 import moment from 'moment/moment';
 
-import initializeStore from '../../store';
+import { CourseAuthoringProvider } from '@src/CourseAuthoringContext';
 import { REQUEST_TYPES } from '../constants';
 import { courseHandoutsMock, courseUpdatesMock } from '../__mocks__';
 import UpdateForm from './UpdateForm';
 import messages from './messages';
 
-let store;
 const closeMock = jest.fn();
 const onSubmitMock = jest.fn();
 const addNewUpdateMock = { id: 0, date: moment().utc().toDate(), content: 'Some content' };
 const formattedDateMock = '07/11/2023';
-const contentMock = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.';
+const contentMock =
+  'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.';
 
 jest.mock('@tinymce/tinymce-react', () => {
   const originalModule = jest.requireActual('@tinymce/tinymce-react');
@@ -52,32 +49,22 @@ const courseUpdatesInitialValues = (requestType) => {
   }
 };
 
-const renderComponent = ({ requestType }) => render(
-  <AppProvider store={store}>
-    <IntlProvider locale="en">
+const renderComponent = ({ requestType }) =>
+  render(
+    <CourseAuthoringProvider courseId="1">
       <UpdateForm
         isOpen
         close={closeMock}
         requestType={requestType}
         onSubmit={onSubmitMock}
         courseUpdatesInitialValues={courseUpdatesInitialValues(requestType)}
-      />
-    </IntlProvider>
-  </AppProvider>,
-);
+      />,
+    </CourseAuthoringProvider>,
+  );
 
 describe('<UpdateForm />', () => {
   beforeEach(() => {
-    initializeMockApp({
-      authenticatedUser: {
-        userId: 3,
-        username: 'abc123',
-        administrator: true,
-        roles: [],
-      },
-    });
-
-    store = initializeStore();
+    initializeMocks();
   });
   it('render Add new update form correctly', async () => {
     const { getByText, getByDisplayValue, getByRole } = renderComponent({ requestType: REQUEST_TYPES.add_new_update });
@@ -103,7 +90,10 @@ describe('<UpdateForm />', () => {
 
   it('render Edit handouts form correctly', async () => {
     const {
-      getByText, getByRole, queryByTestId, queryByText,
+      getByText,
+      getByRole,
+      queryByTestId,
+      queryByText,
     } = renderComponent({ requestType: REQUEST_TYPES.edit_handouts });
 
     expect(getByText(messages.editHandoutsTitle.defaultMessage)).toBeInTheDocument();

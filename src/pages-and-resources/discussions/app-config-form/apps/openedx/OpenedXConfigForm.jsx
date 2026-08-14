@@ -22,16 +22,22 @@ import OpenedXConfigFormProvider from './OpenedXConfigFormProvider';
 setupYupExtensions();
 
 const OpenedXConfigForm = ({
-  onSubmit, formRef, legacy,
+  onSubmit,
+  formRef,
+  legacy,
 }) => {
   const intl = useIntl();
   const {
-    selectedAppId, enableGradedUnits, discussionTopicIds, divideDiscussionIds, postingRestrictions,
+    selectedAppId,
+    enableGradedUnits,
+    discussionTopicIds,
+    divideDiscussionIds,
+    postingRestrictions,
   } = useSelector(state => state.discussions);
   const appConfigObj = useModel('appConfigs', selectedAppId);
   const discussionTopicsModel = useModels('discussionTopics', discussionTopicIds);
   const legacyAppConfig = {
-    ...(appConfigObj || {}),
+    ...appConfigObj,
     divideDiscussionIds,
     enableInContext: true,
     enableGradedUnits,
@@ -64,6 +70,7 @@ const OpenedXConfigForm = ({
           .required(intl.formatMessage(messages.restrictedEndDateRequired))
           .when('startDate', {
             is: (startDate) => startDate,
+            // oxlint-disable-next-line unicorn/no-thenable
             then: Yup.string().compare(intl.formatMessage(messages.restrictedEndDateInPast), 'date'),
           }),
         startTime: Yup.string().checkFormat(
@@ -74,6 +81,7 @@ const OpenedXConfigForm = ({
           .checkFormat(intl.formatMessage(messages.restrictedEndTimeInValidFormat), 'time')
           .when('startTime', {
             is: (startTime) => startTime,
+            // oxlint-disable-next-line unicorn/no-thenable
             then: Yup.string().compare(intl.formatMessage(messages.restrictedEndTimeInPast), 'time'),
           }),
       }),
@@ -95,12 +103,20 @@ const OpenedXConfigForm = ({
       onSubmit={(values) => onSubmit(values)}
     >
       {({
-        handleSubmit, handleChange, handleBlur, values, errors, touched,
+        handleSubmit,
+        handleChange,
+        handleBlur,
+        values,
+        errors,
+        touched,
       }) => {
         const { discussionTopics, restrictedDates } = values;
-        const discussionTopicErrors = discussionTopics.map((value, index) => checkFieldErrors(touched, errors, `discussionTopics.${index}`, 'name'));
+        const discussionTopicErrors = discussionTopics.map((value, index) =>
+          checkFieldErrors(touched, errors, `discussionTopics.${index}`, 'name')
+        );
         const restrictedDatesErrors = restrictedDates.map(
-          (value, index) => checkFieldErrors(touched, errors, `restrictedDates.${index}`, 'startDate')
+          (value, index) =>
+            checkFieldErrors(touched, errors, `restrictedDates.${index}`, 'startDate')
             || checkFieldErrors(touched, errors, `restrictedDates.${index}`, 'endDate')
             || checkFieldErrors(touched, errors, `restrictedDates.${index}`, 'startTime')
             || checkFieldErrors(touched, errors, `restrictedDates.${index}`, 'endTime'),
@@ -112,8 +128,7 @@ const OpenedXConfigForm = ({
           discussionTopicErrors,
           postingRestrictions,
           restrictedDatesErrors,
-          isFormInvalid:
-            discussionTopicErrors.some((error) => error)
+          isFormInvalid: discussionTopicErrors.some((error) => error)
             || restrictedDatesErrors.some((error) => error),
         };
 

@@ -121,10 +121,18 @@ export const replaceStaticWithAsset = ({
       let staticFullUrl;
       const isStatic = src.startsWith('/static/');
       const assetSrc = src.substring(0, src.indexOf('"'));
+
+      // Check if this is a direct /static/filename.ext pattern (should be converted)
+      // vs /static/images/filename.ext pattern (should NOT be converted)
+      // /static/images/ are direct links to images stored in static, not course assets
+      // we have dummy images there for course content that should not be converted to assets
+      const isDirectStaticFile = (isStatic || assetSrc.startsWith('/asset')) &&
+        !assetSrc.substring(8).includes('images/');
+
       const staticName = assetSrc.substring(8);
       const assetName = parseAssetName(src);
       const displayName = isStatic ? staticName : assetName;
-      const isCorrectAssetFormat = assetSrc.startsWith('/asset') && assetSrc.match(/\/asset-v1:\S+[+]\S+[@]\S+[+]\S+[@]/g)?.length >= 1;
+      const isCorrectAssetFormat = assetSrc.match(/\/asset-v1:\S+[+]\S+[@]\S+[+]\S+[@]/g)?.length >= 1;
 
       // assets in expandable text areas do not support relative urls so all assets must have the lms
       // endpoint prepended to the relative url
@@ -133,16 +141,16 @@ export const replaceStaticWithAsset = ({
         // set the base URL to an endpoint serving the draft version of an asset by
         // its path.
         /* istanbul ignore next */
-        if (isStatic) {
+        if (isStatic && isDirectStaticFile) {
           staticFullUrl = assetSrc.substring(1);
         }
       } else if (editorType === 'expandable') {
         if (isCorrectAssetFormat) {
           staticFullUrl = `${lmsEndpointUrl}${assetSrc}`;
-        } else {
+        } else if (isDirectStaticFile) {
           staticFullUrl = `${lmsEndpointUrl}${getRelativeUrl({ courseId: learningContextId, displayName })}`;
         }
-      } else if (!isCorrectAssetFormat) {
+      } else if (!isCorrectAssetFormat && isDirectStaticFile) {
         staticFullUrl = getRelativeUrl({ courseId: learningContextId, displayName });
       }
       if (staticFullUrl) {
@@ -170,7 +178,10 @@ export const replaceStaticWithAsset = ({
  * @returns {Object} { result, foundMatch }
  */
 export function updateImageDimensions({
-  images, url, width, height,
+  images,
+  url,
+  width,
+  height,
 }) {
   let foundMatch = false;
 
@@ -189,12 +200,18 @@ export function updateImageDimensions({
 
 export const getImageResizeHandler = ({ editor, imagesRef, setImage }) => () => {
   const {
-    src, alt, width, height,
+    src,
+    alt,
+    width,
+    height,
   } = editor.selection.getNode();
 
   // eslint-disable-next-line no-param-reassign
   imagesRef.current = updateImageDimensions({
-    images: imagesRef.current, url: src, width, height,
+    images: imagesRef.current,
+    url: src,
+    width,
+    height,
   }).result;
 
   setImage({
@@ -252,8 +269,12 @@ export const detectImageMatchingError = ({ matchingImages, tinyMceHTML }) => {
 };
 
 export const openModalWithSelectedImage = ({
-  editor, images, setImage, openImgModal,
-}) => () => {
+  editor,
+  images,
+  setImage,
+  openImgModal,
+}) =>
+() => {
   const tinyMceHTML = editor.selection.getNode();
   const { src: mceSrc } = tinyMceHTML;
 
@@ -283,7 +304,8 @@ export const setupCustomBehavior = ({
   setImage,
   lmsEndpointUrl,
   learningContextId,
-}) => (editor) => {
+}) =>
+(editor) => {
   // image upload button
   editor.ui.registry.addButton(tinyMCE.buttons.imageUploadButton, {
     icon: 'image',
@@ -295,7 +317,10 @@ export const setupCustomBehavior = ({
     icon: 'image',
     tooltip: 'Edit Image Settings',
     onAction: openModalWithSelectedImage({
-      editor, images, setImage, openImgModal,
+      editor,
+      images,
+      setImage,
+      openImgModal,
     }),
   });
   // overriding the code plugin's icon with 'HTML' text
@@ -330,7 +355,8 @@ export const setupCustomBehavior = ({
   editor.ui.registry.addButton('customLabelButton', {
     icon: 'textToSpeech',
     text: 'Label',
-    tooltip: 'Apply a "Question" label to specific text, recognized by screen readers. Recommended to improve accessibility.',
+    tooltip:
+      'Apply a "Question" label to specific text, recognized by screen readers. Recommended to improve accessibility.',
     onAction: toggleLabelFormatting,
   });
   if (editorType === 'expandable') {
@@ -365,12 +391,18 @@ export const setupCustomBehavior = ({
   editor.on('ExecCommand', /* istanbul ignore next */ (e) => {
     if (editorType === 'text' && e.command === 'mceFocus') {
       const initialContent = editor.getContent();
-      // @ts-ignore Some parameters like 'lmsEndpointUrl' were missing here. Fix me?
       const newContent = replaceStaticWithAsset({
         initialContent,
+        editorType,
+        lmsEndpointUrl,
         learningContextId,
       });
-      if (newContent) { editor.setContent(newContent); }
+      if (newContent) {
+        // Use setTimeout to ensure the update happens after current execution
+        setTimeout(() => {
+          editor.setContent(newContent);
+        }, 0);
+      }
     }
     if (e.command === 'RemoveFormat') {
       editor.formatter.remove('blockquote');

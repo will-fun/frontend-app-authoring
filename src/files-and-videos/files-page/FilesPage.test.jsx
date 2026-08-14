@@ -1,24 +1,21 @@
+import userEvent from '@testing-library/user-event';
+import ReactDOM from 'react-dom';
+import { saveAs } from 'file-saver';
+
+import { camelCaseObject } from '@edx/frontend-platform';
+
 import {
   render,
   fireEvent,
   screen,
   waitFor,
   within,
-} from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import ReactDOM from 'react-dom';
-import { saveAs } from 'file-saver';
-
-import { camelCaseObject, initializeMockApp } from '@edx/frontend-platform';
-import MockAdapter from 'axios-mock-adapter';
-import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
-import { AppProvider } from '@edx/frontend-platform/react';
-import { IntlProvider } from '@edx/frontend-platform/i18n';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
-
-import initializeStore from '../../store';
-import { executeThunk } from '../../utils';
-import { RequestStatus } from '../../data/constants';
+  initializeMocks,
+} from '@src/testUtils';
+import { CourseAuthoringProvider } from '@src/CourseAuthoringContext';
+import { useCourseUserPermissions } from '@src/authz/hooks';
+import { executeThunk } from '@src/utils';
+import { RequestStatus } from '@src/data/constants';
 import FilesPage from './FilesPage';
 import {
   generateFetchAssetApiResponse,
@@ -49,22 +46,28 @@ let file;
 ReactDOM.createPortal = jest.fn(node => node);
 jest.mock('file-saver');
 
+jest.mock('@src/authz/hooks', () => ({
+  useCourseUserPermissions: jest.fn().mockReturnValue({
+    isLoading: false,
+    canViewFiles: true,
+    canEditFiles: true,
+    canDeleteFiles: true,
+    canCreateFiles: true,
+  }),
+}));
+
 const renderComponent = () => {
   render(
-    <IntlProvider locale="en">
-      <AppProvider store={store} wrapWithRouter={false}>
-        <MemoryRouter initialEntries={[`/course/${courseId}/videos`]}>
-          <Routes>
-            <Route
-              path="/course/:courseId/*"
-              element={
-                <FilesPage courseId={courseId} />
-              }
-            />
-          </Routes>
-        </MemoryRouter>
-      </AppProvider>
-    </IntlProvider>,
+    <CourseAuthoringProvider courseId={courseId}>
+      <FilesPage />,
+    </CourseAuthoringProvider>,
+    {
+      path: '/course/:courseId/*',
+      routerProps: {
+        initialEntries: [`/course/${courseId}/videos`],
+      },
+      params: { courseId },
+    },
   );
 };
 
@@ -91,24 +94,19 @@ const emptyMockStore = async (status) => {
 
 describe('FilesAndUploads', () => {
   describe('empty state', () => {
-    beforeEach(async () => {
-      initializeMockApp({
-        authenticatedUser: {
-          userId: 3,
-          username: 'abc123',
-          administrator: false,
-          roles: [],
+    beforeEach(() => {
+      const mocks = initializeMocks({
+        initialState: {
+          ...initialState,
+          assets: {
+            ...initialState.assets,
+            assetIds: [],
+          },
+          models: {},
         },
       });
-      store = initializeStore({
-        ...initialState,
-        assets: {
-          ...initialState.assets,
-          assetIds: [],
-        },
-        models: {},
-      });
-      axiosMock = new MockAdapter(getAuthenticatedHttpClient());
+      store = mocks.reduxStore;
+      axiosMock = mocks.axiosMock;
       file = new File(['(⌐□_□)'], 'download.png', { type: 'image/png' });
     });
 
@@ -152,17 +150,19 @@ describe('FilesAndUploads', () => {
   });
 
   describe('valid assets', () => {
-    beforeEach(async () => {
-      initializeMockApp({
-        authenticatedUser: {
-          userId: 3,
-          username: 'abc123',
-          administrator: false,
-          roles: [],
+    beforeEach(() => {
+      const mocks = initializeMocks({
+        initialState: {
+          ...initialState,
+          assets: {
+            ...initialState.assets,
+            assetIds: [],
+          },
+          models: {},
         },
       });
-      store = initializeStore(initialState);
-      axiosMock = new MockAdapter(getAuthenticatedHttpClient());
+      store = mocks.reduxStore;
+      axiosMock = mocks.axiosMock;
       file = new File(['(⌐□_□)'], 'download.png', { type: 'image/png' });
       global.localStorage.clear();
     });
@@ -241,7 +241,8 @@ describe('FilesAndUploads', () => {
           const { asset: newDefaultAssetResponse } = generateNewAssetApiResponse();
           const responseData = {
             asset: {
-              ...newDefaultAssetResponse, id: 'mOckID6',
+              ...newDefaultAssetResponse,
+              id: 'mOckID6',
             },
           };
 
@@ -425,11 +426,14 @@ describe('FilesAndUploads', () => {
         fireEvent.click(within(assetMenuButton).getByLabelText('file-menu-toggle'));
         fireEvent.click(screen.getByText('Info'));
 
-        await executeThunk(getUsagePaths({
-          courseId,
-          asset: { id: 'mOckID1', displayName: 'mOckID1' },
-          setSelectedRows: jest.fn(),
-        }), store.dispatch);
+        await executeThunk(
+          getUsagePaths({
+            courseId,
+            asset: { id: 'mOckID1', displayName: 'mOckID1' },
+            setSelectedRows: jest.fn(),
+          }),
+          store.dispatch,
+        );
         await waitFor(() => {
           expect(screen.getAllByLabelText('mOckID1')[0]).toBeVisible();
         });
@@ -447,21 +451,27 @@ describe('FilesAndUploads', () => {
         axiosMock.onGet(`${getAssetsUrl(courseId)}mOckID1/usage`).reply(201, { usage_locations: { mOckID1: [] } });
         fireEvent.click(within(assetMenuButton).getByLabelText('file-menu-toggle'));
         fireEvent.click(screen.getByText('Info'));
-        await executeThunk(getUsagePaths({
-          courseId,
-          asset: { id: 'mOckID1', displayName: 'mOckID1' },
-          setSelectedRows: jest.fn(),
-        }), store.dispatch);
+        await executeThunk(
+          getUsagePaths({
+            courseId,
+            asset: { id: 'mOckID1', displayName: 'mOckID1' },
+            setSelectedRows: jest.fn(),
+          }),
+          store.dispatch,
+        );
         await waitFor(() => {
           expect(screen.getAllByLabelText('mOckID1')[0]).toBeVisible();
         });
 
         fireEvent.click(screen.getByLabelText('Checkbox'));
-        await executeThunk(updateAssetLock({
-          courseId,
-          assetId: 'mOckID1',
-          locked: false,
-        }), store.dispatch);
+        await executeThunk(
+          updateAssetLock({
+            courseId,
+            assetId: 'mOckID1',
+            locked: false,
+          }),
+          store.dispatch,
+        );
         expect(screen.getByText(messages.usageNotInUseMessage.defaultMessage)).toBeVisible();
 
         const updateStatus = store.getState().assets.updatingStatus;
@@ -476,11 +486,14 @@ describe('FilesAndUploads', () => {
         axiosMock.onPut(`${getAssetsUrl(courseId)}mOckID1`).reply(201, { locked: false });
         fireEvent.click(within(assetMenuButton).getByLabelText('file-menu-toggle'));
         fireEvent.click(screen.getByText('Unlock'));
-        await executeThunk(updateAssetLock({
-          courseId,
-          assetId: 'mOckID1',
-          locked: false,
-        }), store.dispatch);
+        await executeThunk(
+          updateAssetLock({
+            courseId,
+            assetId: 'mOckID1',
+            locked: false,
+          }),
+          store.dispatch,
+        );
         await waitFor(() => {
           const updateStatus = store.getState().assets.updatingStatus;
           expect(updateStatus).toEqual(RequestStatus.SUCCESSFUL);
@@ -495,11 +508,14 @@ describe('FilesAndUploads', () => {
         axiosMock.onPut(`${getAssetsUrl(courseId)}mOckID3`).reply(201, { locked: true });
         fireEvent.click(within(assetMenuButton).getByLabelText('file-menu-toggle'));
         fireEvent.click(screen.getByText('Lock'));
-        await executeThunk(updateAssetLock({
-          courseId,
-          assetId: 'mOckID3',
-          locked: true,
-        }), store.dispatch);
+        await executeThunk(
+          updateAssetLock({
+            courseId,
+            assetId: 'mOckID3',
+            locked: true,
+          }),
+          store.dispatch,
+        );
         await waitFor(() => {
           const updateStatus = store.getState().assets.updatingStatus;
           expect(updateStatus).toEqual(RequestStatus.SUCCESSFUL);
@@ -637,11 +653,14 @@ describe('FilesAndUploads', () => {
         axiosMock.onGet(`${getAssetsUrl(courseId)}mOckID3/usage`).reply(404);
         fireEvent.click(within(assetMenuButton).getByLabelText('file-menu-toggle'));
         fireEvent.click(screen.getByText('Info'));
-        await executeThunk(getUsagePaths({
-          courseId,
-          asset: { id: 'mOckID3', displayName: 'mOckID3' },
-          setSelectedRows: jest.fn(),
-        }), store.dispatch);
+        await executeThunk(
+          getUsagePaths({
+            courseId,
+            asset: { id: 'mOckID3', displayName: 'mOckID3' },
+            setSelectedRows: jest.fn(),
+          }),
+          store.dispatch,
+        );
         await waitFor(() => {
           const { usageStatus } = store.getState().assets;
           expect(usageStatus).toEqual(RequestStatus.FAILED);
@@ -656,11 +675,14 @@ describe('FilesAndUploads', () => {
         axiosMock.onPut(`${getAssetsUrl(courseId)}mOckID3`).reply(404);
         fireEvent.click(within(assetMenuButton).getByLabelText('file-menu-toggle'));
         fireEvent.click(screen.getByText('Lock'));
-        await executeThunk(updateAssetLock({
-          courseId,
-          assetId: 'mOckID3',
-          locked: true,
-        }), store.dispatch);
+        await executeThunk(
+          updateAssetLock({
+            courseId,
+            assetId: 'mOckID3',
+            locked: true,
+          }),
+          store.dispatch,
+        );
         await waitFor(() => {
           const updateStatus = store.getState().assets.updatingStatus;
           expect(updateStatus).toEqual(RequestStatus.FAILED);
@@ -693,6 +715,109 @@ describe('FilesAndUploads', () => {
 
         expect(screen.getByText('Error')).toBeVisible();
       });
+    });
+  });
+
+  describe('permissions', () => {
+    beforeEach(() => {
+      const mocks = initializeMocks({
+        initialState: {
+          ...initialState,
+          assets: {
+            ...initialState.assets,
+            assetIds: [],
+          },
+          models: {},
+        },
+      });
+      store = mocks.reduxStore;
+      axiosMock = mocks.axiosMock;
+      file = new File(['(⌐□_□)'], 'download.png', { type: 'image/png' });
+      global.localStorage.clear();
+    });
+    it('should render loading spinner when permissions are loading', async () => {
+      useCourseUserPermissions.mockReturnValue({
+        isLoading: true,
+        canViewFiles: false,
+        canEditFiles: false,
+        canDeleteFiles: false,
+        canCreateFiles: false,
+      });
+      renderComponent();
+      expect(screen.getByRole('status')).toBeInTheDocument();
+      expect(screen.queryByTestId('files-dropzone')).not.toBeInTheDocument();
+    });
+
+    it('should render permission alert when the user is not authorized to view files', async () => {
+      useCourseUserPermissions.mockReturnValue({
+        isLoading: false,
+        canViewFiles: false,
+        canEditFiles: true,
+        canDeleteFiles: true,
+        canCreateFiles: true,
+      });
+      await mockStore(RequestStatus.SUCCESSFUL);
+      expect(await screen.findByText(/You are not authorized to view this page/)).toBeInTheDocument();
+    });
+
+    it('should not render dropzone when is not authorized to create files', async () => {
+      useCourseUserPermissions.mockReturnValue({
+        isLoading: false,
+        canViewFiles: true,
+        canEditFiles: true,
+        canDeleteFiles: true,
+        canCreateFiles: false,
+      });
+      await emptyMockStore(RequestStatus.SUCCESSFUL);
+
+      expect(screen.queryByTestId('files-dropzone')).toBeNull();
+    });
+
+    it('should render dropzone when is authorized to create files', async () => {
+      useCourseUserPermissions.mockReturnValue({
+        isLoading: false,
+        canViewFiles: true,
+        canEditFiles: true,
+        canDeleteFiles: true,
+        canCreateFiles: true,
+      });
+      await emptyMockStore(RequestStatus.SUCCESSFUL);
+
+      expect(screen.queryByTestId('files-dropzone')).toBeInTheDocument();
+    });
+
+    it('should not render delete item when is not authorized to delete files', async () => {
+      const user = userEvent.setup();
+      useCourseUserPermissions.mockReturnValue({
+        isLoading: false,
+        canViewFiles: true,
+        canEditFiles: true,
+        canDeleteFiles: false,
+        canCreateFiles: true,
+      });
+      await mockStore(RequestStatus.SUCCESSFUL);
+
+      const actionsButton = screen.getByText(messages.actionsButtonLabel.defaultMessage);
+      await user.click(actionsButton);
+
+      expect(screen.queryByText(messages.deleteTitle.defaultMessage)).toBeNull();
+    });
+
+    it('should render delete item when is authorized to delete files', async () => {
+      const user = userEvent.setup();
+      useCourseUserPermissions.mockReturnValue({
+        isLoading: false,
+        canViewFiles: true,
+        canEditFiles: true,
+        canDeleteFiles: true,
+        canCreateFiles: true,
+      });
+      await mockStore(RequestStatus.SUCCESSFUL);
+
+      const actionsButton = screen.getByText(messages.actionsButtonLabel.defaultMessage);
+      await user.click(actionsButton);
+
+      expect(screen.queryByText(messages.deleteTitle.defaultMessage)).toBeInTheDocument();
     });
   });
 });

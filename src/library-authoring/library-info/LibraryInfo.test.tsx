@@ -28,9 +28,10 @@ const {
   libraryData,
 } = mockContentLibrary;
 
-const render = (libraryId: string = mockLibraryId) => baseRender(<LibraryInfo />, {
-  extraWrapper: ({ children }) => <LibraryProvider libraryId={libraryId}>{children}</LibraryProvider>,
-});
+const render = (libraryId: string = mockLibraryId) =>
+  baseRender(<LibraryInfo />, {
+    extraWrapper: ({ children }) => <LibraryProvider libraryId={libraryId}>{children}</LibraryProvider>,
+  });
 
 let axiosMock: MockAdapter;
 let mockShowToast: (message: string) => void;
@@ -45,7 +46,7 @@ describe('<LibraryInfo />', () => {
     mockShowToast = mocks.mockShowToast;
     validateUserPermissionsMock = mocks.validateUserPermissionsMock;
 
-    validateUserPermissionsMock.mockResolvedValue({ canPublish: true });
+    validateUserPermissionsMock.mockResolvedValue({ canPublish: true, canManageTeam: true });
   });
 
   afterEach(() => {
@@ -281,8 +282,33 @@ describe('<LibraryInfo />', () => {
     const ADMIN_CONSOLE_URL = 'http://localhost:2025/admin-console';
     mergeConfig({ ADMIN_CONSOLE_URL });
     render();
-    const manageTeam = await screen.getByText('Manage Access');
+    const manageTeam = await screen.findByText('Manage Access');
     expect(manageTeam).toBeInTheDocument();
-    expect(manageTeam).toHaveAttribute('href', `${ADMIN_CONSOLE_URL}/authz/libraries/${libraryData.id}`);
+    expect(manageTeam).toHaveAttribute('href', `${ADMIN_CONSOLE_URL}/authz?scope=${libraryData.id}`);
+  });
+
+  it('renders settings section title', () => {
+    render();
+    expect(screen.getByText('Settings')).toBeInTheDocument();
+  });
+
+  it('renders PublicReadToggle when user can manage team', async () => {
+    render();
+    const allowSwitch = await screen.findByRole('switch', { name: /allow public read/i });
+    expect(allowSwitch).toBeInTheDocument();
+    await waitFor(() => {
+      expect(allowSwitch).toBeEnabled();
+    });
+  });
+
+  it('renders PublicReadToggle in disabled mode when user can not manage team', async () => {
+    validateUserPermissionsMock.mockResolvedValue({ canPublish: true, canManageTeam: false });
+
+    render();
+    const allowSwitch = await screen.findByRole('switch', { name: /allow public read/i });
+    expect(allowSwitch).toBeInTheDocument();
+    await waitFor(() => {
+      expect(allowSwitch).toBeDisabled();
+    });
   });
 });

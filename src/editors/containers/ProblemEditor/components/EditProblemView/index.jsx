@@ -18,9 +18,13 @@ import EditorContainer from '../../../EditorContainer';
 import RawEditor from '../../../../sharedComponents/RawEditor';
 import { AdvanceProblemKeys, ProblemTypeKeys } from '../../../../data/constants/problem';
 import CustomSingleSelectEditor from './CustomSingleSelectEditor';
+import CustomProblemEditor from './CustomProblemEditor';
 
 import {
-  checkIfEditorsDirty, parseState, saveWarningModalToggle, getContent,
+  checkIfEditorsDirty,
+  parseState,
+  saveWarningModalToggle,
+  getContent,
 } from './hooks';
 
 import './index.scss';
@@ -50,6 +54,7 @@ const EditProblemView = ({ returnFunction }) => {
 
   const isAdvancedProblemType = problemType === ProblemTypeKeys.ADVANCED;
   const isCustomSingleSelect = problemType === AdvanceProblemKeys.CUSTOMSINGLESELECT;
+  const isCustomProblem = problemType === AdvanceProblemKeys.CUSTOMPROBLEM;
 
   const { isSaveWarningModalOpen, openSaveWarningModal, closeSaveWarningModal } = saveWarningModalToggle();
 
@@ -57,7 +62,7 @@ const EditProblemView = ({ returnFunction }) => {
     if (isAdvancedProblemType && editorRef?.current) {
       return editorRef.current.observer?.lastChange !== 0;
     }
-    if (isCustomSingleSelect) {
+    if (isCustomSingleSelect || isCustomProblem) {
       return isDirty || checkIfEditorsDirty();
     }
     return isDirty || checkIfEditorsDirty();
@@ -66,14 +71,15 @@ const EditProblemView = ({ returnFunction }) => {
   return (
     <ProblemEditorContextProvider editorRef={editorRef}>
       <EditorContainer
-        getContent={() => getContent({
-          problemState,
-          openSaveWarningModal,
-          isAdvancedProblemType,
-          isMarkdownEditorEnabled,
-          editorRef,
-          lmsEndpointUrl,
-        })}
+        getContent={() =>
+          getContent({
+            problemState,
+            openSaveWarningModal,
+            isAdvancedProblemType,
+            isMarkdownEditorEnabled,
+            editorRef,
+            lmsEndpointUrl,
+          })}
         isDirty={checkIfDirty}
         returnFunction={returnFunction}
       >
@@ -83,34 +89,33 @@ const EditProblemView = ({ returnFunction }) => {
             : intl.formatMessage(messages.noAnswerTitle)}
           isOpen={isSaveWarningModalOpen}
           onClose={closeSaveWarningModal}
-          footerNode={(
+          footerNode={
             <ActionRow>
               <Button variant="tertiary" onClick={closeSaveWarningModal}>
                 <FormattedMessage {...messages.saveWarningModalCancelButtonLabel} />
               </Button>
               <Button
-                onClick={() => saveBlock({
-                  content: parseState({
-                    problem: problemState,
-                    isAdvanced: isAdvancedProblemType,
-                    isMarkdown: isMarkdownEditorEnabled,
-                    ref: editorRef,
-                    lmsEndpointUrl,
-                  })(),
-                  returnFunction,
-                  destination: returnUrl,
-                  dispatch,
-                  analytics,
-                })}
+                onClick={() =>
+                  saveBlock({
+                    content: parseState({
+                      problem: problemState,
+                      isAdvanced: isAdvancedProblemType,
+                      isMarkdown: isMarkdownEditorEnabled,
+                      ref: editorRef,
+                      lmsEndpointUrl,
+                    })(),
+                    returnFunction,
+                    destination: returnUrl,
+                    dispatch,
+                    analytics,
+                  })}
               >
                 <FormattedMessage {...messages.saveWarningModalSaveButtonLabel} />
               </Button>
             </ActionRow>
-        )}
+          }
         >
-          {isAdvancedProblemType ? (
-            <FormattedMessage {...messages.olxSettingDiscrepancyBodyExplanation} />
-          ) : (
+          {isAdvancedProblemType ? <FormattedMessage {...messages.olxSettingDiscrepancyBodyExplanation} /> : (
             <>
               <div>
                 <FormattedMessage {...messages.saveWarningModalBodyQuestion} />
@@ -123,25 +128,35 @@ const EditProblemView = ({ returnFunction }) => {
         </AlertModal>
 
         <div className="editProblemView d-flex flex-row flex-nowrap justify-content-end">
-          {isAdvancedProblemType || isMarkdownEditorEnabled ? (
-            <Container fluid className="advancedEditorTopMargin p-0">
-              <RawEditor
-                editorRef={editorRef}
-                lang={isMarkdownEditorEnabled ? 'markdown' : 'xml'}
-                content={isMarkdownEditorEnabled ? problemState.rawMarkdown : problemState.rawOLX}
-              />
-            </Container>
-          ) : isCustomSingleSelect ? (
-            <span className="flex-grow-1 mb-5">
-              <CustomSingleSelectEditor />
-            </span>
-          ) : (
-            <span className="flex-grow-1 mb-5">
-              <QuestionWidget />
-              <ExplanationWidget />
-              <AnswerWidget problemType={problemType} />
-            </span>
-          )}
+          {isAdvancedProblemType || isMarkdownEditorEnabled ?
+            (
+              <Container fluid className="advancedEditorTopMargin p-0">
+                <RawEditor
+                  editorRef={editorRef}
+                  lang={isMarkdownEditorEnabled ? 'markdown' : 'xml'}
+                  content={isMarkdownEditorEnabled ? problemState.rawMarkdown : problemState.rawOLX}
+                />
+              </Container>
+            ) :
+            isCustomSingleSelect ?
+            (
+              <span className="flex-grow-1 mb-5">
+                <CustomSingleSelectEditor />
+              </span>
+            ) :
+            isCustomProblem ?
+            (
+              <span className="flex-grow-1 mb-5">
+                <CustomProblemEditor />
+              </span>
+            ) :
+            (
+              <span className="flex-grow-1 mb-5">
+                <QuestionWidget />
+                <ExplanationWidget />
+                <AnswerWidget problemType={problemType} />
+              </span>
+            )}
 
           <span className="editProblemView-settingsColumn">
             <SettingsWidget problemType={problemType} />

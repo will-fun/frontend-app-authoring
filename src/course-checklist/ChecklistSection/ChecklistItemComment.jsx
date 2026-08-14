@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { injectIntl, FormattedMessage, FormattedNumber } from '@edx/frontend-platform/i18n';
+import { FormattedMessage, FormattedNumber } from '@edx/frontend-platform/i18n';
 import { Icon } from '@openedx/paragon';
 import { Link } from 'react-router-dom';
 import { ModeComment } from '@openedx/paragon/icons';
@@ -15,7 +15,8 @@ const ChecklistItemComment = ({
   const waffleFlags = useWaffleFlags(courseId);
 
   const getPathToCourseOutlinePage = (assignmentId) => (waffleFlags.useNewCourseOutlinePage
-    ? `/course/${courseId}#${assignmentId}` : `${getConfig().STUDIO_BASE_URL}/course/${courseId}#${assignmentId}`);
+    ? `/course/${courseId}#${assignmentId}` :
+    `${getConfig().STUDIO_BASE_URL}/course/${courseId}#${assignmentId}`);
 
   const commentWrapper = (comment) => (
     <div className="row m-0 mt-3 pt-3 border-top align-items-center" data-identifier="comment">
@@ -47,19 +48,21 @@ const ChecklistItemComment = ({
         }}
       />
     );
-    return (showGradingCommentSection ? (
-      commentWrapper(comment)
-    ) : null);
+    return (showGradingCommentSection ?
+      (
+        commentWrapper(comment)
+      ) :
+      null);
   }
 
   if (checkId === 'assignmentDeadlines') {
     const showDeadlinesCommentSection = Object.keys(data).length > 0
-    && (
-      data.assignments.assignmentsWithDatesBeforeStart.length > 0
-      || data?.assignments.assignmentsWithDatesAfterEnd.length > 0
-      || data?.assignments.assignmentsWithOraDatesBeforeStart.length > 0
-      || data?.assignments.assignmentsWithOraDatesAfterEnd.length > 0
-    );
+      && (
+        data.assignments.assignmentsWithDatesBeforeStart.length > 0
+        || data?.assignments.assignmentsWithDatesAfterEnd.length > 0
+        || data?.assignments.assignmentsWithOraDatesBeforeStart.length > 0
+        || data?.assignments.assignmentsWithOraDatesAfterEnd.length > 0
+      );
 
     const allGradedAssignmentsOutsideDateRange = [].concat(
       data?.assignments.assignmentsWithDatesBeforeStart,
@@ -71,7 +74,9 @@ const ChecklistItemComment = ({
     // de-dupe in case one assignment has multiple violations
     const assignmentsMap = new Map();
     allGradedAssignmentsOutsideDateRange.forEach(
-      (assignment) => { assignmentsMap.set(assignment.id, assignment); },
+      (assignment) => {
+        assignmentsMap.set(assignment.id, assignment);
+      },
     );
     const gradedAssignmentsOutsideDateRange = [];
     assignmentsMap.forEach(
@@ -94,9 +99,11 @@ const ChecklistItemComment = ({
         </ul>
       </>
     );
-    return (showDeadlinesCommentSection ? (
-      commentWrapper(comment)
-    ) : null);
+    return (showDeadlinesCommentSection ?
+      (
+        commentWrapper(comment)
+      ) :
+      null);
   }
 
   return null;
@@ -127,4 +134,4 @@ ChecklistItemComment.propTypes = {
   ]).isRequired,
 };
 
-export default injectIntl(ChecklistItemComment);
+export default ChecklistItemComment;

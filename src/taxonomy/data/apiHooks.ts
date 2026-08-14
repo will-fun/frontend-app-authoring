@@ -13,7 +13,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { camelCaseObject } from '@edx/frontend-platform';
 import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
-import { apiUrls, ALL_TAXONOMIES } from './api';
+import { apiUrls, ALL_TAXONOMIES, getApiErrorMessage } from './api';
 import * as api from './api';
 import type { QueryOptions, TagListData } from './types';
 
@@ -27,7 +27,9 @@ export const taxonomyQueryKeys = {
    * @param org Which org we fetched the taxonomy list for (optional)
    */
   taxonomyList: (org?: string) => [
-    ...taxonomyQueryKeys.all, 'taxonomyList', ...(org && org !== ALL_TAXONOMIES ? [org] : []),
+    ...taxonomyQueryKeys.all,
+    'taxonomyList',
+    ...(org && org !== ALL_TAXONOMIES ? [org] : []),
   ],
   /**
    * Base key for data specific to a single taxonomy. No data is stored directly in this key.
@@ -48,7 +50,10 @@ export const taxonomyQueryKeys = {
    * @param pageSize
    */
   taxonomyTagListPage: (taxonomyId: number, pageIndex: number, pageSize: number) => [
-    ...taxonomyQueryKeys.taxonomyTagList(taxonomyId), 'page', pageIndex, pageSize,
+    ...taxonomyQueryKeys.taxonomyTagList(taxonomyId),
+    'page',
+    pageIndex,
+    pageSize,
   ],
   /**
    * Query for loading _all_ the subtags of a particular parent tag
@@ -56,7 +61,9 @@ export const taxonomyQueryKeys = {
    * @param parentTagValue
    */
   taxonomyTagSubtagsList: (taxonomyId: number, parentTagValue: string) => [
-    ...taxonomyQueryKeys.taxonomyTagList(taxonomyId), 'subtags', parentTagValue,
+    ...taxonomyQueryKeys.taxonomyTagList(taxonomyId),
+    'subtags',
+    parentTagValue,
   ],
   /**
    * @param taxonomyId ID of the taxonomy
@@ -83,7 +90,7 @@ export const useTaxonomyList = (org) => (
 export const useDeleteTaxonomy = () => {
   const queryClient = useQueryClient();
   const { mutateAsync } = useMutation({
-    mutationFn: async ({ pk }: { pk: number }) => api.deleteTaxonomy(pk),
+    mutationFn: async ({ pk }: { pk: number; }) => api.deleteTaxonomy(pk),
     onSettled: (_d, _e, args) => {
       queryClient.invalidateQueries({ queryKey: taxonomyQueryKeys.taxonomyList() });
       queryClient.removeQueries({ queryKey: taxonomyQueryKeys.taxonomy(args.pk) });
@@ -93,10 +100,12 @@ export const useDeleteTaxonomy = () => {
 };
 
 /** Builds the query to get the taxonomy detail */
-export const useTaxonomyDetails = (taxonomyId: number) => useQuery({
-  queryKey: taxonomyQueryKeys.taxonomyMetadata(taxonomyId),
-  queryFn: () => api.getTaxonomy(taxonomyId),
-});
+export const useTaxonomyDetails = (taxonomyId: number) =>
+  useQuery({
+    queryKey: taxonomyQueryKeys.taxonomyMetadata(taxonomyId),
+    queryFn: () => api.getTaxonomy(taxonomyId),
+    refetchOnMount: 'always',
+  });
 
 /**
  * Use this mutation to import a new taxonomy.
@@ -105,8 +114,10 @@ export const useImportNewTaxonomy = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({
-      name, description, file,
-    }: { name: string, description: string, file: File }) => {
+      name,
+      description,
+      file,
+    }: { name: string; description: string; file: File; }) => {
       const formData = new FormData();
       formData.append('taxonomy_name', name);
       formData.append('taxonomy_description', description);
@@ -131,7 +142,7 @@ export const useImportNewTaxonomy = () => {
 export const useImportTags = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ taxonomyId, file }: { taxonomyId: number, file: File }) => {
+    mutationFn: async ({ taxonomyId, file }: { taxonomyId: number; file: File; }) => {
       const formData = new FormData();
       formData.append('file', file);
 
@@ -139,7 +150,7 @@ export const useImportTags = () => {
         const { data } = await getAuthenticatedHttpClient().put(apiUrls.tagsImport(taxonomyId), formData);
         return camelCaseObject(data);
       } catch (err) {
-        throw new Error((err as any).response?.data?.error || (err as any).message);
+        throw new Error(getApiErrorMessage(err));
       }
     },
     onSuccess: (data) => {
@@ -157,36 +168,47 @@ export const useImportTags = () => {
  * @param taxonomyId The ID of the taxonomy whose tags we're updating.
  * @param file The file that we want to import
  */
-export const useImportPlan = (taxonomyId: number, file: File | null) => useQuery({
-  queryKey: taxonomyQueryKeys.importPlan(taxonomyId, file ? `${file.name}${file.lastModified}${file.size}` : ''),
-  queryFn: async (): Promise<string | null> => {
-    if (!taxonomyId || file === null) {
-      return null;
-    }
-    const formData = new FormData();
-    formData.append('file', file);
+export const useImportPlan = (taxonomyId: number, file: File | null) =>
+  useQuery({
+    queryKey: taxonomyQueryKeys.importPlan(taxonomyId, file ? `${file.name}${file.lastModified}${file.size}` : ''),
+    queryFn: async (): Promise<string | null> => {
+      if (!taxonomyId || file === null) {
+        return null;
+      }
+      const formData = new FormData();
+      formData.append('file', file);
 
-    try {
-      const { data } = await getAuthenticatedHttpClient().put(apiUrls.tagsPlanImport(taxonomyId), formData);
-      return data.plan as string;
-    } catch (err) {
-      throw new Error((err as any).response?.data?.error || (err as any).message);
-    }
-  },
-  retry: false, // If there's an error, it's probably a real problem with the file. Don't try again several times!
-});
+      try {
+        const { data } = await getAuthenticatedHttpClient().put(apiUrls.tagsPlanImport(taxonomyId), formData);
+        return data.plan as string;
+      } catch (err) {
+        throw new Error(getApiErrorMessage(err));
+      }
+    },
+    retry: false, // If there's an error, it's probably a real problem with the file. Don't try again several times!
+  });
 
 /**
  * Use the list of tags in a taxonomy.
  */
 export const useTagListData = (taxonomyId: number, options: QueryOptions) => {
-  const { pageIndex, pageSize } = options;
+  const { pageIndex, pageSize, enabled = true, disablePagination = false } = options; // eslint-disable-line
   return useQuery({
-    queryKey: taxonomyQueryKeys.taxonomyTagListPage(taxonomyId, pageIndex, pageSize),
+    // queryKey: taxonomyQueryKeys.taxonomyTagListPage(taxonomyId, pageIndex, pageSize),
+    queryKey: taxonomyQueryKeys.taxonomyTagList(taxonomyId), // For now, ignore pagination in the query key.
     queryFn: async () => {
-      const { data } = await getAuthenticatedHttpClient().get(apiUrls.tagList(taxonomyId, pageIndex, pageSize));
+      const { data } = await getAuthenticatedHttpClient().get(
+        apiUrls.tagList(taxonomyId, {
+          pageIndex,
+          pageSize,
+          fullDepth: true,
+          disablePagination,
+        }),
+      );
       return camelCaseObject(data) as TagListData;
     },
+    enabled,
+    refetchOnMount: 'always',
   });
 };
 
@@ -195,10 +217,75 @@ export const useTagListData = (taxonomyId: number, options: QueryOptions) => {
  * Doesn't handle pagination or anything. This is meant to be replaced by
  * something more sophisticated later, as we improve the "taxonomy details" page.
  */
-export const useSubTags = (taxonomyId: number, parentTagValue: string) => useQuery({
-  queryKey: taxonomyQueryKeys.taxonomyTagSubtagsList(taxonomyId, parentTagValue),
-  queryFn: async () => {
-    const response = await getAuthenticatedHttpClient().get(apiUrls.allSubtagsOf(taxonomyId, parentTagValue));
-    return camelCaseObject(response.data) as TagListData;
-  },
-});
+export const useSubTags = (taxonomyId: number, parentTagValue: string) =>
+  useQuery({
+    queryKey: taxonomyQueryKeys.taxonomyTagSubtagsList(taxonomyId, parentTagValue),
+    queryFn: async () => {
+      const response = await getAuthenticatedHttpClient().get(apiUrls.allSubtagsOf(taxonomyId, parentTagValue));
+      return camelCaseObject(response.data) as TagListData;
+    },
+  });
+
+export const useCreateTag = (taxonomyId: number) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ value, parentTagValue }: { value: string; parentTagValue?: string; }) => {
+      await getAuthenticatedHttpClient().post(
+        apiUrls.createTag(taxonomyId),
+        { tag: value, parent_tag_value: parentTagValue },
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: taxonomyQueryKeys.taxonomyTagList(taxonomyId),
+        refetchType: 'none',
+      });
+      // In the metadata, 'tagsCount' (and possibly other fields) will have changed:
+      queryClient.invalidateQueries({
+        queryKey: taxonomyQueryKeys.taxonomyMetadata(taxonomyId),
+        refetchType: 'none',
+      });
+    },
+  });
+};
+
+export const useUpdateTag = (taxonomyId: number) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ value, originalValue }: { value: string; originalValue: string; }) => {
+      await getAuthenticatedHttpClient().patch(
+        apiUrls.updateTag(taxonomyId),
+        { tag: originalValue, updated_tag_value: value },
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: taxonomyQueryKeys.taxonomyTagList(taxonomyId),
+      });
+      // In the metadata, 'tagsCount' (and possibly other fields) will have changed:
+      queryClient.invalidateQueries({ queryKey: taxonomyQueryKeys.taxonomyMetadata(taxonomyId) });
+    },
+  });
+};
+
+export const useDeleteTag = (taxonomyId: number) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ value, withSubtags }: { value: string; withSubtags: boolean; }) => {
+      const body = { tags: [value], with_subtags: withSubtags };
+      await getAuthenticatedHttpClient().delete(apiUrls.deleteTag(taxonomyId), {
+        data: body,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: taxonomyQueryKeys.taxonomyTagList(taxonomyId),
+      });
+      // In the metadata, 'tagsCount' (and possibly other fields) will have changed:
+      queryClient.invalidateQueries({ queryKey: taxonomyQueryKeys.taxonomyMetadata(taxonomyId) });
+    },
+  });
+};

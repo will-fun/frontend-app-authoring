@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import {
   FormattedMessage,
 } from '@edx/frontend-platform/i18n';
+import { getExternalLinkUrl } from '@edx/frontend-platform';
 import {
   Stack,
   Hyperlink,
@@ -22,7 +23,9 @@ const LicenseDisplay = ({
   if (license !== LicenseTypes.select) {
     return (
       <Stack gap={3}>
-        <div className="x-small"><FormattedMessage {...messages.displaySubsectionTitle} /></div>
+        <div className="x-small">
+          <FormattedMessage {...messages.displaySubsectionTitle} />
+        </div>
         <div className="small border border-gray-300 rounded p-4">
           <LicenseBlurb license={license} details={details} />
           <div className="x-small mt-3">{licenseDescription}</div>
@@ -30,7 +33,7 @@ const LicenseDisplay = ({
         {license === LicenseTypes.creativeCommons && (
           <Hyperlink
             className="text-primary-500 x-small"
-            destination="https://creativecommons.org/about"
+            destination={getExternalLinkUrl('https://creativecommons.org/about')}
             target="_blank"
           >
             <FormattedMessage {...messages.viewLicenseDetailsLabel} />

@@ -1,10 +1,11 @@
-import { useQuery } from '@tanstack/react-query';
+import { skipToken, useQuery } from '@tanstack/react-query';
 import { PermissionValidationAnswer, PermissionValidationQuery } from '@src/authz/types';
 import { validateUserPermissions } from './api';
 
 const adminConsoleQueryKeys = {
   all: ['authz'],
-  permissions: (permissions: PermissionValidationQuery) => [...adminConsoleQueryKeys.all, 'validatePermissions', permissions] as const,
+  permissions: (permissions: PermissionValidationQuery) =>
+    [...adminConsoleQueryKeys.all, 'validatePermissions', permissions] as const,
 };
 
 /**
@@ -25,12 +26,13 @@ const adminConsoleQueryKeys = {
  *      }
  *    });
  * if (data.canRead) { ... }
- *
  */
 export const useUserPermissions = (
   permissions: PermissionValidationQuery,
-) => useQuery<PermissionValidationAnswer, Error>({
-  queryKey: adminConsoleQueryKeys.permissions(permissions),
-  queryFn: () => validateUserPermissions(permissions),
-  retry: false,
-});
+  enabled: boolean = true,
+) =>
+  useQuery<PermissionValidationAnswer, Error>({
+    queryKey: adminConsoleQueryKeys.permissions(permissions),
+    queryFn: enabled ? () => validateUserPermissions(permissions) : skipToken,
+    retry: false,
+  });

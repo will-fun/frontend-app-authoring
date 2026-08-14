@@ -225,7 +225,8 @@ function denormalizeData(courseId, appId, data) {
   }
   if ('divideCourseTopicsByCohorts' in data) {
     pluginConfiguration.divided_course_wide_discussions = data.divideCourseTopicsByCohorts
-      ? data.divideDiscussionIds : [];
+      ? data.divideDiscussionIds :
+      [];
   }
 
   const ltiConfiguration = {};

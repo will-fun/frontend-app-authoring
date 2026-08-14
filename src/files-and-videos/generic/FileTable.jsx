@@ -42,6 +42,11 @@ const FileTable = ({
   maxFileSize,
   thumbnailPreview,
   infoModalSidebar,
+  permissions = {
+    canCreateFiles: true,
+    canDeleteFiles: true,
+    canEditFiles: true,
+  },
 }) => {
   const intl = useIntl();
   const pageCount = Math.ceil(files.length / 50);
@@ -76,7 +81,8 @@ const FileTable = ({
     supportedFileFormats,
     fileType,
   } = data;
-  const defaultCurrentView = (fileType === 'video' && localStorage.getItem('videosCurrentView')) || (fileType === 'file' && localStorage.getItem('filesCurrentView')) || defaultView;
+  const defaultCurrentView = (fileType === 'video' && localStorage.getItem('videosCurrentView')) ||
+    (fileType === 'file' && localStorage.getItem('filesCurrentView')) || defaultView;
   const [currentView, setCurrentView] = useState(defaultCurrentView);
 
   useEffect(() => {
@@ -152,6 +158,10 @@ const FileTable = ({
         fileType,
         setInitialState,
       }}
+      permissions={{
+        canCreateFiles: permissions.canCreateFiles,
+        canDeleteFiles: permissions.canDeleteFiles,
+      }}
     />
   );
 
@@ -166,6 +176,10 @@ const FileTable = ({
         className,
         original,
         fileType,
+        permissions: {
+          canEditFiles: permissions.canEditFiles,
+          canDeleteFiles: permissions.canDeleteFiles,
+        },
       }}
     />
   );
@@ -173,14 +187,19 @@ const FileTable = ({
   const moreInfoColumn = {
     id: 'moreInfo',
     Header: '',
-    Cell: ({ row }) => MoreInfoColumn({
-      row,
-      handleLock: handleLockFile,
-      handleBulkDownload,
-      handleOpenFileInfo,
-      handleOpenDeleteConfirmation,
-      fileType,
-    }),
+    Cell: ({ row }) =>
+      MoreInfoColumn({
+        row,
+        handleLock: handleLockFile,
+        handleBulkDownload,
+        handleOpenFileInfo,
+        handleOpenDeleteConfirmation,
+        fileType,
+        permissions: {
+          canEditFiles: permissions.canEditFiles,
+          canDeleteFiles: permissions.canDeleteFiles,
+        },
+      }),
   };
 
   const hasMoreInfoColumn = tableColumns.filter(col => col.id === 'moreInfo').length === 1;
@@ -222,27 +241,36 @@ const FileTable = ({
         FilterStatusComponent={FilterStatus}
         RowStatusComponent={RowStatus}
       >
-        {isEmpty(files) && loadingStatus !== RequestStatus.IN_PROGRESS ? (
-          <Dropzone
-            data-testid="files-dropzone"
-            accept={supportedFileFormats}
-            onProcessUpload={handleDropzoneAsset}
-            maxSize={maxFileSize}
-            errorMessages={{
-              invalidSize: intl.formatMessage(messages.fileSizeError),
-              multipleDragged: 'Dropzone can only upload a single file.',
-            }}
-          />
-        ) : (
-          <div data-testid="files-data-table" className="bg-light-200">
-            <DataTable.TableControlBar />
-            <hr className="mb-5 border-light-700" />
-            { currentView === 'card' && <CardView CardComponent={fileCard} columnSizes={columnSizes} selectionPlacement="left" skeletonCardCount={6} /> }
-            { currentView === 'list' && <DataTable.Table /> }
-            <DataTable.EmptyTable content={intl.formatMessage(messages.noResultsFoundMessage)} />
-            <Footer />
-          </div>
-        )}
+        {permissions.canCreateFiles && isEmpty(files) && loadingStatus !== RequestStatus.IN_PROGRESS ?
+          (
+            <Dropzone
+              data-testid="files-dropzone"
+              accept={supportedFileFormats}
+              onProcessUpload={handleDropzoneAsset}
+              maxSize={maxFileSize}
+              errorMessages={{
+                invalidSize: intl.formatMessage(messages.fileSizeError),
+                multipleDragged: 'Dropzone can only upload a single file.',
+              }}
+            />
+          ) :
+          (
+            <div data-testid="files-data-table" className="bg-light-200">
+              <DataTable.TableControlBar />
+              <hr className="mb-5 border-light-700" />
+              {currentView === 'card' && (
+                <CardView
+                  CardComponent={fileCard}
+                  columnSizes={columnSizes}
+                  selectionPlacement="left"
+                  skeletonCardCount={6}
+                />
+              )}
+              {currentView === 'list' && <DataTable.Table />}
+              <DataTable.EmptyTable content={intl.formatMessage(messages.noResultsFoundMessage)} />
+              <Footer />
+            </div>
+          )}
 
         <ApiStatusToast
           actionType={intl.formatMessage(messages.apiStatusDeletingAction)}
@@ -295,7 +323,6 @@ const FileTable = ({
           sidebar={infoModalSidebar}
         />
       )}
-
     </div>
   );
 };
@@ -326,6 +353,11 @@ FileTable.propTypes = {
   maxFileSize: PropTypes.number.isRequired,
   thumbnailPreview: PropTypes.func.isRequired,
   infoModalSidebar: PropTypes.func.isRequired,
+  permissions: PropTypes.shape({
+    canCreateFiles: PropTypes.bool,
+    canDeleteFiles: PropTypes.bool,
+    canEditFiles: PropTypes.bool,
+  }),
 };
 
 FileTable.defaultProps = {

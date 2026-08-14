@@ -3,6 +3,7 @@ import React from 'react'; // Required to use JSX syntax without type errors
 
 import { initializeMockApp } from '@edx/frontend-platform';
 import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
+import { IntlProvider } from '@edx/frontend-platform/i18n';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -11,6 +12,7 @@ import MockAdapter from 'axios-mock-adapter';
 import { apiUrls } from './api';
 
 import {
+  useCreateTag,
   useImportPlan,
   useImportTags,
   useImportNewTaxonomy,
@@ -28,7 +30,9 @@ const queryClient = new QueryClient({
 
 const wrapper = ({ children }) => (
   <QueryClientProvider client={queryClient}>
-    {children}
+    <IntlProvider locale="en">
+      {children}
+    </IntlProvider>
   </QueryClientProvider>
 );
 
@@ -104,5 +108,21 @@ describe('import taxonomy api calls', () => {
     });
     expect(result.current.error).toEqual(Error('test error'));
     expect(axiosMock.history.put[0].url).toEqual(apiUrls.tagsPlanImport(1));
+  });
+
+  it('should surface tag errors', async () => {
+    const duplicateMessage = 'Tag with value \'ab\' already exists for taxonomy.';
+    axiosMock.onPost(apiUrls.createTag(1)).reply(400, [duplicateMessage]);
+    const { result } = renderHook(() => useCreateTag(1), { wrapper });
+
+    try {
+      await result.current.mutateAsync({ value: 'ab' });
+      // expect: if code reaches this line, the test should fail because an error should have been thrown
+      expect('This line should not be reached').toBe(false);
+    } catch (error) {
+      // we check the response data, not the error message, because of how react-query surfaces errors from axios
+      // @ts-ignore
+      expect(error.response.data).toEqual([duplicateMessage]);
+    }
   });
 });

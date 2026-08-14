@@ -1,16 +1,17 @@
-import React from 'react';
-import { IntlProvider } from '@edx/frontend-platform/i18n';
-import { initializeMockApp } from '@edx/frontend-platform';
-import { AppProvider } from '@edx/frontend-platform/react';
-import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
-import MockAdapter from 'axios-mock-adapter';
-import { render, queryByLabelText, queryByTestId } from '@testing-library/react';
+import {
+  render,
+  queryByLabelText,
+  queryByTestId,
+  initializeMocks,
+  fireEvent,
+} from '@src/testUtils';
+import { executeThunk } from '@src/utils';
 
+import { CourseAuthoringProvider } from '@src/CourseAuthoringContext';
+import PagesAndResourcesProvider from '../../PagesAndResourcesProvider';
 import AppCard from './AppCard';
 import messages from './messages';
 import appMessages from '../app-config-form/messages';
-import initializeStore from '../../../store';
-import { executeThunk } from '../../../utils';
 import { getDiscussionsProvidersUrl } from '../data/api';
 import { fetchProviders } from '../data/thunks';
 import { legacyApiResponse } from '../factories/mockApiResponses';
@@ -29,17 +30,9 @@ describe('AppCard', () => {
   let container;
 
   beforeEach(async () => {
-    initializeMockApp({
-      authenticatedUser: {
-        userId: 3,
-        username: 'abc123',
-        administrator: true,
-        roles: [],
-      },
-    });
-
-    store = initializeStore();
-    axiosMock = new MockAdapter(getAuthenticatedHttpClient());
+    const mocks = initializeMocks();
+    store = mocks.reduxStore;
+    axiosMock = mocks.axiosMock;
   });
 
   const mockStore = async (mockResponse) => {
@@ -47,18 +40,18 @@ describe('AppCard', () => {
     await executeThunk(fetchProviders(courseId), store.dispatch);
   };
 
-  const createComponent = (data) => {
+  const createComponent = (data, { isEditable = false } = {}) => {
     const wrapper = render(
-      <AppProvider store={store}>
-        <IntlProvider locale="en">
+      <CourseAuthoringProvider courseId={courseId}>
+        <PagesAndResourcesProvider courseId={courseId} isEditable={isEditable}>
           <AppCard
             app={data}
             onClick={() => jest.fn()}
             selected={selected}
             features={[]}
           />
-        </IntlProvider>
-      </AppProvider>,
+        </PagesAndResourcesProvider>
+      </CourseAuthoringProvider>,
     );
     container = wrapper.container;
     return container;
@@ -106,5 +99,99 @@ describe('AppCard', () => {
     createComponent(appWithBasicSupport);
 
     expect(queryByTestId(container, 'card-subtitle')).toHaveTextContent(subtitle);
+  });
+
+  describe('isEditable integration', () => {
+    test('card responds to click when isEditable=true', async () => {
+      const handleClick = jest.fn();
+      await mockStore(legacyApiResponse);
+
+      const wrapper = render(
+        <CourseAuthoringProvider courseId={courseId}>
+          <PagesAndResourcesProvider courseId={courseId} isEditable>
+            <AppCard
+              app={app}
+              onClick={handleClick}
+              selected={false}
+              features={[]}
+            />
+          </PagesAndResourcesProvider>
+        </CourseAuthoringProvider>,
+      );
+      const card = wrapper.container.querySelector('[role="radio"]');
+
+      fireEvent.click(card);
+
+      expect(handleClick).toHaveBeenCalledWith(app.id);
+    });
+
+    test('card does NOT respond to click when isEditable=false', async () => {
+      const handleClick = jest.fn();
+      await mockStore(legacyApiResponse);
+
+      const wrapper = render(
+        <CourseAuthoringProvider courseId={courseId}>
+          <PagesAndResourcesProvider courseId={courseId} isEditable={false}>
+            <AppCard
+              app={app}
+              onClick={handleClick}
+              selected={false}
+              features={[]}
+            />
+          </PagesAndResourcesProvider>
+        </CourseAuthoringProvider>,
+      );
+      const card = wrapper.container.querySelector('[role="radio"]');
+
+      fireEvent.click(card);
+
+      expect(handleClick).not.toHaveBeenCalled();
+    });
+
+    test('card responds to keyDown Enter when isEditable=true', async () => {
+      const handleClick = jest.fn();
+      await mockStore(legacyApiResponse);
+
+      const wrapper = render(
+        <CourseAuthoringProvider courseId={courseId}>
+          <PagesAndResourcesProvider courseId={courseId} isEditable>
+            <AppCard
+              app={app}
+              onClick={handleClick}
+              selected={false}
+              features={[]}
+            />
+          </PagesAndResourcesProvider>
+        </CourseAuthoringProvider>,
+      );
+      const card = wrapper.container.querySelector('[role="radio"]');
+
+      fireEvent.keyDown(card, { key: 'Enter' });
+
+      expect(handleClick).toHaveBeenCalledWith(app.id);
+    });
+
+    test('card does NOT respond to keyDown when isEditable=false', async () => {
+      const handleClick = jest.fn();
+      await mockStore(legacyApiResponse);
+
+      const wrapper = render(
+        <CourseAuthoringProvider courseId={courseId}>
+          <PagesAndResourcesProvider courseId={courseId} isEditable={false}>
+            <AppCard
+              app={app}
+              onClick={handleClick}
+              selected={false}
+              features={[]}
+            />
+          </PagesAndResourcesProvider>
+        </CourseAuthoringProvider>,
+      );
+      const card = wrapper.container.querySelector('[role="radio"]');
+
+      fireEvent.keyDown(card, { key: 'Enter' });
+
+      expect(handleClick).not.toHaveBeenCalled();
+    });
   });
 });

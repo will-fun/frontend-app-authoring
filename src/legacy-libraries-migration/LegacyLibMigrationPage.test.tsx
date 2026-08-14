@@ -14,8 +14,8 @@ import { mockGetStudioHomeLibraries } from '@src/studio-home/data/api.mocks';
 import { getContentLibraryV2CreateApiUrl } from '@src/library-authoring/create-library/data/api';
 import { getStudioHomeApiUrl } from '@src/studio-home/data/api';
 
+import { bulkModulestoreMigrateUrl } from '@src/data/api';
 import { LegacyLibMigrationPage } from './LegacyLibMigrationPage';
-import { bulkMigrateLegacyLibrariesUrl } from './data/api';
 
 const path = '/libraries-v1/migrate/*';
 let axiosMock: MockAdapter;
@@ -244,9 +244,11 @@ describe('<LegacyLibMigrationPage />', () => {
 
     await user.click(nextButton);
     const alert = await screen.findByRole('alert');
-    expect(await within(alert).findByText(
-      /All content from the legacy library you selected will be migrated to/,
-    )).toBeInTheDocument();
+    expect(
+      await within(alert).findByText(
+        /All content from the legacy library you selected will be migrated to/,
+      ),
+    ).toBeInTheDocument();
 
     const backButton = screen.getByRole('button', { name: /back/i });
     await user.click(backButton);
@@ -320,7 +322,7 @@ describe('<LegacyLibMigrationPage />', () => {
 
   it('should confirm migration', async () => {
     const user = userEvent.setup();
-    axiosMock.onPost(bulkMigrateLegacyLibrariesUrl()).reply(200);
+    axiosMock.onPost(bulkModulestoreMigrateUrl()).reply(200);
     renderPage();
     expect(await screen.findByText('Migrate Legacy Libraries')).toBeInTheDocument();
     expect(await screen.findByText('MBA')).toBeInTheDocument();
@@ -353,9 +355,11 @@ describe('<LegacyLibMigrationPage />', () => {
 
     // Should show alert of ConfirmationView
     const alert = await screen.findByRole('alert');
-    expect(await within(alert).findByText(
-      /All content from the 3 legacy libraries you selected will be migrated to/,
-    )).toBeInTheDocument();
+    expect(
+      await within(alert).findByText(
+        /All content from the 3 legacy libraries you selected will be migrated to/,
+      ),
+    ).toBeInTheDocument();
     expect(screen.getByText('MBA')).toBeInTheDocument();
     expect(screen.getByText('Legacy library 1')).toBeInTheDocument();
     expect(screen.getByText('MBA 1')).toBeInTheDocument();
@@ -377,7 +381,7 @@ describe('<LegacyLibMigrationPage />', () => {
 
   it('should show error when confirm migration', async () => {
     const user = userEvent.setup();
-    axiosMock.onPost(bulkMigrateLegacyLibrariesUrl()).reply(400);
+    axiosMock.onPost(bulkModulestoreMigrateUrl()).reply(400);
     renderPage();
     expect(await screen.findByText('Migrate Legacy Libraries')).toBeInTheDocument();
     expect(await screen.findByText('MBA')).toBeInTheDocument();
@@ -410,10 +414,12 @@ describe('<LegacyLibMigrationPage />', () => {
 
     // Should show alert of ConfirmationView
     const alert = await screen.findByRole('alert');
-    expect(await within(alert).findByText(
-      /All content from the 3 legacy libraries you selected will be migrated to/,
-      { exact: false },
-    )).toBeInTheDocument();
+    expect(
+      await within(alert).findByText(
+        /All content from the 3 legacy libraries you selected will be migrated to/,
+        { exact: false },
+      ),
+    ).toBeInTheDocument();
     expect(screen.getByText('MBA')).toBeInTheDocument();
     expect(screen.getByText('Legacy library 1')).toBeInTheDocument();
     expect(screen.getByText('MBA 1')).toBeInTheDocument();

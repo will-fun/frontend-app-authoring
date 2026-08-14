@@ -1,7 +1,11 @@
 import { useIntl } from '@edx/frontend-platform/i18n';
 import {
-  ActionRow, Button, CheckboxFilter, useToggle,
+  ActionRow,
+  Button,
+  CheckboxFilter,
+  useToggle,
 } from '@openedx/paragon';
+import { AgreementGated } from '@src/constants';
 import { RequestStatus } from '@src/data/constants';
 import {
   ActiveColumn,
@@ -29,6 +33,7 @@ import messages from '@src/files-and-videos/videos-page/messages';
 import TranscriptSettings from '@src/files-and-videos/videos-page/transcript-settings';
 import UploadModal from '@src/files-and-videos/videos-page/upload-modal';
 import VideoThumbnail from '@src/files-and-videos/videos-page/VideoThumbnail';
+import { GatedComponentWrapper } from '@src/generic/agreement-gated-feature';
 import { useModels } from '@src/generic/model-store';
 import { DeprecatedReduxState } from '@src/store';
 import React, { useEffect, useRef } from 'react';
@@ -37,7 +42,7 @@ import { useParams } from 'react-router-dom';
 
 export const CourseVideosTable = () => {
   const intl = useIntl();
-  const { courseId } = useParams() as { courseId: string };
+  const { courseId } = useParams() as { courseId: string; };
   const dispatch = useDispatch();
   const [
     isTranscriptSettingsOpen,
@@ -118,21 +123,23 @@ export const CourseVideosTable = () => {
     dispatch(addVideoFile(courseId, files, videoIds, uploadingIdsRef));
   };
   const handleDeleteFile = (id) => dispatch(deleteVideoFile(courseId, id));
-  const handleDownloadFile = (selectedRows) => dispatch(fetchVideoDownload({
-    selectedRows,
-    courseId,
-  }));
+  const handleDownloadFile = (selectedRows) =>
+    dispatch(fetchVideoDownload({
+      selectedRows,
+      courseId,
+    }));
   const handleUsagePaths = (video) => dispatch(getUsagePaths({ video, courseId }));
   const handleFileOrder = ({ newFileIdOrder }) => {
     dispatch(updateVideoOrder(courseId, newFileIdOrder));
   };
-  const handleAddThumbnail = (file, videoId) => resampleFile({
-    file,
-    dispatch,
-    courseId,
-    videoId,
-    addVideoThumbnail,
-  });
+  const handleAddThumbnail = (file, videoId) =>
+    resampleFile({
+      file,
+      dispatch,
+      courseId,
+      videoId,
+      addVideoThumbnail,
+    });
 
   const videos = useModels('videos', videoIds);
 
@@ -145,12 +152,13 @@ export const CourseVideosTable = () => {
     usageErrorMessages: errorMessages.usageMetrics,
     fileType: 'video',
   };
-  const thumbnailPreview = (props) => VideoThumbnail({
-    ...props,
-    pageLoadStatus: loadingStatus,
-    handleAddThumbnail,
-    videoImageSettings,
-  });
+  const thumbnailPreview = (props) =>
+    VideoThumbnail({
+      ...props,
+      pageLoadStatus: loadingStatus,
+      handleAddThumbnail,
+      videoImageSettings,
+    });
   const infoModalSidebar = (video, activeTab, setActiveTab) => (
     <VideoInfoModalSidebar video={video} activeTab={activeTab} setActiveTab={setActiveTab} />
   );
@@ -224,65 +232,67 @@ export const CourseVideosTable = () => {
   ];
 
   return (
-    <>
-      <ActionRow>
-        <ActionRow.Spacer />
-        {isVideoTranscriptEnabled ? (
-          <Button
-            variant="link"
-            size="sm"
-            onClick={() => {
-              openTranscriptSettings();
-              handleErrorReset({ errorType: 'transcript' });
-            }}
-          >
-            {intl.formatMessage(messages.transcriptSettingsButtonLabel)}
-          </Button>
-        ) : null}
-      </ActionRow>
-      {
-        loadingStatus !== RequestStatus.FAILED && (
-        <>
-          {isVideoTranscriptEnabled && (
-          <TranscriptSettings
-            {...{
-              isTranscriptSettingsOpen,
-              closeTranscriptSettings,
-              handleErrorReset,
-              errorMessages,
-              transcriptStatus,
-              courseId,
-            }}
-          />
-          )}
-          <FileTable
-            {...{
-              courseId,
-              data,
-              handleAddFile,
-              handleDeleteFile,
-              handleDownloadFile,
-              handleUsagePaths,
-              handleErrorReset,
-              handleFileOrder,
-              tableColumns,
-              maxFileSize,
-              thumbnailPreview,
-              infoModalSidebar,
-              files: videos,
-            }}
-          />
-        </>
-        )
-    }
-      <UploadModal
-        {...{
-          isUploadTrackerOpen,
-          currentUploadingIdsRef: uploadingIdsRef.current,
-          handleUploadCancel,
-          addVideoStatus,
-        }}
-      />
-    </>
+    <GatedComponentWrapper gatingTypes={[AgreementGated.UPLOAD, AgreementGated.UPLOAD_VIDEOS]}>
+      <>
+        <ActionRow>
+          <ActionRow.Spacer />
+          {isVideoTranscriptEnabled ?
+            (
+              <Button
+                variant="link"
+                size="sm"
+                onClick={() => {
+                  openTranscriptSettings();
+                  handleErrorReset({ errorType: 'transcript' });
+                }}
+              >
+                {intl.formatMessage(messages.transcriptSettingsButtonLabel)}
+              </Button>
+            ) :
+            null}
+        </ActionRow>
+        {loadingStatus !== RequestStatus.FAILED && (
+          <>
+            {isVideoTranscriptEnabled && (
+              <TranscriptSettings
+                {...{
+                  isTranscriptSettingsOpen,
+                  closeTranscriptSettings,
+                  handleErrorReset,
+                  errorMessages,
+                  transcriptStatus,
+                  courseId,
+                }}
+              />
+            )}
+            <FileTable
+              {...{
+                courseId,
+                data,
+                handleAddFile,
+                handleDeleteFile,
+                handleDownloadFile,
+                handleUsagePaths,
+                handleErrorReset,
+                handleFileOrder,
+                tableColumns,
+                maxFileSize,
+                thumbnailPreview,
+                infoModalSidebar,
+                files: videos,
+              }}
+            />
+          </>
+        )}
+        <UploadModal
+          {...{
+            isUploadTrackerOpen,
+            currentUploadingIdsRef: uploadingIdsRef.current,
+            handleUploadCancel,
+            addVideoStatus,
+          }}
+        />
+      </>
+    </GatedComponentWrapper>
   );
 };

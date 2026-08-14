@@ -8,12 +8,19 @@ import {
   fetchAdvancedSettings,
   loadProblem,
 } from './problem';
-import { checkboxesOLXWithFeedbackAndHintsOLX, advancedProblemOlX, blankProblemOLX } from '../../../containers/ProblemEditor/data/mockData/olxTestData';
+import {
+  checkboxesOLXWithFeedbackAndHintsOLX,
+  advancedProblemOlX,
+  blankProblemOLX,
+} from '../../../containers/ProblemEditor/data/mockData/olxTestData';
 import { ProblemTypeKeys } from '../../constants/problem';
 
 const mockOlx = 'SOmEVALue';
 const mockBuildOlx = jest.fn(() => mockOlx);
-jest.mock('../../../containers/ProblemEditor/data/ReactStateOLXParser', () => jest.fn().mockImplementation(() => ({ buildOLX: mockBuildOlx })));
+jest.mock(
+  '../../../containers/ProblemEditor/data/ReactStateOLXParser',
+  () => jest.fn().mockImplementation(() => ({ buildOLX: mockBuildOlx })),
+);
 
 jest.mock('../problem', () => ({
   actions: {
@@ -160,21 +167,24 @@ describe('problem thunkActions', () => {
   });
 
   describe('fetchAdvanceSettings', () => {
-    it('dispatches fetchAdvanceSettings action', () => {
-      fetchAdvancedSettings({ rawOLX, rawSettings, isMarkdownEditorEnabled: true })(dispatch);
+    it('dispatches fetchAdvanceSettings action', async () => {
+      // eslint-disable-next-line no-void
+      void fetchAdvancedSettings({ rawOLX, rawSettings, isMarkdownEditorEnabled: true })(dispatch);
       [[dispatchedAction]] = dispatch.mock.calls;
       expect(dispatchedAction.fetchAdvanceSettings).not.toEqual(undefined);
     });
-    it('dispatches actions.problem.updateField and loadProblem on success', () => {
+    it('dispatches actions.problem.updateField and loadProblem on success', async () => {
       dispatch.mockClear();
-      fetchAdvancedSettings({ rawOLX, rawSettings, isMarkdownEditorEnabled: true })(dispatch);
+      // eslint-disable-next-line no-void
+      void fetchAdvancedSettings({ rawOLX, rawSettings, isMarkdownEditorEnabled: true })(dispatch);
       [[dispatchedAction]] = dispatch.mock.calls;
       dispatchedAction.fetchAdvanceSettings.onSuccess({ data: { key: 'test', max_attempts: 1 } });
       expect(dispatch).toHaveBeenCalledWith(actions.problem.load(undefined));
     });
-    it('calls loadProblem on failure', () => {
+    it('calls loadProblem on failure', async () => {
       dispatch.mockClear();
-      fetchAdvancedSettings({ rawOLX, rawSettings, isMarkdownEditorEnabled: true })(dispatch);
+      // eslint-disable-next-line no-void
+      void fetchAdvancedSettings({ rawOLX, rawSettings, isMarkdownEditorEnabled: true })(dispatch);
       [[dispatchedAction]] = dispatch.mock.calls;
       dispatchedAction.fetchAdvanceSettings.onFailure();
       expect(dispatch).toHaveBeenCalledWith(actions.problem.load(undefined));
@@ -184,14 +194,20 @@ describe('problem thunkActions', () => {
     test('initializeProblem advanced Problem', () => {
       rawOLX = advancedProblemOlX.rawOLX;
       loadProblem({
-        rawOLX, rawSettings, defaultSettings, isMarkdownEditorEnabled: true,
+        rawOLX,
+        rawSettings,
+        defaultSettings,
+        isMarkdownEditorEnabled: true,
       })(dispatch);
       expect(dispatch).toHaveBeenCalledWith(actions.problem.load(undefined));
     });
     test('initializeProblem blank Problem', () => {
       rawOLX = blankProblemOLX.rawOLX;
       loadProblem({
-        rawOLX, rawSettings, defaultSettings, isMarkdownEditorEnabled: true,
+        rawOLX,
+        rawSettings,
+        defaultSettings,
+        isMarkdownEditorEnabled: true,
       })(dispatch);
       expect(dispatch).toHaveBeenCalledWith(actions.problem.setEnableTypeSelection(undefined));
     });

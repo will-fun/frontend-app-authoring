@@ -1,22 +1,37 @@
 /**
- * Given a usage key like `lb:org:lib:html:id`, get the type (e.g. `html`)
- * @param usageKey e.g. `lb:org:lib:html:id`
+ * Given a usage key like `lb:org:lib:html:id` or `block-v1:org+type@html+block@1`, get the type (e.g. `html`)
+ * @param usageKey e.g. `lb:org:lib:html:id`, `block-v1:org+type@html+block@1`
  * @returns The block type as a string
  */
-export function getBlockType(usageKey: string): string {
-  if (usageKey && (usageKey.startsWith('lb:') || usageKey.startsWith('lct:'))) {
-    const blockType = usageKey.split(':')[3];
-    if (blockType) {
-      return blockType;
+export function getBlockType(
+  usageKey: string,
+  onInvalid: 'empty' | 'error' = 'error',
+): string {
+  if (usageKey) {
+    if (usageKey.startsWith('lb:') || usageKey.startsWith('lct:')) {
+      const blockType = usageKey.split(':')[3];
+      if (blockType) {
+        return blockType;
+      }
+    } else if (usageKey.startsWith('block-v1:')) {
+      const blockType = usageKey.match(/type@([^+]+)/);
+      if (blockType) {
+        return blockType[1];
+      }
     }
   }
+
+  if (onInvalid === 'empty') {
+    return '';
+  }
+
   throw new Error(`Invalid usageKey: ${usageKey}`);
 }
 
 /**
  * Parses a library key and returns the organization and library name as an object.
  */
-export function parseLibraryKey(libraryKey: string): { org: string, lib: string } {
+export function parseLibraryKey(libraryKey: string): { org: string; lib: string; } {
   const splitKey = libraryKey?.split(':') || [];
   if (splitKey.length !== 3) {
     throw new Error(`Invalid libraryKey: ${libraryKey}`);
@@ -72,14 +87,14 @@ export function isLibraryV1Key(learningContextKey: string | undefined | null): l
 }
 
 /** Check if this is a V1 block key. */
-export function isBlockV1Key(usageKey: string | undefined | null): usageKey is string {
+export function isBlockV1Key(usageKey: string | undefined | null): boolean {
   return typeof usageKey === 'string' && usageKey.startsWith('block-v1:');
 }
 
 /**
  * Build a collection usage key from library V2 context key and collection Id.
  * This Collection Usage Key is only used on tagging.
-*/
+ */
 export const buildCollectionUsageKey = (learningContextKey: string, collectionId: string) => {
   if (!isLibraryKey(learningContextKey)) {
     return '';

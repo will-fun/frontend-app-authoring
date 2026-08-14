@@ -3,13 +3,16 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import {
-  ActionRow, Form, Stack, CheckboxControl,
+  ActionRow,
+  Form,
+  Stack,
+  CheckboxControl,
 } from '@openedx/paragon';
 
 import { LICENSE_COMMONS_OPTIONS } from '../constants';
 import messages from './messages';
 
-const LicenseCommonsOptions = ({ licenseDetails, onToggleCheckbox }) => {
+const LicenseCommonsOptions = ({ licenseDetails, isEditable = true, onToggleCheckbox }) => {
   const optionDetails = [
     {
       id: LICENSE_COMMONS_OPTIONS.attribution,
@@ -42,7 +45,7 @@ const LicenseCommonsOptions = ({ licenseDetails, onToggleCheckbox }) => {
   ];
 
   const handleCheckboxClick = (option) => {
-    if (!option.disabled) {
+    if (!option.disabled && isEditable) {
       onToggleCheckbox(option.id);
     }
   };
@@ -67,7 +70,7 @@ const LicenseCommonsOptions = ({ licenseDetails, onToggleCheckbox }) => {
             <ActionRow>
               <CheckboxControl
                 checked={option.checked}
-                disabled={option.disabled}
+                disabled={option.disabled || !isEditable}
                 className="p-1"
                 readOnly
               />

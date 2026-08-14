@@ -8,14 +8,24 @@ import { languageExportId } from '../utils';
 export async function mockContentTaxonomyTagsData(contentId: string): Promise<any> {
   const thisMock = mockContentTaxonomyTagsData;
   switch (contentId) {
-    case thisMock.stagedTagsId: return thisMock.stagedTags;
-    case thisMock.otherTagsId: return thisMock.otherTags;
-    case thisMock.languageWithTagsId: return thisMock.languageWithTags;
-    case thisMock.languageWithoutTagsId: return thisMock.languageWithoutTags;
-    case thisMock.largeTagsId: return thisMock.largeTags;
-    case thisMock.containerTagsId: return thisMock.largeTags;
-    case thisMock.emptyTagsId: return thisMock.emptyTags;
-    default: throw new Error(`No mock has been set up for contentId "${contentId}"`);
+    case thisMock.stagedTagsId:
+      return thisMock.stagedTags;
+    case thisMock.otherTagsId:
+      return thisMock.otherTags;
+    case thisMock.languageWithTagsId:
+      return thisMock.languageWithTags;
+    case thisMock.languageWithoutTagsId:
+      return thisMock.languageWithoutTags;
+    case thisMock.largeTagsId:
+      return thisMock.largeTags;
+    case thisMock.containerTagsId:
+      return thisMock.largeTags;
+    case thisMock.emptyTagsId:
+      return thisMock.emptyTags;
+    case thisMock.veryLongTagsId:
+      return thisMock.veryLongTags;
+    default:
+      throw new Error(`No mock has been set up for contentId "${contentId}"`);
   }
 }
 mockContentTaxonomyTagsData.stagedTagsId = 'block-v1:StagedTagsOrg+STC1+2023_1+type@vertical+block@stagedTagsId';
@@ -79,7 +89,8 @@ mockContentTaxonomyTagsData.otherTags = {
     },
   ],
 };
-mockContentTaxonomyTagsData.languageWithTagsId = 'block-v1:LanguageTagsOrg+STC1+2023_1+type@vertical+block@languageWithTagsId';
+mockContentTaxonomyTagsData.languageWithTagsId =
+  'block-v1:LanguageTagsOrg+STC1+2023_1+type@vertical+block@languageWithTagsId';
 mockContentTaxonomyTagsData.languageWithTags = {
   taxonomies: [
     {
@@ -114,7 +125,8 @@ mockContentTaxonomyTagsData.languageWithTags = {
     },
   ],
 };
-mockContentTaxonomyTagsData.languageWithoutTagsId = 'block-v1:LanguageTagsOrg+STC1+2023_1+type@vertical+block@languageWithoutTagsId';
+mockContentTaxonomyTagsData.languageWithoutTagsId =
+  'block-v1:LanguageTagsOrg+STC1+2023_1+type@vertical+block@languageWithoutTagsId';
 mockContentTaxonomyTagsData.languageWithoutTags = {
   taxonomies: [
     {
@@ -205,8 +217,40 @@ mockContentTaxonomyTagsData.emptyTagsId = 'block-v1:EmptyTagsOrg+STC1+2023_1+typ
 mockContentTaxonomyTagsData.emptyTags = {
   taxonomies: [],
 };
+mockContentTaxonomyTagsData.veryLongTagsId = 'block-v1:VeryLongTagsOrg+STC1+2023_1+type@vertical+block@veryLongTagsId';
+mockContentTaxonomyTagsData.veryLongTags = {
+  taxonomies: [
+    {
+      name: 'ESDC Skills and Competencies',
+      taxonomyId: 1,
+      canTagObject: true,
+      tags: [
+        {
+          value: 'Technical Skills',
+          lineage: [
+            'Skills',
+            'Technical Skills Sub-Category',
+            'Technical Skills',
+          ],
+          canDeleteObjecttag: true,
+        },
+        {
+          value: 'Communication Abilities',
+          lineage: [
+            'Abilities',
+            'Cognitive Abilities',
+            'Communication Abilities',
+          ],
+          canDeleteObjecttag: true,
+        },
+      ],
+    },
+  ],
+};
+
 mockContentTaxonomyTagsData.containerTagsId = 'lct:StagedTagsOrg:lib:unit:container_tags';
-mockContentTaxonomyTagsData.applyMock = () => jest.spyOn(api, 'getContentTaxonomyTagsData').mockImplementation(mockContentTaxonomyTagsData);
+mockContentTaxonomyTagsData.applyMock = () =>
+  jest.spyOn(api, 'getContentTaxonomyTagsData').mockImplementation(mockContentTaxonomyTagsData);
 
 /**
  * Mock for `getTaxonomyListData()`
@@ -214,11 +258,16 @@ mockContentTaxonomyTagsData.applyMock = () => jest.spyOn(api, 'getContentTaxonom
 export async function mockTaxonomyListData(org: string): Promise<any> {
   const thisMock = mockTaxonomyListData;
   switch (org) {
-    case thisMock.stagedTagsOrg: return thisMock.stagedTags;
-    case thisMock.languageTagsOrg: return thisMock.languageTags;
-    case thisMock.largeTagsOrg: return thisMock.largeTags;
-    case thisMock.emptyTagsOrg: return thisMock.emptyTags;
-    default: throw new Error(`No mock has been set up for org "${org}"`);
+    case thisMock.stagedTagsOrg:
+      return thisMock.stagedTags;
+    case thisMock.languageTagsOrg:
+      return thisMock.languageTags;
+    case thisMock.largeTagsOrg:
+      return thisMock.largeTags;
+    case thisMock.emptyTagsOrg:
+      return thisMock.emptyTags;
+    default:
+      throw new Error(`No mock has been set up for org "${org}"`);
   }
 }
 mockTaxonomyListData.stagedTagsOrg = 'StagedTagsOrg';
@@ -289,7 +338,8 @@ mockTaxonomyListData.emptyTagsOrg = 'EmptyTagsOrg';
 mockTaxonomyListData.emptyTags = {
   results: [],
 };
-mockTaxonomyListData.applyMock = () => jest.spyOn(taxonomyApi, 'getTaxonomyListData').mockImplementation(mockTaxonomyListData);
+mockTaxonomyListData.applyMock = () =>
+  jest.spyOn(taxonomyApi, 'getTaxonomyListData').mockImplementation(mockTaxonomyListData);
 
 /**
  * Mock for `getTaxonomyTagsData()`
@@ -297,9 +347,12 @@ mockTaxonomyListData.applyMock = () => jest.spyOn(taxonomyApi, 'getTaxonomyListD
 export async function mockTaxonomyTagsData(taxonomyId: number): Promise<any> {
   const thisMock = mockTaxonomyTagsData;
   switch (taxonomyId) {
-    case thisMock.stagedTagsTaxonomy: return thisMock.stagedTags;
-    case thisMock.languageTagsTaxonomy: return thisMock.languageTags;
-    default: throw new Error(`No mock has been set up for taxonomyId "${taxonomyId}"`);
+    case thisMock.stagedTagsTaxonomy:
+      return thisMock.stagedTags;
+    case thisMock.languageTagsTaxonomy:
+      return thisMock.languageTags;
+    default:
+      throw new Error(`No mock has been set up for taxonomyId "${taxonomyId}"`);
   }
 }
 mockTaxonomyTagsData.stagedTagsTaxonomy = 123;
@@ -371,10 +424,19 @@ mockTaxonomyTagsData.applyMock = () => jest.spyOn(api, 'getTaxonomyTagsData').mo
 /**
  * Mock for `getContentData()`
  */
-export async function mockContentData(): Promise<any> {
-  return mockContentData.data;
+export async function mockContentData(contentId: string): Promise<any> {
+  switch (contentId) {
+    case mockContentData.textXBlock:
+      return mockContentData.textXBlockData;
+    default:
+      return mockContentData.data;
+  }
 }
 mockContentData.data = {
   displayName: 'Unit 1',
+};
+mockContentData.textXBlock = 'block-v1:edX+DemoX+Demo_Course+type@html+block@030e35c4756a4ddc8d40b95fbbfff4d4';
+mockContentData.textXBlockData = {
+  displayName: 'Text XBlock 1',
 };
 mockContentData.applyMock = () => jest.spyOn(api, 'getContentData').mockImplementation(mockContentData);

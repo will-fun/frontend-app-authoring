@@ -18,7 +18,7 @@ import {
   mockGetContainerMetadata,
 } from '../data/api.mocks';
 
-import { ComponentPicker } from './ComponentPicker';
+import { LibraryAndComponentPicker } from './ComponentPicker';
 import { ContentType } from '../routes';
 
 jest.mock('react-router-dom', () => ({
@@ -46,7 +46,7 @@ mockGetContainerMetadata.applyMock();
 
 let postMessageSpy: jest.SpyInstance;
 
-describe('<ComponentPicker />', () => {
+describe('<LibraryAndComponentPicker />', () => {
   beforeEach(() => {
     initializeMocks();
     postMessageSpy = jest.spyOn(window.parent, 'postMessage');
@@ -55,7 +55,7 @@ describe('<ComponentPicker />', () => {
   });
 
   it('should be able to switch tabs', async () => {
-    render(<ComponentPicker />);
+    render(<LibraryAndComponentPicker />);
 
     expect(await screen.findByText('Test Library 1')).toBeInTheDocument();
     fireEvent.click(screen.getByDisplayValue(/lib:sampletaxonomyorg1:tl1/i));
@@ -99,7 +99,7 @@ describe('<ComponentPicker />', () => {
   });
 
   it('should pick component using the component card button', async () => {
-    render(<ComponentPicker />);
+    render(<LibraryAndComponentPicker />);
 
     expect(await screen.findByText('Test Library 1')).toBeInTheDocument();
     fireEvent.click(screen.getByDisplayValue(/lib:sampletaxonomyorg1:tl1/i));
@@ -122,7 +122,7 @@ describe('<ComponentPicker />', () => {
   });
 
   it('should pick component using the component sidebar', async () => {
-    render(<ComponentPicker />);
+    render(<LibraryAndComponentPicker />);
 
     expect(await screen.findByText('Test Library 1')).toBeInTheDocument();
     fireEvent.click(screen.getByDisplayValue(/lib:sampletaxonomyorg1:tl1/i));
@@ -150,7 +150,7 @@ describe('<ComponentPicker />', () => {
   });
 
   it('should open the unit sidebar', async () => {
-    render(<ComponentPicker />);
+    render(<LibraryAndComponentPicker />);
 
     expect(await screen.findByText('Test Library 1')).toBeInTheDocument();
     fireEvent.click(screen.getByDisplayValue(/lib:sampletaxonomyorg1:tl1/i));
@@ -160,7 +160,7 @@ describe('<ComponentPicker />', () => {
     expect(await screen.findByText('Test Library 1')).toBeInTheDocument();
 
     // Click on the unit card to open the sidebar
-    fireEvent.click((await screen.findByText('Published Test Unit')));
+    fireEvent.click(await screen.findByText('Published Test Unit'));
 
     const sidebar = await screen.findByTestId('library-sidebar');
     expect(sidebar).toBeInTheDocument();
@@ -169,7 +169,7 @@ describe('<ComponentPicker />', () => {
 
   it('double clicking a collection should open it', async () => {
     const user = userEvent.setup();
-    render(<ComponentPicker />);
+    render(<LibraryAndComponentPicker />);
 
     expect(await screen.findByText('Test Library 1')).toBeInTheDocument();
     fireEvent.click(screen.getByDisplayValue(/lib:sampletaxonomyorg1:tl1/i));
@@ -193,7 +193,7 @@ describe('<ComponentPicker />', () => {
   });
 
   it('should pick component inside a collection using the card', async () => {
-    render(<ComponentPicker />);
+    render(<LibraryAndComponentPicker />);
 
     expect(await screen.findByText('Test Library 1')).toBeInTheDocument();
     fireEvent.click(screen.getByDisplayValue(/lib:sampletaxonomyorg1:tl1/i));
@@ -231,7 +231,7 @@ describe('<ComponentPicker />', () => {
   });
 
   it('should pick component inside a collection using the sidebar', async () => {
-    render(<ComponentPicker />);
+    render(<LibraryAndComponentPicker />);
 
     expect(await screen.findByText('Test Library 1')).toBeInTheDocument();
     fireEvent.click(screen.getByDisplayValue(/lib:sampletaxonomyorg1:tl1/i));
@@ -274,7 +274,7 @@ describe('<ComponentPicker />', () => {
   });
 
   it('should return to library selection', async () => {
-    render(<ComponentPicker />);
+    render(<LibraryAndComponentPicker />);
 
     expect(await screen.findByText('Test Library 1')).toBeInTheDocument();
     fireEvent.click(screen.getByDisplayValue(/lib:sampletaxonomyorg1:tl1/i));
@@ -288,7 +288,7 @@ describe('<ComponentPicker />', () => {
 
   it('should pick multiple components using the component card button', async () => {
     const onChange = jest.fn();
-    render(<ComponentPicker componentPickerMode="multiple" onChangeComponentSelection={onChange} />);
+    render(<LibraryAndComponentPicker componentPickerMode="multiple" onChangeComponentSelection={onChange} />);
 
     expect(await screen.findByText('Test Library 1')).toBeInTheDocument();
     fireEvent.click(screen.getByDisplayValue(/lib:sampletaxonomyorg1:tl1/i));
@@ -302,43 +302,49 @@ describe('<ComponentPicker />', () => {
 
     // Select the first component
     fireEvent.click(screen.queryAllByRole('button', { name: 'Select' })[0]);
-    await waitFor(() => expect(onChange).toHaveBeenCalledWith([
-      {
-        usageKey: 'lb:Axim:TEST:html:571fe018-f3ce-45c9-8f53-5dafcb422fdd',
-        blockType: 'html',
-      },
-    ]));
+    await waitFor(() =>
+      expect(onChange).toHaveBeenCalledWith([
+        {
+          usageKey: 'lb:Axim:TEST:html:571fe018-f3ce-45c9-8f53-5dafcb422fdd',
+          blockType: 'html',
+        },
+      ])
+    );
 
     onChange.mockClear();
 
     // Select another component
     fireEvent.click(screen.queryAllByRole('button', { name: 'Select' })[1]);
-    await waitFor(() => expect(onChange).toHaveBeenCalledWith([
-      {
-        usageKey: 'lb:Axim:TEST:html:571fe018-f3ce-45c9-8f53-5dafcb422fdd',
-        blockType: 'html',
-      },
-      {
-        blockType: 'html',
-        usageKey: 'lb:Axim:TEST:html:73a22298-bcd9-4f4c-ae34-0bc2b0612480',
-      },
-    ]));
+    await waitFor(() =>
+      expect(onChange).toHaveBeenCalledWith([
+        {
+          usageKey: 'lb:Axim:TEST:html:571fe018-f3ce-45c9-8f53-5dafcb422fdd',
+          blockType: 'html',
+        },
+        {
+          blockType: 'html',
+          usageKey: 'lb:Axim:TEST:html:73a22298-bcd9-4f4c-ae34-0bc2b0612480',
+        },
+      ])
+    );
 
     onChange.mockClear();
 
     // Deselect the first component
     fireEvent.click(screen.queryAllByRole('button', { name: 'Select' })[0]);
-    await waitFor(() => expect(onChange).toHaveBeenCalledWith([
-      {
-        blockType: 'html',
-        usageKey: 'lb:Axim:TEST:html:73a22298-bcd9-4f4c-ae34-0bc2b0612480',
-      },
-    ]));
+    await waitFor(() =>
+      expect(onChange).toHaveBeenCalledWith([
+        {
+          blockType: 'html',
+          usageKey: 'lb:Axim:TEST:html:73a22298-bcd9-4f4c-ae34-0bc2b0612480',
+        },
+      ])
+    );
   });
 
   it('should pick multilpe components using the component sidebar', async () => {
     const onChange = jest.fn();
-    render(<ComponentPicker componentPickerMode="multiple" onChangeComponentSelection={onChange} />);
+    render(<LibraryAndComponentPicker componentPickerMode="multiple" onChangeComponentSelection={onChange} />);
 
     expect(await screen.findByText('Test Library 1')).toBeInTheDocument();
     fireEvent.click(screen.getByDisplayValue(/lib:sampletaxonomyorg1:tl1/i));
@@ -358,12 +364,14 @@ describe('<ComponentPicker />', () => {
     // Click the select component from the component sidebar
     fireEvent.click(within(sidebar).getByRole('button', { name: 'Select' }));
 
-    await waitFor(() => expect(onChange).toHaveBeenCalledWith([
-      {
-        usageKey: 'lb:Axim:TEST:html:571fe018-f3ce-45c9-8f53-5dafcb422fdd',
-        blockType: 'html',
-      },
-    ]));
+    await waitFor(() =>
+      expect(onChange).toHaveBeenCalledWith([
+        {
+          usageKey: 'lb:Axim:TEST:html:571fe018-f3ce-45c9-8f53-5dafcb422fdd',
+          blockType: 'html',
+        },
+      ])
+    );
 
     onChange.mockClear();
 
@@ -374,7 +382,7 @@ describe('<ComponentPicker />', () => {
   });
 
   it('should display an alert banner when showOnlyPublished is true', async () => {
-    render(<ComponentPicker />);
+    render(<LibraryAndComponentPicker />);
 
     expect(await screen.findByText('Test Library 1')).toBeInTheDocument();
     fireEvent.click(screen.getByDisplayValue(/lib:sampletaxonomyorg1:tl1/i));
@@ -385,7 +393,7 @@ describe('<ComponentPicker />', () => {
 
   it('should display all tabs', async () => {
     // Default `visibleTabs = allLibraryPageTabs`
-    render(<ComponentPicker />);
+    render(<LibraryAndComponentPicker />);
 
     expect(await screen.findByText('Test Library 1')).toBeInTheDocument();
     fireEvent.click(screen.getByDisplayValue(/lib:sampletaxonomyorg1:tl1/i));
@@ -397,7 +405,7 @@ describe('<ComponentPicker />', () => {
   });
 
   it('should display only units', async () => {
-    render(<ComponentPicker visibleTabs={[ContentType.units]} />);
+    render(<LibraryAndComponentPicker visibleTabs={[ContentType.units]} />);
 
     expect(await screen.findByText('Test Library 1')).toBeInTheDocument();
     fireEvent.click(screen.getByDisplayValue(/lib:sampletaxonomyorg1:tl1/i));
@@ -408,7 +416,7 @@ describe('<ComponentPicker />', () => {
   });
 
   it('should not display never published filter', async () => {
-    render(<ComponentPicker />);
+    render(<LibraryAndComponentPicker />);
 
     expect(await screen.findByText('Test Library 1')).toBeInTheDocument();
     fireEvent.click(screen.getByDisplayValue(/lib:sampletaxonomyorg1:tl1/i));
@@ -424,7 +432,7 @@ describe('<ComponentPicker />', () => {
   });
 
   it('should not display never published filter in collection page', async () => {
-    render(<ComponentPicker />);
+    render(<LibraryAndComponentPicker />);
 
     expect(await screen.findByText('Test Library 1')).toBeInTheDocument();
     fireEvent.click(screen.getByDisplayValue(/lib:sampletaxonomyorg1:tl1/i));

@@ -7,7 +7,7 @@ import {
   Icon,
 } from '@openedx/paragon';
 import classNames from 'classnames';
-import DatePicker from 'react-datepicker/dist';
+import DatePicker from 'react-datepicker';
 import { useIntl } from '@edx/frontend-platform/i18n';
 import { Calendar as CalendarIcon, Error as ErrorIcon } from '@openedx/paragon/icons';
 import { Formik } from 'formik';
@@ -42,10 +42,11 @@ const UpdateForm = ({
   } = geUpdateFormSettings(requestType, courseUpdatesInitialValues, intl);
 
   return (
-    <div className={classNames('update-form', {
-      'update-form__inner': isInnerForm,
-      'update-form__inner-first': isFirstUpdate,
-    })}
+    <div
+      className={classNames('update-form', {
+        'update-form__inner': isInnerForm,
+        'update-form__inner-first': isFirstUpdate,
+      })}
     >
       <Formik
         initialValues={courseUpdatesInitialValues}
@@ -55,7 +56,10 @@ const UpdateForm = ({
         onSubmit={onSubmit}
       >
         {({
-          values, handleSubmit, isValid, setFieldValue,
+          values,
+          handleSubmit,
+          isValid,
+          setFieldValue,
         }) => (
           <>
             <h3 className="update-form-title">{formTitle}</h3>
@@ -73,7 +77,7 @@ const UpdateForm = ({
                   <DatePicker
                     name="date"
                     data-testid="course-updates-datepicker"
-                    selected={isValidDate(values.date) ? convertToDateFromString(values.date) : ''}
+                    selected={isValidDate(values.date) ? convertToDateFromString(values.date) : undefined}
                     dateFormat={DATE_FORMAT}
                     className={classNames('datepicker-custom-control', {
                       'datepicker-custom-control_isInvalid': !isValid,
@@ -83,15 +87,21 @@ const UpdateForm = ({
                     showPopperArrow={false}
                     onChange={(value) => {
                       if (!isValidDate(value)) {
+                        /* istanbul ignore next */
                         return;
                       }
+                      // eslint-disable-next-line @typescript-eslint/no-floating-promises
                       setFieldValue('date', convertToStringFromDate(value));
                     }}
                   />
                 </div>
                 {!isValid && (
                   <div className="datepicker-field-error">
-                    <Icon src={ErrorIcon} className="text-danger-500" alt={intl.formatMessage(messages.updateFormErrorAltText)} />
+                    <Icon
+                      src={ErrorIcon}
+                      className="text-danger-500"
+                      alt={intl.formatMessage(messages.updateFormErrorAltText)}
+                    />
                     <span className="message-error">{intl.formatMessage(messages.updateFormInValid)}</span>
                   </div>
                 )}
@@ -103,8 +113,8 @@ const UpdateForm = ({
                 data-testid="course-updates-wisiwyg-editor"
                 name={contentFieldName}
                 minHeight={300}
-                onChange={(value) => {
-                  setFieldValue(contentFieldName, value || DEFAULT_EMPTY_WYSIWYG_VALUE);
+                onChange={/* istanbul ignore next: we can't test WYSIWYG editors */ async (value) => {
+                  await setFieldValue(contentFieldName, value || DEFAULT_EMPTY_WYSIWYG_VALUE);
                 }}
               />
             </Form.Group>

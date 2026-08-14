@@ -2,7 +2,13 @@ import { useContext, useState } from 'react';
 import { FormattedMessage, useIntl } from '@edx/frontend-platform/i18n';
 import type { UseMutationResult } from '@tanstack/react-query';
 import {
-  Button, Icon, Scrollable, SelectableBox, Stack, StatefulButton, useCheckboxSetValues,
+  Button,
+  Icon,
+  Scrollable,
+  SelectableBox,
+  Stack,
+  StatefulButton,
+  useCheckboxSetValues,
 } from '@openedx/paragon';
 import { Folder } from '@openedx/paragon/icons';
 
@@ -14,14 +20,14 @@ import {
 } from '../../../search-manager';
 import { ToastContext } from '../../../generic/toast-context';
 import { CollectionMetadata } from '../../data/api';
-import { useLibraryContext } from '../../common/context/LibraryContext';
+import { useOptionalLibraryContext } from '../../common/context/LibraryContext';
 import { SidebarActions, useSidebarContext } from '../../common/context/SidebarContext';
 import genericMessages from '../messages';
 import messages from './messages';
 
 interface ManageCollectionsProps {
   opaqueKey: string;
-  collections: CollectionMetadata[],
+  collections: CollectionMetadata[];
   useUpdateCollectionsHook: (opaqueKey: string) => UseMutationResult<void, unknown, string[], unknown>;
 }
 
@@ -119,11 +125,15 @@ const AddToCollectionsDrawer = ({
   onClose,
 }: CollectionsDrawerProps) => {
   const intl = useIntl();
-  const { libraryId } = useLibraryContext();
+  const { libraryId } = useOptionalLibraryContext();
+  const extraFilter = ['type = "collection"'];
+  if (libraryId) {
+    extraFilter.push(`context_key = "${libraryId}"`);
+  }
 
   return (
     <SearchContextProvider
-      extraFilter={[`context_key = "${libraryId}"`, 'type = "collection"']}
+      extraFilter={extraFilter}
       skipUrlUpdate
       skipBlockTypeFetch
     >
@@ -156,7 +166,7 @@ const EntityCollections = ({ collections, onManageClick }: {
   onManageClick: () => void;
 }) => {
   const intl = useIntl();
-  const { readOnly } = useLibraryContext();
+  const { readOnly } = useOptionalLibraryContext();
 
   if (!collections?.length) {
     return (
@@ -214,7 +224,8 @@ const ManageCollections = ({ opaqueKey, collections, useUpdateCollectionsHook }:
           useUpdateCollectionsHook={useUpdateCollectionsHook}
           onClose={() => resetSidebarAction()}
         />
-      ) : (
+      ) :
+      (
         <EntityCollections
           collections={collectionNames}
           onManageClick={() => setSidebarAction(SidebarActions.JumpToManageCollections)}

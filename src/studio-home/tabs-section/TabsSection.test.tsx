@@ -33,9 +33,6 @@ let store;
 const courseApiLinkV2 = `${getApiBaseUrl()}/api/contentstore/v2/home/courses`;
 const libraryApiLink = `${getStudioHomeApiUrl()}/libraries`;
 
-// The Libraries v2 tab title contains a badge, so we need to use regex to match its tab text.
-const librariesBetaTabTitle = /Libraries Beta/;
-
 const tabSectionComponent = (overrideProps) => (
   <TabsSection
     showNewCourseContainer={false}
@@ -53,26 +50,27 @@ export const LocationDisplay = () => {
   return <div data-testid="location-display">{location.pathname}</div>;
 };
 
-const render = (overrideProps = {}) => baseRender(
-  <>
-    <Routes>
-      <Route
-        path="/home"
-        element={tabSectionComponent(overrideProps)}
-      />
-      <Route
-        path="/libraries"
-        element={tabSectionComponent(overrideProps)}
-      />
-      <Route
-        path="/libraries-v1"
-        element={tabSectionComponent(overrideProps)}
-      />
-    </Routes>
-    <LocationDisplay />
-  </>,
-  { routerProps: { initialEntries: ['/home'] } },
-);
+const render = (overrideProps = {}) =>
+  baseRender(
+    <>
+      <Routes>
+        <Route
+          path="/home"
+          element={tabSectionComponent(overrideProps)}
+        />
+        <Route
+          path="/libraries"
+          element={tabSectionComponent(overrideProps)}
+        />
+        <Route
+          path="/libraries-v1"
+          element={tabSectionComponent(overrideProps)}
+        />
+      </Routes>
+      <LocationDisplay />
+    </>,
+    { routerProps: { initialEntries: ['/home'] } },
+  );
 
 describe('<TabsSection />', () => {
   beforeEach(() => {
@@ -91,7 +89,7 @@ describe('<TabsSection />', () => {
 
     expect(screen.getByRole('tab', { name: tabMessages.coursesTabTitle.defaultMessage })).toBeInTheDocument();
 
-    expect(screen.getByRole('tab', { name: librariesBetaTabTitle })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: tabMessages.librariesTabTitle.defaultMessage })).toBeInTheDocument();
 
     expect(screen.getByRole('tab', { name: tabMessages.legacyLibrariesTabTitle.defaultMessage })).toBeInTheDocument();
   });
@@ -120,7 +118,7 @@ describe('<TabsSection />', () => {
     await executeThunk(fetchStudioHomeData(), store.dispatch);
 
     expect(screen.getByText(tabMessages.librariesTabTitle.defaultMessage)).toBeInTheDocument();
-    const librariesTab = screen.getByRole('tab', { name: librariesBetaTabTitle });
+    const librariesTab = screen.getByRole('tab', { name: tabMessages.librariesTabTitle.defaultMessage });
     expect(librariesTab).toBeInTheDocument();
     // Check Tab.eventKey
     expect(librariesTab).toHaveAttribute('data-rb-event-key', 'libraries');
@@ -311,9 +309,11 @@ describe('<TabsSection />', () => {
       expect(await within(panel).findByText('Showing 1 of 3')).toBeInTheDocument();
       expect(await within(panel).findByText(migratedContent.displayName)).toBeVisible();
       // Should not show other items.
-      expect(within(panel).queryByText(
-        generateGetStudioHomeLibrariesApiResponse().libraries[0].displayName,
-      )).not.toBeInTheDocument();
+      expect(
+        within(panel).queryByText(
+          generateGetStudioHomeLibrariesApiResponse().libraries[0].displayName,
+        ),
+      ).not.toBeInTheDocument();
       // reset search
       fireEvent.change(searchField, { target: { value: '' } });
 
@@ -352,7 +352,7 @@ describe('<TabsSection />', () => {
       await axiosMock.onGet(getStudioHomeApiUrl()).reply(200, generateGetStudioHomeDataApiResponse());
       await executeThunk(fetchStudioHomeData(), store.dispatch);
 
-      const librariesTab = await screen.findByRole('tab', { name: librariesBetaTabTitle });
+      const librariesTab = await screen.findByRole('tab', { name: tabMessages.librariesTabTitle.defaultMessage });
       fireEvent.click(librariesTab);
 
       expect(librariesTab).toHaveClass('active');
@@ -377,9 +377,6 @@ describe('<TabsSection />', () => {
       const user = userEvent.setup();
       await act(async () => executeThunk(fetchStudioHomeData(), store.dispatch));
 
-      // Libraries v2 tab should not be shown
-      expect(screen.queryByRole('tab', { name: librariesBetaTabTitle })).toBeNull();
-
       const librariesTab = await screen.findByRole('tab', { name: tabMessages.librariesTabTitle.defaultMessage });
       await user.click(librariesTab);
 
@@ -398,9 +395,6 @@ describe('<TabsSection />', () => {
       render({ librariesV2Enabled: false });
       const user = userEvent.setup();
       await act(async () => executeThunk(fetchStudioHomeData(), store.dispatch));
-
-      // Libraries v2 tab should not be shown
-      expect(screen.queryByRole('tab', { name: librariesBetaTabTitle })).toBeNull();
 
       const librariesTab = await screen.findByRole('tab', { name: tabMessages.librariesTabTitle.defaultMessage });
       await user.click(librariesTab);
@@ -430,7 +424,7 @@ describe('<TabsSection />', () => {
       render();
       await executeThunk(fetchStudioHomeData(), store.dispatch);
 
-      const librariesTab = await screen.findByRole('tab', { name: librariesBetaTabTitle });
+      const librariesTab = await screen.findByRole('tab', { name: tabMessages.librariesTabTitle.defaultMessage });
       await user.click(librariesTab);
 
       expect(librariesTab).toHaveClass('active');
@@ -453,7 +447,7 @@ describe('<TabsSection />', () => {
       // Libraries v1 tab should not be shown
       expect(screen.queryByText(tabMessages.legacyLibrariesTabTitle.defaultMessage)).toBeNull();
 
-      const librariesTab = await screen.findByRole('tab', { name: librariesBetaTabTitle });
+      const librariesTab = await screen.findByRole('tab', { name: tabMessages.librariesTabTitle.defaultMessage });
       fireEvent.click(librariesTab);
 
       expect(librariesTab).toHaveClass('active');
@@ -478,14 +472,16 @@ describe('<TabsSection />', () => {
       await axiosMock.onGet(getStudioHomeApiUrl()).reply(200, generateGetStudioHomeDataApiResponse());
       await executeThunk(fetchStudioHomeData(), store.dispatch);
 
-      const librariesTab = await screen.findByRole('tab', { name: librariesBetaTabTitle });
+      const librariesTab = await screen.findByRole('tab', { name: tabMessages.librariesTabTitle.defaultMessage });
       fireEvent.click(librariesTab);
 
       expect(librariesTab).toHaveClass('active');
 
-      expect(await screen.findByText(
-        tabMessages.librariesV2TabLibraryNotFoundAlertMessage.defaultMessage,
-      )).toBeVisible();
+      expect(
+        await screen.findByText(
+          tabMessages.librariesV2TabLibraryNotFoundAlertMessage.defaultMessage,
+        ),
+      ).toBeVisible();
     });
 
     it('should hide Libraries tab when libraries are disabled', async () => {
@@ -522,14 +518,16 @@ describe('<TabsSection />', () => {
       const user = userEvent.setup();
       await act(async () => executeThunk(fetchStudioHomeData(), store.dispatch));
 
-      const librariesTab = await screen.findByRole('tab', { name: librariesBetaTabTitle });
+      const librariesTab = await screen.findByRole('tab', { name: tabMessages.librariesTabTitle.defaultMessage });
       await user.click(librariesTab);
 
       expect(librariesTab).toHaveClass('active');
 
-      expect(await screen.findByText(
-        tabMessages.librariesTabErrorMessage.defaultMessage,
-      )).toBeVisible();
+      expect(
+        await screen.findByText(
+          tabMessages.librariesTabErrorMessage.defaultMessage,
+        ),
+      ).toBeVisible();
     });
 
     [true, false].forEach((isMigrated) => {
@@ -546,7 +544,7 @@ describe('<TabsSection />', () => {
         render();
         await executeThunk(fetchStudioHomeData(), store.dispatch);
 
-        const librariesTab = await screen.findByRole('tab', { name: librariesBetaTabTitle });
+        const librariesTab = await screen.findByRole('tab', { name: tabMessages.librariesTabTitle.defaultMessage });
         await user.click(librariesTab);
 
         expect(librariesTab).toHaveClass('active');

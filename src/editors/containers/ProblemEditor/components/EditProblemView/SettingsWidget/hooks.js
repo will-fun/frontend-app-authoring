@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 
 import {
-  includes, isEmpty, isFinite, isNaN, isNil,
+  includes,
+  isEmpty,
+  isFinite,
+  isNaN,
+  isNil,
 } from 'lodash';
 import {
   ProblemTypeKeys,
@@ -62,7 +66,7 @@ export const hintsCardHooks = (hints, updateSettings) => {
     if (hintsNumber === 0) {
       setSummary({ message: messages.noHintSummary, values: {} });
     } else {
-      setSummary({ message: messages.hintSummary, values: { hint: hints[0].value, count: (hintsNumber - 1) } });
+      setSummary({ message: messages.hintSummary, values: { hint: hints[0].value, count: hintsNumber - 1 } });
     }
   }, [hints]);
 
@@ -173,12 +177,18 @@ export const scoringCardHooks = (scoring, updateSettings, defaultValue) => {
     updateSettings({ scoring: { ...scoring, weight } });
   };
 
+  const handleGradingMethodChange = (event) => {
+    const { value } = event.target;
+    updateSettings({ scoring: { ...scoring, gradingMethod: value } });
+  };
+
   return {
     attemptDisplayValue,
     handleUnlimitedChange,
     handleMaxAttemptChange,
     handleOnChange,
     handleWeightChange,
+    handleGradingMethodChange,
   };
 };
 
@@ -299,9 +309,9 @@ export const typeRowHooks = ({
     if (typeKey === ProblemTypeKeys.TEXTINPUT && RichTextProblems.includes(problemType)) {
       convertToPlainText();
     }
-    // Dropdown problems can only have one correct answer. When there is more than one correct answer
+    // Dropdown and single-select problems can only have one correct answer. When there is more than one correct answer
     // from a previous problem type, the correct attribute for selected answers need to be set to false.
-    if (typeKey === ProblemTypeKeys.DROPDOWN) {
+    if (typeKey === ProblemTypeKeys.DROPDOWN || typeKey === ProblemTypeKeys.SINGLESELECT) {
       if (correctAnswerCount > 1) {
         clearPreviouslySelectedAnswers();
       } else if (RichTextProblems.includes(problemType)) {

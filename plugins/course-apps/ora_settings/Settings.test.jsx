@@ -38,7 +38,14 @@ const renderComponent = () => (
         <PagesAndResourcesProvider courseId={courseId}>
           <MemoryRouter initialEntries={[oraSettingsUrl]}>
             <Routes>
-              <Route path={oraSettingsUrl} element={<PageWrap><ORASettings onClose={jest.fn()} /></PageWrap>} />
+              <Route
+                path={oraSettingsUrl}
+                element={
+                  <PageWrap>
+                    <ORASettings onClose={jest.fn()} />
+                  </PageWrap>
+                }
+              />
             </Routes>
           </MemoryRouter>
         </PagesAndResourcesProvider>
@@ -113,7 +120,8 @@ describe('ORASettings', () => {
     renderComponent();
     const errorAlert = screen.getByRole('alert');
 
-    expect(within(errorAlert).getByText('We encountered a technical error when loading this page.', { exact: false })).toBeVisible();
+    expect(within(errorAlert).getByText('We encountered a technical error when loading this page.', { exact: false }))
+      .toBeVisible();
   });
 
   it('Displays Permissions Error Alert', async () => {
@@ -128,7 +136,7 @@ describe('ORASettings', () => {
     await mockStore({ apiStatus: 200, enabled: true });
     renderComponent();
 
-    const checkbox = await screen.getByRole('checkbox', { name: /Flex Peer Grading/ });
+    const checkbox = screen.getByRole('checkbox', { name: /Flex Peer Grading/ });
     expect(checkbox).toBeChecked();
 
     await waitFor(() => {

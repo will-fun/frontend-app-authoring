@@ -32,7 +32,8 @@ import messages from './messages';
  * }>}
  */
 const TaxonomyMenu = ({
-  taxonomy, iconMenu,
+  taxonomy,
+  iconMenu,
 }) => {
   const intl = useIntl();
   const navigate = useNavigate();
@@ -41,6 +42,7 @@ const TaxonomyMenu = ({
   const { setToastMessage } = useContext(TaxonomyContext);
 
   const onDeleteTaxonomy = useCallback(() => {
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     deleteTaxonomy({ pk: taxonomy.id }, {
       onSuccess: () => {
         if (setToastMessage) {
@@ -60,14 +62,14 @@ const TaxonomyMenu = ({
   const [isManageOrgsModalOpen, manageOrgsModalOpen, manageOrgsModalClose] = useToggle(false);
 
   /**
-    * @typedef {Object} MenuItem
-    * @property {string} title - The title of the menu item
-    * @property {() => void} action - The action to perform when the menu item is clicked
-    * @property {boolean} [show] - Whether or not to show the menu item
-    *
-    * @constant
-    * @type {Record<string, MenuItem>}
-    */
+   * @typedef {Object} MenuItem
+   * @property {string} title - The title of the menu item
+   * @property {() => void} action - The action to perform when the menu item is clicked
+   * @property {boolean} [show] - Whether or not to show the menu item
+   *
+   * @constant
+   * @type {Record<string, MenuItem>}
+   */
   let menuItems = {
     import: {
       title: intl.formatMessage(messages.importMenu),
@@ -130,13 +132,15 @@ const TaxonomyMenu = ({
     </>
   );
 
-  const toggleProps = iconMenu ? {
-    as: IconButton,
-    src: MoreVert,
-    iconAs: Icon,
-  } : {
-    as: Button,
-  };
+  const toggleProps = iconMenu ?
+    {
+      as: IconButton,
+      src: MoreVert,
+      iconAs: Icon,
+    } :
+    {
+      as: Button,
+    };
 
   return (
     <Dropdown id={`taxonomy-menu-${taxonomy.id}`} onToggle={(_isOpen, ev) => ev.preventDefault()}>
@@ -156,12 +160,10 @@ const TaxonomyMenu = ({
             key={key}
             data-testid={`taxonomy-menu-${key}`}
             as="button" // Prevents <a> cannot appear as a descendant of <a> warning
-            onClick={
-              (e) => {
-                e.preventDefault();
-                menuItems[key].action();
-              }
-            }
+            onClick={(e) => {
+              e.preventDefault();
+              menuItems[key].action();
+            }}
           >
             {menuItems[key].title}
           </Dropdown.Item>

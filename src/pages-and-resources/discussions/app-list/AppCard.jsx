@@ -1,30 +1,39 @@
-import React from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import { useSelector } from 'react-redux';
 import { useIntl } from '@edx/frontend-platform/i18n';
 import Responsive from 'react-responsive';
 import {
-  Card, CheckboxControl, breakpoints,
+  Card,
+  CheckboxControl,
+  breakpoints,
 } from '@openedx/paragon';
+import { useCourseAuthoringContext } from '@src/CourseAuthoringContext';
+import { useContext } from 'react';
+import { PagesAndResourcesContext } from '../../PagesAndResourcesProvider';
 import messages from './messages';
 import appMessages from '../app-config-form/messages';
 import FeaturesList from './FeaturesList';
 
 const AppCard = ({
-  app, onClick, selected, features,
+  app,
+  onClick,
+  selected,
+  features,
 }) => {
   const intl = useIntl();
-  const { canChangeProviders } = useSelector(state => state.courseDetail);
+  const { canChangeProviders } = useCourseAuthoringContext();
+  const { isEditable } = useContext(PagesAndResourcesContext);
+  const canInteract = canChangeProviders && isEditable;
   const supportText = app.hasFullSupport
     ? intl.formatMessage(messages.appFullSupport)
     : intl.formatMessage(messages.appBasicSupport);
 
   return (
     <Card
-      isClickable
-      onClick={() => canChangeProviders && onClick(app.id)}
-      onKeyPress={() => canChangeProviders && onClick(app.id)}
+      isClickable={canInteract}
+      aria-disabled={!canInteract}
+      onClick={() => canInteract && onClick(app.id)}
+      onKeyDown={(e) => canInteract && (e.key === 'Enter' || e.key === ' ') && onClick(app.id)}
       role="radio"
       aria-checked={selected}
       className={classNames({
@@ -34,18 +43,18 @@ const AppCard = ({
       <Card.Header
         title={<div data-testid="card-title">{intl.formatMessage(appMessages[`appName-${app.id}`])}</div>}
         subtitle={<div className="h6 text-muted" data-testid="card-subtitle">{supportText}</div>}
-        actions={(
+        actions={
           <div className="mt-2.5">
             <CheckboxControl
               checked={selected}
-              disabled={!canChangeProviders}
+              disabled={!canInteract}
               readOnly
               aria-label={intl.formatMessage(messages.selectApp, {
                 appName: intl.formatMessage(appMessages[`appName-${app.id}`]),
               })}
             />
           </div>
-        )}
+        }
         size="sm"
       />
       <Card.Body>

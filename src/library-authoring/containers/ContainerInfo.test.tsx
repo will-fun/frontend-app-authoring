@@ -2,13 +2,17 @@ import userEvent from '@testing-library/user-event';
 import type MockAdapter from 'axios-mock-adapter';
 
 import {
-  initializeMocks, render as baseRender, screen, waitFor,
+  initializeMocks,
+  render as baseRender,
+  screen,
+  waitFor,
   fireEvent,
   within,
 } from '@src/testUtils';
 import { ContainerType } from '@src/generic/key-utils';
 import type { ToastActionData } from '@src/generic/toast-context';
 import { mockContentSearchConfig, mockSearchResult, hydrateSearchResult } from '@src/search-manager/data/api.mock';
+import { PublishedFilterContextProvider } from '@src/library-authoring/common/context/PublishedFilterContext';
 import {
   mockContentLibrary,
   mockGetContainerChildren,
@@ -102,7 +106,7 @@ const render = (
   containerType: string = '', // renders container page
   showOnlyPublished: boolean = false,
 ) => {
-  const params: { libraryId: string, selectedItemId?: string } = { libraryId, selectedItemId: containerId };
+  const params: { libraryId: string; selectedItemId?: string; } = { libraryId, selectedItemId: containerId };
   const path = containerType
     ? `/library/:libraryId/${containerType}/:selectedItemId?`
     : '/library/:libraryId/:selectedItemId?';
@@ -111,24 +115,23 @@ const render = (
     path,
     params,
     extraWrapper: ({ children }) => (
-      <LibraryProvider
-        libraryId={libraryId}
-        showOnlyPublished={showOnlyPublished}
-      >
-        <SidebarProvider
-          initialSidebarItemInfo={{
-            id: containerId,
-            type: SidebarBodyItemId.ContainerInfo,
-          }}
-        >
-          {children}
-        </SidebarProvider>
-      </LibraryProvider>
+      <PublishedFilterContextProvider showOnlyPublished={showOnlyPublished}>
+        <LibraryProvider libraryId={libraryId}>
+          <SidebarProvider
+            initialSidebarItemInfo={{
+              id: containerId,
+              type: SidebarBodyItemId.ContainerInfo,
+            }}
+          >
+            {children}
+          </SidebarProvider>
+        </LibraryProvider>
+      </PublishedFilterContextProvider>
     ),
   });
 };
 let axiosMock: MockAdapter;
-let mockShowToast: { (message: string, action?: ToastActionData | undefined): void; mock?: any; };
+let mockShowToast: { (message: string, action?: ToastActionData): void; mock?: any; };
 
 [
   {
@@ -136,32 +139,24 @@ let mockShowToast: { (message: string, action?: ToastActionData | undefined): vo
     containerId: unitId,
     childType: 'component',
     willPublishCount: 2,
-    parentType: 'subsection',
-    parentCount: 3,
   },
   {
     containerType: ContainerType.Subsection,
     containerId: subsectionId,
     childType: 'unit',
     willPublishCount: 3,
-    parentType: 'section',
-    parentCount: 2,
   },
   {
     containerType: ContainerType.Section,
     containerId: sectionId,
     childType: 'subsection',
     willPublishCount: 4,
-    parentType: '',
-    parentCount: 0,
   },
 ].forEach(({
   containerId,
   containerType,
   childType,
   willPublishCount,
-  parentType,
-  parentCount,
 }) => {
   describe(`<ContainerInfo /> with containerType: ${containerType}`, () => {
     beforeEach(() => {
@@ -187,7 +182,9 @@ let mockShowToast: { (message: string, action?: ToastActionData | undefined): vo
       fireEvent.click(deleteMenuItem);
 
       // Confirm delete Modal is open
-      const modal = await screen.findByRole('dialog', { name: `Delete ${containerType[0].toUpperCase()}${containerType.slice(1)}` });
+      const modal = await screen.findByRole('dialog', {
+        name: `Delete ${containerType[0].toUpperCase()}${containerType.slice(1)}`,
+      });
       expect(modal).toBeInTheDocument();
       const deleteButton = screen.getByRole('button', { name: /delete/i });
       fireEvent.click(deleteButton);
@@ -239,18 +236,14 @@ let mockShowToast: { (message: string, action?: ToastActionData | undefined): vo
 
       // Reveals the confirmation box with warning text and publish hierarchy
       expect(await screen.findByText('Confirm Publish')).toBeInTheDocument();
-      expect(screen.getByText(new RegExp(
-        `This ${containerType} and the ${childType}s it contains will all be`, // <strong>published</strong>
-        'i',
-      ))).toBeInTheDocument();
-      if (parentCount > 0) {
-        expect(screen.getByText(new RegExp(
-          `Its parent ${parentType}s will be`, // <srong>draft</strong>
+      expect(screen.getByText(
+        new RegExp(
+          `This ${containerType} and the ${childType}s it contains will all be`, // <strong>published</strong>
           'i',
-        ))).toBeInTheDocument();
-      }
-      expect(await screen.queryAllByText('Will Publish').length).toBe(willPublishCount);
-      expect(await screen.queryAllByText('Draft').length).toBe(4 - willPublishCount);
+        ),
+      )).toBeInTheDocument();
+      expect(screen.queryAllByText('Will Publish').length).toBe(willPublishCount);
+      expect(screen.queryAllByText('Draft').length).toBe(0);
 
       // Click on the confirm Cancel button
       const publishCancel = await screen.findByRole('button', { name: 'Cancel' });
@@ -297,7 +290,7 @@ let mockShowToast: { (message: string, action?: ToastActionData | undefined): vo
       expect(mockShowToast).toHaveBeenCalledWith('Failed to publish changes');
     });
 
-    it(`shows single child / parent message before publishing the ${containerType}`, async () => {
+    it(`shows single child message before publishing the ${containerType}`, async () => {
       const user = userEvent.setup();
       render(singleChild(containerId), containerType);
 
@@ -308,16 +301,12 @@ let mockShowToast: { (message: string, action?: ToastActionData | undefined): vo
       expect(publishButton).not.toBeInTheDocument();
 
       // Check warning text in the confirmation box
-      expect(screen.getByText(new RegExp(
-        `This ${containerType} and the ${childType} it contains will all be`, // <strong>published</strong>
-        'i',
-      ))).toBeInTheDocument();
-      if (parentCount) {
-        expect(screen.getByText(new RegExp(
-          `Its parent ${parentType} will be`, // <strong>draft</strong>
+      expect(screen.getByText(
+        new RegExp(
+          `This ${containerType} and the ${childType} it contains will all be`, // <strong>published</strong>
           'i',
-        ))).toBeInTheDocument();
-      }
+        ),
+      )).toBeInTheDocument();
     });
 
     it(`omits child count before publishing an empty ${containerType}`, async () => {
@@ -331,10 +320,14 @@ let mockShowToast: { (message: string, action?: ToastActionData | undefined): vo
       expect(publishButton).not.toBeInTheDocument();
 
       // Check warning text in the confirmation box
-      expect(await screen.findByText(new RegExp(
-        `This ${containerType} will be`, // <strong>published</strong>
-        'i',
-      ))).toBeInTheDocument();
+      expect(
+        await screen.findByText(
+          new RegExp(
+            `This ${containerType} will be`, // <strong>published</strong>
+            'i',
+          ),
+        ),
+      ).toBeInTheDocument();
     });
 
     it(`show only published ${containerType} content`, async () => {
@@ -363,9 +356,11 @@ let mockShowToast: { (message: string, action?: ToastActionData | undefined): vo
       const child = await screen.findByText(`${childTypeDisplayName} block 0`);
 
       // Check that there are no menu buttons for containers
-      expect(within(
-        child.parentElement!.parentElement!.parentElement!,
-      ).queryAllByRole('button', { name: /container actions menu/i }).length).toBe(0);
+      expect(
+        within(
+          child.parentElement!.parentElement!.parentElement!,
+        ).queryAllByRole('button', { name: /container actions menu/i }).length,
+      ).toBe(0);
       // Trigger double click. Find the child card as the parent element
       await user.dblClick(child.parentElement!.parentElement!.parentElement!);
       // Click should not do anything in preview

@@ -132,7 +132,7 @@ export function updateCustomPageVisibility({ blockId, metadata }) {
         },
       }));
       dispatch(updateSavingStatus({ status: RequestStatus.SUCCESSFUL }));
-    } catch (error) {
+    } catch {
       dispatch(updateSavingStatus({ status: RequestStatus.FAILED }));
     }
   };
@@ -142,7 +142,8 @@ export const updateSingleCustomPage = ({
   blockId,
   metadata,
   setCurrentPage,
-}) => (dispatch) => {
+}) =>
+(dispatch) => {
   dispatch(updateSavingStatus({ status: RequestStatus.IN_PROGRESS }));
   try {
     dispatch(updateModel({
@@ -154,7 +155,7 @@ export const updateSingleCustomPage = ({
     }));
     setCurrentPage(null);
     dispatch(updateSavingStatus({ status: RequestStatus.SUCCESSFUL }));
-  } catch (error) {
+  } catch {
     dispatch(updateSavingStatus({ status: RequestStatus.FAILED }));
   }
 };

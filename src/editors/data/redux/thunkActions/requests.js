@@ -39,7 +39,8 @@ export const networkRequest = ({
   promise,
   onSuccess,
   onFailure,
-}) => (dispatch) => {
+}) =>
+(dispatch) => {
   dispatch(actions.requests.startRequest(requestKey));
   return promise
     .then((response) => {
@@ -59,8 +60,8 @@ export const networkRequest = ({
 /**
  * Tracked fetchByBlockId api method.
  * Tracked to the `fetchBlock` request key.
- * @param {[func]} onSuccess - onSuccess method ((response) => { ... })
- * @param {[func]} onFailure - onFailure method ((error) => { ... })
+ * @param {func} onSuccess - onSuccess method ((response) => { ... })
+ * @param {func} onFailure - onFailure method ((error) => { ... })
  */
 export const fetchBlock = ({ ...rest }) => (dispatch, getState) => {
   dispatch(module.networkRequest({
@@ -77,8 +78,8 @@ export const fetchBlock = ({ ...rest }) => (dispatch, getState) => {
 
  * Tracked fetchStudioView api method.
  * Tracked to the `fetchBlock` request key.
- * @param {[func]} onSuccess - onSuccess method ((response) => { ... })
- * @param {[func]} onFailure - onFailure method ((error) => { ... })
+ * @param {func} onSuccess - onSuccess method ((response) => { ... })
+ * @param {func} onFailure - onFailure method ((error) => { ... })
  */
 export const fetchStudioView = ({ ...rest }) => (dispatch, getState) => {
   dispatch(module.networkRequest({
@@ -94,8 +95,8 @@ export const fetchStudioView = ({ ...rest }) => (dispatch, getState) => {
 /**
  * Tracked fetchByUnitId api method.
  * Tracked to the `fetchUnit` request key.
- * @param {[func]} onSuccess - onSuccess method ((response) => { ... })
- * @param {[func]} onFailure - onFailure method ((error) => { ... })
+ * @param {func} onSuccess - onSuccess method ((response) => { ... })
+ * @param {func} onFailure - onFailure method ((error) => { ... })
  */
 export const fetchUnit = ({ ...rest }) => (dispatch, getState) => {
   dispatch(module.networkRequest({
@@ -111,8 +112,8 @@ export const fetchUnit = ({ ...rest }) => (dispatch, getState) => {
 /**
  * Tracked saveBlock api method.  Tracked to the `saveBlock` request key.
  * @param {Object} content
- * @param {[func]} onSuccess - onSuccess method ((response) => { ... })
- * @param {[func]} onFailure - onFailure method ((error) => { ... })
+ * @param {func} onSuccess - onSuccess method ((response) => { ... })
+ * @param {func} onFailure - onFailure method ((error) => { ... })
  */
 export const saveBlock = ({ content, ...rest }) => (dispatch, getState) => {
   dispatch(module.networkRequest({
@@ -131,8 +132,8 @@ export const saveBlock = ({ content, ...rest }) => (dispatch, getState) => {
 
 /**
  * Tracked createBlock api method.  Tracked to the `createBlock` request key.
- * @param {[func]} onSuccess - onSuccess method ((response) => { ... })
- * @param {[func]} onFailure - onFailure method ((error) => { ... })
+ * @param {func} onSuccess - onSuccess method ((response) => { ... })
+ * @param {func} onFailure - onFailure method ((error) => { ... })
  */
 export const createBlock = ({ ...rest }) => (dispatch, getState) => {
   const blockTitle = selectors.app.blockTitle(getState());
@@ -164,8 +165,10 @@ export const removeTemporalLink = (response, asset, content, resolve) => {
   const imagePath = `/${response.data.asset.portableUrl}`;
   const reader = new FileReader();
   reader.addEventListener('load', () => {
-    const imageBS64 = reader.result.toString();
-    const parsedContent = typeof content === 'string' ? content.replace(imageBS64, imagePath) : { ...content, olx: content.olx.replace(imageBS64, imagePath) };
+    const imageBS64 = /** @type {string} */ (reader.result);
+    const parsedContent = typeof content === 'string'
+      ? content.replace(imageBS64, imagePath)
+      : { ...content, olx: content.olx.replace(imageBS64, imagePath) };
     URL.revokeObjectURL(asset);
     resolve(parsedContent);
   });
@@ -173,13 +176,16 @@ export const removeTemporalLink = (response, asset, content, resolve) => {
 };
 
 export const batchUploadAssets = ({ assets, content, ...rest }) => (dispatch) => {
-  const promises = assets.reduce((promiseChain, asset) => promiseChain
-    .then((parsedContent) => new Promise((resolve) => {
-      dispatch(module.uploadAsset({
-        asset,
-        onSuccess: (response) => removeTemporalLink(response, asset, parsedContent, resolve),
-      }));
-    })), Promise.resolve(content));
+  const promises = assets.reduce((promiseChain, asset) =>
+    promiseChain
+      .then((parsedContent) =>
+        new Promise((resolve) => {
+          dispatch(module.uploadAsset({
+            asset,
+            onSuccess: (response) => removeTemporalLink(response, asset, parsedContent, resolve),
+          }));
+        })
+      ), Promise.resolve(content));
 
   dispatch(module.networkRequest({
     requestKey: RequestKeys.batchUploadAssets,
@@ -336,7 +342,8 @@ export const uploadTranscript = ({
   videoId,
   language,
   ...rest
-}) => (dispatch, getState) => {
+}) =>
+(dispatch, getState) => {
   const state = getState();
   const isLibrary = selectors.app.isLibrary(state);
   if (isLibrary) {
@@ -371,7 +378,8 @@ export const updateTranscriptLanguage = ({
   newLanguageCode,
   videoId,
   ...rest
-}) => (dispatch, getState) => {
+}) =>
+(dispatch, getState) => {
   const state = getState();
   const isLibrary = selectors.app.isLibrary(state);
   if (isLibrary) {

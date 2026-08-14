@@ -7,13 +7,14 @@ import messages from './messages';
 import ExtendedCourseDetails from '.';
 
 // Mock the TextareaAutosize component
-jest.mock('react-textarea-autosize', () => jest.fn((props) => (
-  <textarea
-    {...props}
-    onFocus={() => {}}
-    onBlur={() => {}}
-  />
-)));
+jest.mock('react-textarea-autosize', () =>
+  jest.fn((props) => (
+    <textarea
+      {...props}
+      onFocus={() => {}}
+      onBlur={() => {}}
+    />
+  )));
 
 const onChangeMock = jest.fn();
 
@@ -63,5 +64,17 @@ describe('<ExtendedCourseDetails />', () => {
       fireEvent.change(input, { target: { value: 'abc' } });
     });
     expect(onChangeMock).toHaveBeenCalledWith('abc', 'title');
+  });
+
+  it('disables all inputs when isEditable is false', () => {
+    const { getAllByRole } = render(<RootWrapper {...props} isEditable={false} />);
+    const inputs = getAllByRole('textbox');
+    inputs.forEach((input) => expect(input).toBeDisabled());
+  });
+
+  it('enables all inputs when isEditable is true', () => {
+    const { getAllByRole } = render(<RootWrapper {...props} isEditable />);
+    const inputs = getAllByRole('textbox');
+    inputs.forEach((input) => expect(input).not.toBeDisabled());
   });
 });

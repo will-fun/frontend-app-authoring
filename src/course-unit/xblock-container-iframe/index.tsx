@@ -1,15 +1,17 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { getConfig } from '@edx/frontend-platform';
 import {
-  FC, useEffect, useState, useMemo, useCallback,
+  FC,
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
 } from 'react';
 import { useIntl } from '@edx/frontend-platform/i18n';
 import { useToggle, Sheet, StandardModal } from '@openedx/paragon';
 import { useDispatch } from 'react-redux';
 
-import {
-  hideProcessingNotification,
-  showProcessingNotification,
-} from '@src/generic/processing-notification/data/slice';
+import { useToastContext } from '@src/generic/toast-context';
 import DeleteModal from '@src/generic/delete-modal/DeleteModal';
 import ConfigureModal from '@src/generic/configure-modal/ConfigureModal';
 import ModalIframe from '@src/generic/modal-iframe';
@@ -24,7 +26,11 @@ import { UnlinkModal } from '@src/generic/unlink-modal';
 import VideoSelectorPage from '@src/editors/VideoSelectorPage';
 import EditorPage from '@src/editors/EditorPage';
 
-import { messageTypes } from '../constants';
+import { useCourseAuthoringContext } from '@src/CourseAuthoringContext';
+import { ConfigureUnitData } from '@src/course-outline/data/types';
+import { AccessManagedXBlockDataTypes } from '@src/data/types';
+import { useConfigureUnitWithPageUpdates } from '@src/course-unit/data/apiHooks';
+import { messageTypes, PUBLISH_TYPES } from '../constants';
 import {
   fetchCourseSectionVerticalData,
   fetchCourseVerticalChildrenData,
@@ -36,27 +42,48 @@ import {
 import messages from './messages';
 import {
   XBlockContainerIframeProps,
-  AccessManagedXBlockDataTypes,
 } from './types';
 import { formatAccessManagedXBlockData, getIframeUrl, getLegacyEditModalUrl } from './utils';
+import { useUnitSidebarContext } from '../unit-sidebar/UnitSidebarContext';
+import { isUnitPageNewDesignEnabled } from '../utils';
+import { courseOutlineQueryKeys } from '@src/course-outline/data/apiHooks';
+import { contentTagsQueryKeys } from '@src/content-tags-drawer/data/apiHooks';
 
 const XBlockContainerIframe: FC<XBlockContainerIframeProps> = ({
-  courseId, blockId, unitXBlockActions, courseVerticalChildren, handleConfigureSubmit, isUnitVerticalType,
+  courseId,
+  blockId,
+  unitXBlockActions,
+  courseVerticalChildren,
+  isUnitVerticalType,
+  readonly,
 }) => {
   const intl = useIntl();
+  const queryClient = useQueryClient();
   const dispatch = useDispatch();
+  const {
+    setCurrentPageKey,
+    setSelectedComponentId,
+  } = useUnitSidebarContext(!readonly) || {};
+
+  const {
+    showToast,
+    closeToast,
+  } = useToastContext();
 
   // Useful to reload iframe
   const [iframeKey, setIframeKey] = useState(0);
   const [isDeleteModalOpen, openDeleteModal, closeDeleteModal] = useToggle(false);
-  const [isUnlinkModalOpen, openUnlinkModal, closeUnlinkModal] = useToggle(false);
+  const { isUnlinkModalOpen, openUnlinkModal, closeUnlinkModal } = useCourseAuthoringContext();
   const [isConfigureModalOpen, openConfigureModal, closeConfigureModal] = useToggle(false);
   const [isVideoSelectorModalOpen, showVideoSelectorModal, closeVideoSelectorModal] = useToggle();
   const [isXBlockEditorModalOpen, showXBlockEditorModal, closeXBlockEditorModal] = useToggle();
   const [blockType, setBlockType] = useState<string>('');
   const { useVideoGalleryFlow } = useWaffleFlags(courseId);
   const [newBlockId, setNewBlockId] = useState<string>('');
-  const [accessManagedXBlockData, setAccessManagedXBlockData] = useState<AccessManagedXBlockDataTypes | {}>({});
+  const [
+    accessManagedXBlockData,
+    setAccessManagedXBlockData,
+  ] = useState<AccessManagedXBlockDataTypes | undefined>(undefined);
   const [iframeOffset, setIframeOffset] = useState(0);
   const [deleteXBlockId, setDeleteXBlockId] = useState<string | null>(null);
   const [unlinkXBlockId, setUnlinkXBlockId] = useState<string | null>(null);
@@ -76,11 +103,21 @@ const XBlockContainerIframe: FC<XBlockContainerIframeProps> = ({
     setIframeRef(iframeRef);
   }, [setIframeRef]);
 
+  const refreshComponent = (id: string) => {
+    queryClient.invalidateQueries({
+      queryKey: courseOutlineQueryKeys.courseItemId(id),
+    });
+    queryClient.invalidateQueries({
+      queryKey: contentTagsQueryKeys.contentData(id),
+    });
+  };
+
   const onXBlockSave = useCallback(/* istanbul ignore next */ () => {
     closeXBlockEditorModal();
     closeVideoSelectorModal();
     sendMessageToIframe(messageTypes.refreshXBlock, null);
-  }, [closeXBlockEditorModal, closeVideoSelectorModal, sendMessageToIframe]);
+    refreshComponent(newBlockId);
+  }, [closeXBlockEditorModal, closeVideoSelectorModal, sendMessageToIframe, newBlockId]);
 
   const handleEditXBlock = useCallback((type: string, id: string) => {
     setBlockType(type);
@@ -106,7 +143,7 @@ const XBlockContainerIframe: FC<XBlockContainerIframeProps> = ({
 
   const handleUnlinkXBlock = (usageId: string) => {
     setUnlinkXBlockId(usageId);
-    openUnlinkModal();
+    openUnlinkModal({});
   };
 
   const handleManageXBlockAccess = (usageId: string) => {
@@ -118,24 +155,34 @@ const XBlockContainerIframe: FC<XBlockContainerIframeProps> = ({
     }
   };
 
-  const onDeleteSubmit = () => {
+  const onDeleteSubmit = async () => {
     if (deleteXBlockId) {
-      unitXBlockActions.handleDelete(deleteXBlockId);
+      await unitXBlockActions.handleDelete(deleteXBlockId);
+      setSelectedComponentId?.(undefined);
       closeDeleteModal();
     }
   };
 
-  const onUnlinkSubmit = () => {
+  const onUnlinkSubmit = async () => {
     if (unlinkXBlockId) {
-      unitXBlockActions.handleUnlink(unlinkXBlockId);
+      await unitXBlockActions.handleUnlink(unlinkXBlockId);
       closeUnlinkModal();
+      refreshComponent(unlinkXBlockId);
     }
   };
 
-  const onManageXBlockAccessSubmit = (...args: any[]) => {
+  const configureFn = useConfigureUnitWithPageUpdates();
+  const onManageXBlockAccessSubmit = (variables: Omit<ConfigureUnitData, 'unitId'>) => {
     if (configureXBlockId) {
-      handleConfigureSubmit(configureXBlockId, ...args, closeConfigureModal);
-      setAccessManagedXBlockData({});
+      configureFn.mutate({
+        unitId: configureXBlockId,
+        ...variables,
+        type: PUBLISH_TYPES.republish,
+      }, {
+        onSuccess: () => sendMessageToIframe(messageTypes.completeManageXBlockAccess, { locator: configureXBlockId }),
+        onSettled: () => closeConfigureModal(),
+      });
+      setAccessManagedXBlockData(undefined);
     }
   };
 
@@ -159,6 +206,9 @@ const XBlockContainerIframe: FC<XBlockContainerIframeProps> = ({
   const handleSaveEditedXBlockData = () => {
     sendMessageToIframe(messageTypes.completeXBlockEditing, { locator: configureXBlockId });
     dispatch(updateCourseUnitSidebar(blockId));
+    if (configureXBlockId) {
+      refreshComponent(configureXBlockId);
+    }
     if (!isUnitVerticalType) {
       dispatch(fetchCourseSectionVerticalData(blockId));
     }
@@ -169,25 +219,36 @@ const XBlockContainerIframe: FC<XBlockContainerIframeProps> = ({
   };
 
   const handleOpenManageTagsModal = (id: string) => {
-    setConfigureXBlockId(id);
-    openManageTagsModal();
+    if (isUnitPageNewDesignEnabled()) {
+      setCurrentPageKey?.('align', id);
+      sendMessageToIframe(messageTypes.selectXblock, { locator: id });
+    } else {
+      // Legacy manage tags modal
+      setConfigureXBlockId(id);
+      openManageTagsModal();
+    }
   };
 
   const handleShowProcessingNotification = (variant: string) => {
     if (variant) {
-      dispatch(showProcessingNotification(variant));
+      showToast(variant);
     }
   };
 
   const handleHideProcessingNotification = () => {
     dispatch(fetchCourseVerticalChildrenData(blockId, true, true));
-    dispatch(hideProcessingNotification());
+    closeToast();
   };
 
   const handleRefreshIframe = () => {
     // Updating iframeKey forces the iframe to re-render.
     /* istanbul ignore next */
     setIframeKey((prev) => prev + 1);
+  };
+
+  const handleXBlockSelected = (id) => {
+    // Open the block in the current tab
+    setCurrentPageKey?.(undefined, id);
   };
 
   const messageHandlers = useMessageHandlers({
@@ -208,9 +269,10 @@ const XBlockContainerIframe: FC<XBlockContainerIframeProps> = ({
     handleHideProcessingNotification,
     handleEditXBlock,
     handleRefreshIframe,
+    handleXBlockSelected,
   });
 
-  useIframeMessages(messageHandlers);
+  useIframeMessages(readonly ? {} : messageHandlers);
 
   return (
     <>
@@ -263,19 +325,17 @@ const XBlockContainerIframe: FC<XBlockContainerIframeProps> = ({
           />
         </div>
       )}
-      {Object.keys(accessManagedXBlockData).length ? (
-        <ConfigureModal
-          isXBlockComponent
-          isOpen={isConfigureModalOpen}
-          onClose={() => {
-            closeConfigureModal();
-            setAccessManagedXBlockData({});
-          }}
-          onConfigureSubmit={onManageXBlockAccessSubmit}
-          currentItemData={accessManagedXBlockData as AccessManagedXBlockDataTypes}
-          isSelfPaced={false}
-        />
-      ) : null}
+      <ConfigureModal
+        isXBlockComponent
+        isOpen={isConfigureModalOpen}
+        onClose={() => {
+          closeConfigureModal();
+          setAccessManagedXBlockData(undefined);
+        }}
+        onConfigureSubmit={onManageXBlockAccessSubmit}
+        currentItemData={accessManagedXBlockData}
+        isSelfPaced={false}
+      />
       <iframe
         key={iframeKey}
         ref={iframeRef}

@@ -33,7 +33,7 @@ const path = '/library/:libraryId/*';
 const libraryTitle = mockContentLibrary.libraryData.title;
 
 let axiosMock: MockAdapter;
-let mockShowToast: (message: string, action?: ToastActionData | undefined) => void;
+let mockShowToast: (message: string, action?: ToastActionData) => void;
 
 mockClipboardEmpty.applyMock();
 mockGetContainerMetadata.applyMock();
@@ -122,13 +122,13 @@ describe('<LibraryUnitPage />', () => {
 
   it('shows empty unit', async () => {
     renderLibraryUnitPage(mockGetContainerMetadata.unitIdEmpty);
-    expect((await screen.findAllByText('Test Unit'))).toHaveLength(2); // Header + Sidebar
+    expect(await screen.findAllByText('Test Unit')).toHaveLength(2); // Header + Sidebar
     expect(await screen.findByText('This unit is empty')).toBeInTheDocument();
   });
 
   it('can rename unit', async () => {
     renderLibraryUnitPage();
-    expect((await screen.findAllByText('Test Unit'))).toHaveLength(2); // Header + Sidebar
+    expect(await screen.findAllByText('Test Unit')).toHaveLength(2); // Header + Sidebar
 
     const editUnitTitleButton = screen.getAllByRole(
       'button',
@@ -159,7 +159,7 @@ describe('<LibraryUnitPage />', () => {
 
   it('show error if renaming unit fails', async () => {
     renderLibraryUnitPage();
-    expect((await screen.findAllByText('Test Unit'))).toHaveLength(2); // Header + Sidebar
+    expect(await screen.findAllByText('Test Unit')).toHaveLength(2); // Header + Sidebar
 
     const editUnitTitleButton = screen.getAllByRole(
       'button',
@@ -213,7 +213,7 @@ describe('<LibraryUnitPage />', () => {
   it('should open and close component sidebar on component selection', async () => {
     const user = userEvent.setup();
     renderLibraryUnitPage();
-    expect((await screen.findAllByText('Test Unit'))).toHaveLength(2); // Header + Sidebar
+    expect(await screen.findAllByText('Test Unit')).toHaveLength(2); // Header + Sidebar
     // No Preview tab shown in sidebar
     expect(screen.queryByText('Preview')).not.toBeInTheDocument();
 
@@ -238,7 +238,7 @@ describe('<LibraryUnitPage />', () => {
     const url = getXBlockFieldsApiUrl('lb:org1:Demo_course_generated:html:text-0');
     axiosMock.onPost(url).reply(200);
     renderLibraryUnitPage();
-    expect((await screen.findAllByText('Test Unit'))).toHaveLength(2); // Header + Sidebar
+    expect(await screen.findAllByText('Test Unit')).toHaveLength(2); // Header + Sidebar
 
     // Wait loading of the component
     await screen.findByText('text block 0');
@@ -273,7 +273,7 @@ describe('<LibraryUnitPage />', () => {
     const url = getXBlockFieldsApiUrl('lb:org1:Demo_course_generated:html:text-0');
     axiosMock.onPost(url).reply(400);
     renderLibraryUnitPage();
-    expect((await screen.findAllByText('Test Unit'))).toHaveLength(2); // Header + Sidebar
+    expect(await screen.findAllByText('Test Unit')).toHaveLength(2); // Header + Sidebar
 
     // Wait loading of the component
     await screen.findByText('text block 0');
@@ -350,6 +350,101 @@ describe('<LibraryUnitPage />', () => {
     });
     setTimeout(() => fireEvent.keyDown(firstDragHandle, { code: 'Space' }));
     await waitFor(() => expect(mockShowToast).toHaveBeenLastCalledWith('Failed to update components order'));
+  });
+
+  it('should move a component down using the menu', async () => {
+    const user = userEvent.setup();
+    const url = getLibraryContainerChildrenApiUrl(mockGetContainerMetadata.unitId);
+    axiosMock.onPatch(url).reply(200);
+    renderLibraryUnitPage();
+
+    expect(await screen.findByText('text block 0')).toBeInTheDocument();
+    // Open the menu of the first component (index 0)
+    const menu = (await screen.findAllByRole('button', { name: /component actions menu/i }))[0];
+    await user.click(menu);
+
+    const moveDown = await screen.findByRole('button', { name: 'Move down' });
+    await user.click(moveDown);
+
+    await waitFor(() => { // Wait for the mocked PATCH call that would re-order the items.
+      expect(axiosMock.history.patch[0].url).toEqual(url);
+    });
+    // The first component is moved one position down, swapping it with the second.
+    expect(JSON.parse(axiosMock.history.patch[0].data).usage_keys).toEqual([
+      'lb:org1:Demo_course_generated:html:text-1',
+      'lb:org1:Demo_course_generated:html:text-0',
+      'lb:org1:Demo_course_generated:html:text-2',
+    ]);
+  });
+
+  it('should move a component up using the menu', async () => {
+    const user = userEvent.setup();
+    const url = getLibraryContainerChildrenApiUrl(mockGetContainerMetadata.unitId);
+    axiosMock.onPatch(url).reply(200);
+    renderLibraryUnitPage();
+
+    expect(await screen.findByText('text block 1')).toBeInTheDocument();
+    // Open the menu of the second component (index 1)
+    const menu = (await screen.findAllByRole('button', { name: /component actions menu/i }))[1];
+    await user.click(menu);
+
+    const moveUp = await screen.findByRole('button', { name: 'Move up' });
+    await user.click(moveUp);
+
+    await waitFor(() => { // Wait for the mocked PATCH call that would re-order the items.
+      expect(axiosMock.history.patch[0].url).toEqual(url);
+    });
+    // The second component is moved one position up, swapping it with the first.
+    expect(JSON.parse(axiosMock.history.patch[0].data).usage_keys).toEqual([
+      'lb:org1:Demo_course_generated:html:text-1',
+      'lb:org1:Demo_course_generated:html:text-0',
+      'lb:org1:Demo_course_generated:html:text-2',
+    ]);
+  });
+
+  it('should disable "Move up" for the first component', async () => {
+    const user = userEvent.setup();
+    renderLibraryUnitPage();
+
+    expect(await screen.findByText('text block 0')).toBeInTheDocument();
+    const menu = (await screen.findAllByRole('button', { name: /component actions menu/i }))[0];
+    await user.click(menu);
+
+    // The first component can't move up, but it can move down.
+    expect(await screen.findByRole('button', { name: 'Move up' })).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByRole('button', { name: 'Move down' })).not.toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('should disable "Move down" for the last component', async () => {
+    const user = userEvent.setup();
+    renderLibraryUnitPage();
+
+    expect(await screen.findByText('text block 2')).toBeInTheDocument();
+    const menu = (await screen.findAllByRole('button', { name: /component actions menu/i }))[2];
+    await user.click(menu);
+
+    // The last component can't move down, but it can move up.
+    expect(await screen.findByRole('button', { name: 'Move down' })).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByRole('button', { name: 'Move up' })).not.toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('should show error toast when reordering via the menu fails', async () => {
+    const user = userEvent.setup();
+    const url = getLibraryContainerChildrenApiUrl(mockGetContainerMetadata.unitId);
+    axiosMock.onPatch(url).reply(500);
+    renderLibraryUnitPage();
+
+    expect(await screen.findByText('text block 0')).toBeInTheDocument();
+    const menu = (await screen.findAllByRole('button', { name: /component actions menu/i }))[0];
+    await user.click(menu);
+
+    const moveDown = await screen.findByRole('button', { name: 'Move down' });
+    await user.click(moveDown);
+
+    await waitFor(() => {
+      expect(axiosMock.history.patch[0].url).toEqual(url);
+    });
+    expect(mockShowToast).toHaveBeenCalledWith('Failed to update components order');
   });
 
   it('should remove a component & restore from component card', async () => {

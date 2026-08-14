@@ -1,8 +1,7 @@
 import { render, initializeMocks } from '@src/testUtils';
 import CourseOutlineHeaderActionsSlot from '.';
 
-jest.mock('CourseAuthoring/course-outline/header-navigations/HeaderNavigations', () => 'HeaderNavigations');
-
+jest.mock('@src/course-outline/header-navigations/HeaderActions', () => 'HeaderActions');
 jest.mock('@openedx/frontend-plugin-framework', () => ({
   PluginSlot: 'PluginSlot',
 }));
@@ -25,20 +24,24 @@ const headerNavProps = {
     duplicable: true,
   },
   errors: {},
+  sections: [],
 };
 
 describe('CourseOutlineHeaderActionsSlot', () => {
   beforeEach(() => initializeMocks());
 
   test('pluginProps are set correctly', () => {
-    const { container } = render(<CourseOutlineHeaderActionsSlot
-      sections={[]}
-      hasSections={false}
-      {...headerNavProps}
-    />);
+    const { container } = render(
+      <CourseOutlineHeaderActionsSlot
+        hasSections={false}
+        {...headerNavProps}
+      />,
+    );
     expect(container.querySelector('pluginslot')).toBeInTheDocument();
     expect(container.querySelector('pluginslot')?.getAttribute('idaliases')).toBe('course_outline_header_actions_slot');
-    expect(container.querySelector('pluginslot')?.getAttribute('id')).toBe('org.openedx.frontend.authoring.course_outline_header_actions.v1');
-    expect(container.querySelector('HeaderNavigations')).toBeInTheDocument();
+    expect(container.querySelector('pluginslot')?.getAttribute('id')).toBe(
+      'org.openedx.frontend.authoring.course_outline_header_actions.v1',
+    );
+    expect(container.querySelector('HeaderActions')).toBeInTheDocument();
   });
 });

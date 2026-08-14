@@ -1,9 +1,9 @@
 import React from 'react';
-import DatePicker from 'react-datepicker/dist';
+import DatePicker from 'react-datepicker';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { Form, Icon } from '@openedx/paragon';
-import { Calendar } from '@openedx/paragon/icons';
+import { AccessTime, Calendar } from '@openedx/paragon/icons';
 import { useIntl } from '@edx/frontend-platform/i18n';
 
 import { convertToDateFromString, convertToStringFromDate, isValidDate } from '../../utils';
@@ -32,9 +32,21 @@ const DatepickerControl = ({
     [DATEPICKER_TYPES.date]: DATE_FORMAT,
     [DATEPICKER_TYPES.time]: TIME_FORMAT,
   };
+  const isTimePicker = type === DATEPICKER_TYPES.time;
+
+  let describedByIds;
+  if (isTimePicker) {
+    const ids = [`${controlName}-timehint`];
+    if (helpText) {
+      ids.push(`${controlName}-helptext`);
+    }
+    describedByIds = ids.filter(Boolean).join(' ') || undefined;
+  } else if (helpText) {
+    describedByIds = `${controlName}-helptext`;
+  }
 
   return (
-    <Form.Group className="form-group-custom datepicker-custom">
+    <Form.Group controlId={controlName} className="form-group-custom datepicker-custom">
       <Form.Label className="d-flex justify-content-between">
         {label}
         {showUTC && (
@@ -51,7 +63,15 @@ const DatepickerControl = ({
             alt={intl.formatMessage(messages.calendarAltText)}
           />
         )}
+        {type === DATEPICKER_TYPES.time && (
+          <Icon
+            src={AccessTime}
+            className="datepicker-custom-control-icon"
+            alt={intl.formatMessage(messages.timeAltText)}
+          />
+        )}
         <DatePicker
+          id={controlName}
           name={controlName}
           selected={formattedDate}
           disabled={readonly}
@@ -67,6 +87,7 @@ const DatepickerControl = ({
           showTimeSelectOnly={type === DATEPICKER_TYPES.time}
           placeholderText={inputFormat[type].toLocaleUpperCase()}
           showPopperArrow={false}
+          aria-describedby={describedByIds}
           onChange={(date) => {
             if (isValidDate(date)) {
               onChange(convertToStringFromDate(date));
@@ -74,7 +95,18 @@ const DatepickerControl = ({
           }}
         />
       </div>
-      {helpText && <Form.Control.Feedback>{helpText}</Form.Control.Feedback>}
+      {isTimePicker && (
+        <Form.Text id={`${controlName}-timehint`} className="sr-only">
+          {intl.formatMessage(messages.timepickerScreenreaderHint, {
+            timeFormat: inputFormat[type].toLocaleUpperCase(),
+          })}
+        </Form.Text>
+      )}
+      {helpText && (
+        <Form.Control.Feedback id={`${controlName}-helptext`}>
+          {helpText}
+        </Form.Control.Feedback>
+      )}
     </Form.Group>
   );
 };

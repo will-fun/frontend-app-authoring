@@ -1,5 +1,10 @@
 import React from 'react';
-import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  skipToken,
+  useInfiniteQuery,
+  useQuery,
+} from '@tanstack/react-query';
 import { type Filter, MeiliSearch } from 'meilisearch';
 
 import {
@@ -11,16 +16,16 @@ import {
   getContentSearchConfig,
   fetchBlockTypes,
   type PublishStatus,
+  fetchContentHits,
 } from './api';
 
 /**
  * Load the Meilisearch connection details from the CMS: the URL to use, the index name, and an API key specific
  * to the current user that allows it to search all content he have permission to view.
- *
  */
 export const useContentSearchConnection = (): {
-  client?: MeiliSearch,
-  indexName?: string,
+  client?: MeiliSearch;
+  indexName?: string;
   hasConnectionError: boolean;
 } => {
   const { data: connectionDetails, isError: hasConnectionError } = useQuery({
@@ -64,22 +69,20 @@ export const buildSearchQueryKey = ({
   publishStatusFilter: PublishStatus[];
   tagsFilter: string[];
   sort: SearchSortOption[];
-}) => (
-  [
-    'content_search',
-    'results',
-    client?.config.apiKey,
-    client?.config.host,
-    indexName,
-    extraFilter,
-    searchKeywords,
-    blockTypesFilter,
-    problemTypesFilter,
-    publishStatusFilter,
-    tagsFilter,
-    sort,
-  ]
-);
+}) => [
+  'content_search',
+  'results',
+  client?.config.apiKey,
+  client?.config.host,
+  indexName,
+  extraFilter,
+  searchKeywords,
+  blockTypesFilter,
+  problemTypesFilter,
+  publishStatusFilter,
+  tagsFilter,
+  sort,
+];
 
 /**
  * Get the results of a search
@@ -184,7 +187,12 @@ export const useContentSearchResults = ({
     // Call this to load more pages. We include some "safety" features recommended by the docs: this should never be
     // called while already fetching a page, and parameters (like 'event') should not be passed into fetchNextPage().
     // See https://tanstack.com/query/v4/docs/framework/react/guides/infinite-queries
-    fetchNextPage: () => { if (!query.isFetching && !query.isFetchingNextPage) { query.fetchNextPage(); } },
+    fetchNextPage: /* istanbul ignore next */ () => {
+      if (!query.isFetching && !query.isFetchingNextPage) {
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        query.fetchNextPage();
+      }
+    },
     hasNextPage: query.hasNextPage,
     // The last page has the most accurate count of total hits
     totalHits: pages?.[pages.length - 1]?.totalHits ?? 0,
@@ -273,9 +281,10 @@ export const useTagFilterOptions = (args: {
     }
     // Combine these two queries to filter the list of tags based on the keyword search.
     const tags = mainQuery.data.tags.filter(
-      ({ tagPath }) => tagKeywordSearchData.data.matches.some(
-        (matchingTag) => matchingTag.tagPath === tagPath || matchingTag.tagPath.startsWith(tagPath + TAG_SEP),
-      ),
+      ({ tagPath }) =>
+        tagKeywordSearchData.data.matches.some(
+          (matchingTag) => matchingTag.tagPath === tagPath || matchingTag.tagPath.startsWith(tagPath + TAG_SEP),
+        ),
     );
     return {
       tags,
@@ -286,7 +295,7 @@ export const useTagFilterOptions = (args: {
   return { ...mainQuery, data };
 };
 
-export const useGetBlockTypes = (extraFilters: Filter) => {
+export const useGetBlockTypes = (extraFilters: Filter, enabled: boolean = true) => {
   const { client, indexName } = useContentSearchConnection();
   return useQuery({
     enabled: client !== undefined && indexName !== undefined,
@@ -298,6 +307,38 @@ export const useGetBlockTypes = (extraFilters: Filter) => {
       extraFilters,
       'block_types',
     ],
-    queryFn: () => fetchBlockTypes(client!, indexName!, extraFilters),
+    queryFn: enabled ? () => fetchBlockTypes(client!, indexName!, extraFilters) : skipToken,
+    refetchOnMount: 'always',
+  });
+};
+
+export const useGetContentHits = (
+  extraFilters: Filter,
+  enabled: boolean = true,
+  attributesToRetrieve?: string[],
+  limit?: number,
+  refetchOnMount?: boolean | 'always',
+) => {
+  const { client, indexName } = useContentSearchConnection();
+  return useQuery({
+    enabled: client !== undefined && indexName !== undefined,
+    queryKey: [
+      'content_search',
+      client?.config.apiKey,
+      client?.config.host,
+      indexName,
+      extraFilters,
+    ],
+    queryFn: enabled ?
+      () =>
+        fetchContentHits(
+          client!,
+          indexName!,
+          extraFilters,
+          limit,
+          attributesToRetrieve,
+        ) :
+      skipToken,
+    refetchOnMount,
   });
 };

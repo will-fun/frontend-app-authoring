@@ -23,6 +23,7 @@ import {
   labelDescriptionQuestionOLX,
   htmlEntityTestOLX,
   numberParseTestOLX,
+  numericTextCoercionTestOLX,
   numericalProblemPartialCredit,
   solutionExplanationTest,
   solutionExplanationWithoutDivTest,
@@ -67,7 +68,9 @@ describe('OLXParser', () => {
     describe('when question parser finds script tags', () => {
       it('should throw error and contain message regarding opening advanced editor', () => {
         const olxparser = new OLXParser(scriptProblemOlX.rawOLX);
-        expect(() => olxparser.parseQuestions('numericalresponse')).toThrow(new Error('Script Tag, reverting to Advanced Editor'));
+        expect(() => olxparser.parseQuestions('numericalresponse')).toThrow(
+          new Error('Script Tag, reverting to Advanced Editor'),
+        );
       });
     });
     describe('when multi select problem finds partial_credit attribute', () => {
@@ -260,9 +263,26 @@ describe('OLXParser', () => {
       });
     });
     describe('given multiple choice olx with feedback and hints', () => {
-      const { answers } = multipleChoiceOlxParser.parseMultipleChoiceAnswers('multiplechoiceresponse', 'choicegroup', 'choice');
+      const { answers } = multipleChoiceOlxParser.parseMultipleChoiceAnswers(
+        'multiplechoiceresponse',
+        'choicegroup',
+        'choice',
+      );
       it('should equal an array of objects with length three', () => {
         expect(answers).toEqual(multipleChoiceWithFeedbackAndHintsOLX.data.answers);
+        expect(answers).toHaveLength(3);
+      });
+    });
+    describe('given multiple choice olx with numeric text that needs coercion', () => {
+      const olxparser = new OLXParser(numericTextCoercionTestOLX.rawOLX);
+      const { answers } = olxparser.parseMultipleChoiceAnswers('multiplechoiceresponse', 'choicegroup', 'choice');
+      it('should coerce numeric #text values to strings', () => {
+        expect(answers).toEqual(numericTextCoercionTestOLX.data.answers);
+        answers.forEach((answer) => {
+          expect(typeof answer.title).toBe('string');
+        });
+      });
+      it('should equal an array of objects with length three', () => {
         expect(answers).toHaveLength(3);
       });
     });

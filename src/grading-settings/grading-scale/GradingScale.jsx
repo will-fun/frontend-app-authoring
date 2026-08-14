@@ -23,6 +23,7 @@ const GradingScale = ({
   setOverrideInternetConnectionAlert,
   setEligibleGrade,
   defaultGradeDesignations,
+  isEditable = true,
 }) => {
   const intl = useIntl();
   const [gradingSegments, setGradingSegments] = useState(sortedGrades);
@@ -95,7 +96,7 @@ const GradingScale = ({
       return updatedGradingSegment;
     });
 
-    const nextIndex = (letters.length % defaultGradeDesignations.length);
+    const nextIndex = letters.length % defaultGradeDesignations.length;
 
     if (gradingSegments.length === 2) {
       setLetters([defaultGradeDesignations[0], defaultGradeDesignations[nextIndex]]);
@@ -109,16 +110,18 @@ const GradingScale = ({
     const sortedSegments = newGradingSegmentData.sort((currentValue, previousValue) => currentValue - previousValue);
     const newSegmentValue = sortedSegments[sortedSegments.length - 1 - activeHandleIndex];
     const prevSegmentBoundary = (gradingSegments[activeHandleIndex + 1]
-        && gradingSegments[activeHandleIndex + 1].current) || 0;
+      && gradingSegments[activeHandleIndex + 1].current) || 0;
     const nextSegmentBoundary = gradingSegments[activeHandleIndex - 1].current;
 
     showSavePrompt(true);
 
     setGradingSegments(gradingSegments.map((gradingSegment, idx) => {
       const upperBoundaryValue = (newSegmentValue < nextSegmentBoundary - gapToSegment)
-        ? newSegmentValue : (nextSegmentBoundary - gapToSegment);
+        ? newSegmentValue :
+        (nextSegmentBoundary - gapToSegment);
       const lowerBoundaryValue = (upperBoundaryValue > prevSegmentBoundary + gapToSegment)
-        ? upperBoundaryValue : (prevSegmentBoundary + gapToSegment);
+        ? upperBoundaryValue :
+        (prevSegmentBoundary + gapToSegment);
 
       if (idx === activeHandleIndex - 1) {
         return {
@@ -205,7 +208,7 @@ const GradingScale = ({
       <IconButtonWithTooltip
         tooltipPlacement="top"
         tooltipContent={intl.formatMessage(messages.addNewSegmentButtonAltText)}
-        disabled={gradingSegments.length >= (defaultGradeDesignations.length + 1)}
+        disabled={!isEditable || gradingSegments.length >= (defaultGradeDesignations.length + 1)}
         data-testid="grading-scale-btn-add-segment"
         className="mr-3"
         src={IconAdd}
@@ -227,6 +230,7 @@ const GradingScale = ({
             idx={idx}
             handleLetterChange={handleLetterChange}
             letters={letters}
+            isEditable={isEditable}
           />
         ))}
         {handles.map(({ value, getHandleProps }, idx) => (
@@ -236,6 +240,7 @@ const GradingScale = ({
             gradingSegments={gradingSegments}
             value={value}
             idx={idx}
+            isEditable={isEditable}
           />
         ))}
       </div>
@@ -259,6 +264,7 @@ GradingScale.propTypes = {
   ).isRequired,
   setEligibleGrade: PropTypes.func.isRequired,
   defaultGradeDesignations: PropTypes.arrayOf(PropTypes.string),
+  isEditable: PropTypes.bool,
 };
 
 GradingScale.defaultProps = {

@@ -68,17 +68,6 @@ const getLeafTags = (tree) => {
  * @param {StagedTagData[]} stagedContentTags
  *       - Array of staged tags represented as objects with value/label
  * @param {TaxonomyData & {contentTags: ContentTagData[]}} taxonomyAndTagsData
- * @returns {{
- *      tagChangeHandler: (tagSelectableBoxValue: string, checked: boolean) => void,
- *      removeAppliedTagHandler: (tagSelectableBoxValue: string) => void,
- *      appliedContentTagsTree: Record<string, TagTreeEntry>,
- *      stagedContentTagsTree: Record<string, TagTreeEntry>,
- *      contentTagsCount: number,
- *      checkedTags: any,
- *      commitStagedTagsToGlobal: () => void,
- *      updateTags: import('@tanstack/react-query').UseMutationResult<
- *                  any, unknown, { tagsData: Promise<UpdateTagsData[]>; }, unknown
- *      >
  * }}
  */
 const useContentTagsCollapsibleHelper = (
@@ -99,7 +88,8 @@ const useContentTagsCollapsibleHelper = (
   } = React.useContext(ContentTagsDrawerContext);
 
   const {
-    id, contentTags,
+    id,
+    contentTags,
   } = taxonomyAndTagsData;
   const updateTags = useContentTaxonomyTagsUpdater(contentId);
 
@@ -114,10 +104,10 @@ const useContentTagsCollapsibleHelper = (
   const [checkedTags, { add, remove, clear }] = useCheckboxSetValues();
 
   // State to keep track of the staged tags (and along with ancestors) that should be removed
-  const [stagedTagsToRemove, setStagedTagsToRemove] = React.useState(/** @type string[] */([]));
+  const [stagedTagsToRemove, setStagedTagsToRemove] = React.useState(/** @type string[] */ ([]));
 
   // State to keep track of the global tags (staged and fetched) that should be removed
-  const [globalTagsToRemove, setGlobalTagsToRemove] = React.useState(/** @type string[] */([]));
+  const [globalTagsToRemove, setGlobalTagsToRemove] = React.useState(/** @type string[] */ ([]));
 
   // Handles the removal of staged content tags based on what was removed
   // from the staged tags tree. We are doing it in a useEffect since the removeTag
@@ -135,8 +125,10 @@ const useContentTagsCollapsibleHelper = (
 
   React.useEffect(() => {
     globalTagsToRemove.forEach((tag) => {
-      if (globalStagedContentTags[id]
-          && globalStagedContentTags[id].some(t => t.value === tag)) {
+      if (
+        globalStagedContentTags[id]
+        && globalStagedContentTags[id].some(t => t.value === tag)
+      ) {
         // A new tag has been removed
         removeGlobalStagedContentTag(id, tag);
       } else if (contentTags.some(t => t.value === tag)) {
@@ -155,8 +147,10 @@ const useContentTagsCollapsibleHelper = (
     const newGlobalTags = [];
 
     explicitStaged.forEach((tag) => {
-      if (globalStagedRemovedContentTags[id]
-          && globalStagedRemovedContentTags[id].includes(tag.value)) {
+      if (
+        globalStagedRemovedContentTags[id]
+        && globalStagedRemovedContentTags[id].includes(tag.value)
+      ) {
         // A fetched tag that has been removed has been added again
         deleteRemovedContentTag(id, tag.value);
       } else {
@@ -202,6 +196,7 @@ const useContentTagsCollapsibleHelper = (
             children: {},
             canChangeObjecttag: item.canChangeObjecttag,
             canDeleteObjecttag: item.canDeleteObjecttag,
+            isCopied: item.isCopied,
           };
 
           // Populating the SelectableBox with "selected" (explicit) tags
@@ -234,7 +229,6 @@ const useContentTagsCollapsibleHelper = (
    * @param {boolean} staged - whether we are removing staged tags or not
    * @param {string[]} fullLineage - Full lineage of tag being removed
    * @returns {string[]} array of staged tag values (with ancestors) that should be removed from staged tree
-   *
    */
   const removeTags = React.useCallback((tree, tagsToRemove, staged, fullLineage) => {
     const removedTags = [];
@@ -338,8 +332,13 @@ const useContentTagsCollapsibleHelper = (
       });
     }
   }, [
-    stagedContentTagsTree, setStagedContentTagsTree, addTags, removeTags,
-    id, addStagedContentTag, removeStagedContentTag,
+    stagedContentTagsTree,
+    setStagedContentTagsTree,
+    addTags,
+    removeTags,
+    id,
+    addStagedContentTag,
+    removeStagedContentTag,
   ]);
 
   const removeAppliedTagHandler = React.useCallback((tagSelectableBoxValue) => {

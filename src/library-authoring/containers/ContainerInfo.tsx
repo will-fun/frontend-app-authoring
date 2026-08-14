@@ -17,7 +17,7 @@ import { InfoOutline, MoreVert } from '@openedx/paragon/icons';
 import { useClipboard } from '@src/generic/clipboard';
 import { ContainerType, getBlockType } from '@src/generic/key-utils';
 import { useComponentPickerContext } from '../common/context/ComponentPickerContext';
-import { useLibraryContext } from '../common/context/LibraryContext';
+import { useOptionalLibraryContext } from '../common/context/LibraryContext';
 import {
   type ContainerInfoTab,
   CONTAINER_INFO_TABS,
@@ -34,9 +34,10 @@ import { useContainer } from '../data/apiHooks';
 import ContainerDeleter from './ContainerDeleter';
 import { ContainerPublisher } from './ContainerPublisher';
 import { PublishDraftButton, PublishedChip } from '../generic/publish-status-buttons';
+import { ContainerDetails } from './ContainerDetails';
 
 type ContainerPreviewProps = {
-  containerId: string,
+  containerId: string;
 };
 
 const ContainerMenu = ({ containerId }: ContainerPreviewProps) => {
@@ -44,6 +45,7 @@ const ContainerMenu = ({ containerId }: ContainerPreviewProps) => {
   const { copyToClipboard } = useClipboard();
 
   const handleCopy = useCallback(() => {
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     copyToClipboard(containerId);
   }, [copyToClipboard, containerId]);
 
@@ -80,7 +82,7 @@ const ContainerMenu = ({ containerId }: ContainerPreviewProps) => {
   );
 };
 
-const ContainerPreview = ({ containerId } : ContainerPreviewProps) => {
+const ContainerPreview = ({ containerId }: ContainerPreviewProps) => {
   const containerType = getBlockType(containerId);
   if (containerType === ContainerType.Unit) {
     return <LibraryUnitBlocks unitId={containerId} readOnly />;
@@ -93,17 +95,17 @@ const ContainerActions = ({
   containerType,
   hasUnpublishedChanges,
 }: {
-  containerId: string,
-  containerType: string,
-  hasUnpublishedChanges: boolean,
+  containerId: string;
+  containerType: string;
+  hasUnpublishedChanges: boolean;
 }) => {
   const intl = useIntl();
-  const { libraryId } = useLibraryContext();
+  const { libraryId } = useOptionalLibraryContext();
   const { componentPickerMode } = useComponentPickerContext();
   const { insideUnit, insideSubsection, insideSection } = useLibraryRoutes();
   const [isPublisherOpen, openPublisher, closePublisher] = useToggle(false);
 
-  const showOpenButton = !componentPickerMode && !(
+  const showOpenButton = libraryId && !componentPickerMode && !(
     insideUnit || insideSubsection || insideSection
   );
 
@@ -129,17 +131,19 @@ const ContainerActions = ({
         </Button>
       )}
       {!componentPickerMode && (
-        !hasUnpublishedChanges ? (
-          <div className="m-1 flex-grow-1">
-            <PublishedChip />
-          </div>
-        ) : (
-          <div className="flex-grow-1">
-            <PublishDraftButton
-              onClick={openPublisher}
-            />
-          </div>
-        )
+        !hasUnpublishedChanges ?
+          (
+            <div className="m-1 flex-grow-1">
+              <PublishedChip />
+            </div>
+          ) :
+          (
+            <div className="flex-grow-1">
+              <PublishDraftButton
+                onClick={openPublisher}
+              />
+            </div>
+          )
       )}
       {showOpenButton && (
         <div className="mt-1">
@@ -175,8 +179,10 @@ const ContainerInfo = () => {
 
   const defaultContainerTab = defaultTab.container;
   const tab: ContainerInfoTab = (
-    sidebarTab && isContainerInfoTab(sidebarTab)
-  ) ? sidebarTab : defaultContainerTab;
+      sidebarTab && isContainerInfoTab(sidebarTab)
+    ) ?
+    sidebarTab :
+    defaultContainerTab;
 
   /* istanbul ignore next */
   const handleTabChange = (newTab: ContainerInfoTab) => {
@@ -233,6 +239,11 @@ const ContainerInfo = () => {
           CONTAINER_INFO_TABS.Settings,
           intl.formatMessage(messages.settingsTabTitle),
           <ContainerSettings />,
+        )}
+        {renderTab(
+          CONTAINER_INFO_TABS.Details,
+          intl.formatMessage(messages.detailsTabTitle),
+          <ContainerDetails />,
         )}
       </Tabs>
     </Stack>

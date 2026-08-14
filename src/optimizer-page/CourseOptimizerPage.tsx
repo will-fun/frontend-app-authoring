@@ -1,28 +1,47 @@
 /* eslint-disable no-param-reassign */
 import {
-  useEffect, useState, useRef, FC, MutableRefObject,
+  useEffect,
+  useState,
+  useRef,
+  MutableRefObject,
 } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useIntl } from '@edx/frontend-platform/i18n';
 import {
-  Badge, Container, Layout, Card, Icon, StatefulButton,
+  Badge,
+  Container,
+  Layout,
+  Card,
+  Icon,
+  StatefulButton,
 } from '@openedx/paragon';
 import { SpinnerSimple } from '@openedx/paragon/icons';
 import { Helmet } from 'react-helmet';
 
+import { useCourseAuthoringContext } from '@src/CourseAuthoringContext';
+import { useCourseUserPermissions } from '@src/authz/hooks';
+import { getCourseOutlinePermissions } from '@src/authz/permissionHelpers';
 import CourseStepper from '../generic/course-stepper';
 import ConnectionErrorAlert from '../generic/ConnectionErrorAlert';
+import Loading from '@src/generic/Loading';
+import PermissionDeniedAlert from '@src/generic/PermissionDeniedAlert';
 import AlertMessage from '../generic/alert-message';
 import { RequestFailureStatuses } from '../data/constants';
 import { RERUN_LINK_UPDATE_STATUSES } from './data/constants';
 import { STATEFUL_BUTTON_STATES } from '../constants';
 import messages from './messages';
 import {
-  getCurrentStage, getError, getLinkCheckInProgress, getLoadingStatus, getSavingStatus, getLinkCheckResult,
-  getLastScannedAt, getRerunLinkUpdateInProgress, getRerunLinkUpdateResult,
+  getCurrentStage,
+  getError,
+  getLinkCheckInProgress,
+  getLoadingStatus,
+  getSavingStatus,
+  getLinkCheckResult,
+  getLastScannedAt,
+  getRerunLinkUpdateInProgress,
+  getRerunLinkUpdateResult,
 } from './data/selectors';
 import { startLinkCheck, fetchLinkCheckStatus, fetchRerunLinkUpdateStatus } from './data/thunks';
-import { useModel } from '../generic/model-store';
 import ScanResults from './scan-results';
 
 const pollLinkCheckStatus = (dispatch: any, courseId: string, delay: number): number => {
@@ -74,7 +93,7 @@ export function pollLinkCheckDuringScan(
   }
 }
 
-const CourseOptimizerPage: FC<{ courseId: string }> = ({ courseId }) => {
+const CourseOptimizerPage = () => {
   const dispatch = useDispatch();
   const linkCheckInProgress = useSelector(getLinkCheckInProgress);
   const rerunLinkUpdateInProgress = useSelector(getRerunLinkUpdateInProgress);
@@ -88,7 +107,12 @@ const CourseOptimizerPage: FC<{ courseId: string }> = ({ courseId }) => {
   const isLoadingDenied = (RequestFailureStatuses as string[]).includes(loadingStatus);
   const interval = useRef<number | undefined>(undefined);
   const rerunUpdateInterval = useRef<number | undefined>(undefined);
-  const courseDetails = useModel('courseDetails', courseId);
+  const { courseId, courseDetails } = useCourseAuthoringContext();
+  const {
+    isLoading: isLoadingUserPermissions,
+    canEditCourseContent,
+  } = useCourseUserPermissions(courseId, getCourseOutlinePermissions(courseId));
+  const hasEditAccess = !isLoadingUserPermissions && canEditCourseContent;
   const linkCheckPresent = currentStage != null ? currentStage >= 0 : !!currentStage;
   const [showStepper, setShowStepper] = useState(false);
   const [scanResultsError, setScanResultsError] = useState<string | null>(null);
@@ -119,21 +143,30 @@ const CourseOptimizerPage: FC<{ courseId: string }> = ({ courseId }) => {
   ];
 
   useEffect(() => {
-    // when first entering the page, fetch any existing scan results
-    dispatch(fetchLinkCheckStatus(courseId));
-  }, []);
+    // when first entering the page, fetch any existing scan results,
+    // but only once the user permissions have been validated
+    if (hasEditAccess) {
+      dispatch(fetchLinkCheckStatus(courseId));
+    }
+  }, [hasEditAccess]);
 
   useEffect(() => {
     // when a scan starts, start polling for the results as long as the scan status fetched
     // signals it is still in progress
+    if (!hasEditAccess) {
+      return undefined;
+    }
     pollLinkCheckDuringScan(linkCheckInProgress, interval, dispatch, courseId);
 
     return () => {
       if (interval.current) { clearInterval(interval.current); }
     };
-  }, [linkCheckInProgress, linkCheckResult]);
+  }, [linkCheckInProgress, linkCheckResult, hasEditAccess]);
 
   useEffect(() => {
+    if (!hasEditAccess) {
+      return undefined;
+    }
     pollRerunLinkUpdateDuringUpdate(
       rerunLinkUpdateInProgress,
       rerunLinkUpdateResult,
@@ -145,7 +178,7 @@ const CourseOptimizerPage: FC<{ courseId: string }> = ({ courseId }) => {
     return () => {
       if (rerunUpdateInterval.current) { clearInterval(rerunUpdateInterval.current); }
     };
-  }, [rerunLinkUpdateInProgress, rerunLinkUpdateResult]);
+  }, [rerunLinkUpdateInProgress, rerunLinkUpdateResult, hasEditAccess]);
 
   const stepperVisibleCondition = linkCheckPresent && ((!linkCheckResult || linkCheckInProgress) && currentStage !== 2);
   useEffect(() => {
@@ -163,14 +196,22 @@ const CourseOptimizerPage: FC<{ courseId: string }> = ({ courseId }) => {
     return () => clearTimeout(timeout);
   }, [stepperVisibleCondition]);
 
+  if (isLoadingUserPermissions) {
+    return <Loading />;
+  }
+
+  if (!canEditCourseContent) {
+    return <PermissionDeniedAlert />;
+  }
+
   if (isLoadingDenied || isSavingDenied) {
     if (interval.current) { clearInterval(interval.current); }
     if (rerunUpdateInterval.current) { clearInterval(rerunUpdateInterval.current); }
 
     return (
-    // <Container size="xl" className="course-unit px-4 mt-4">
+      // <Container size="xl" className="course-unit px-4 mt-4">
       <ConnectionErrorAlert />
-    // </Container>
+      // </Container>
     );
   }
 
@@ -198,9 +239,7 @@ const CourseOptimizerPage: FC<{ courseId: string }> = ({ courseId }) => {
       )}
       <Container size="xl" className="mt-4 px-4 export">
         <section className="setting-items mb-4">
-          <Layout
-            lg={[{ span: 12 }, { span: 0 }]}
-          >
+          <Layout>
             <Layout.Element>
               <article>
                 <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 p-3">
@@ -223,7 +262,7 @@ const CourseOptimizerPage: FC<{ courseId: string }> = ({ courseId }) => {
                     }}
                     state={getScanButtonState()}
                     onClick={() => dispatch(startLinkCheck(courseId))}
-                    disabled={!!(linkCheckInProgress) && !errorMessage}
+                    disabled={!!linkCheckInProgress && !errorMessage}
                     variant="primary"
                     data-testid="scan-course"
                   />
@@ -250,7 +289,12 @@ const CourseOptimizerPage: FC<{ courseId: string }> = ({ courseId }) => {
                         title={intl.formatMessage(messages.scanHeader)}
                       />
                       <Card.Section className="px-3 py-1">
-                        <p className="small"> {lastScannedAt && `${intl.formatMessage(messages.lastScannedOn)} ${intl.formatDate(lastScannedAt, { year: 'numeric', month: 'long', day: 'numeric' })}`}</p>
+                        <p className="small">
+                          {lastScannedAt &&
+                            `${intl.formatMessage(messages.lastScannedOn)} ${
+                              intl.formatDate(lastScannedAt, { year: 'numeric', month: 'long', day: 'numeric' })
+                            }`}
+                        </p>
                       </Card.Section>
                       <ScanResults
                         data={linkCheckResult}

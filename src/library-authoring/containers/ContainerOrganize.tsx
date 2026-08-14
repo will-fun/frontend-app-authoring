@@ -17,16 +17,16 @@ import {
 import { ContentTagsDrawer, useContentTaxonomyTagsData } from '../../content-tags-drawer';
 import { ManageCollections } from '../generic/manage-collections';
 import { useContainer, useUpdateContainerCollections } from '../data/apiHooks';
-import { useLibraryContext } from '../common/context/LibraryContext';
+import { useOptionalLibraryContext } from '../common/context/LibraryContext';
 import { SidebarActions, useSidebarContext } from '../common/context/SidebarContext';
 import messages from './messages';
 
 const ContainerOrganize = () => {
   const intl = useIntl();
-  const [tagsCollapseIsOpen, ,setTagsCollapseClose, toggleTags] = useToggle(true);
+  const [tagsCollapseIsOpen, , setTagsCollapseClose, toggleTags] = useToggle(true);
   const [collectionsCollapseIsOpen, setCollectionsCollapseOpen, , toggleCollections] = useToggle(true);
 
-  const { readOnly } = useLibraryContext();
+  const { readOnly } = useOptionalLibraryContext();
   const { sidebarItemInfo, sidebarAction } = useSidebarContext();
   const jumpToCollections = sidebarAction === SidebarActions.JumpToManageCollections;
 
@@ -53,7 +53,7 @@ const ContainerOrganize = () => {
     }
     let result = 0;
     componentTags.taxonomies.forEach((taxonomy) => {
-      const countedTags : string[] = [];
+      const countedTags: string[] = [];
       taxonomy.tags.forEach((tagData) => {
         tagData.lineage.forEach((tag) => {
           if (!countedTags.includes(tag)) {

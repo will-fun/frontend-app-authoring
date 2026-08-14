@@ -2,7 +2,9 @@ import type { ReactNode } from 'react';
 import { useIntl } from '@edx/frontend-platform/i18n';
 import { Link } from 'react-router-dom';
 import {
-  Breadcrumb, MenuItem, SelectMenu,
+  Breadcrumb,
+  MenuItem,
+  SelectMenu,
 } from '@openedx/paragon';
 import { ContainerType } from '@src/generic/key-utils';
 import type { ContentLibrary } from '../../data/api';
@@ -69,7 +71,7 @@ export const ParentBreadcrumbs = ({ libraryData, parents, containerType }: Paren
   const intl = useIntl();
   const { id: libraryId, title: libraryTitle } = libraryData;
 
-  const links: Array<{ label: string | string[], to: string | string[], containerType: ContainerType }> = [
+  const links: Array<{ label: string | string[]; to: string | string[]; containerType: ContainerType; }> = [
     {
       label: libraryTitle,
       to: `/library/${libraryId}`,
@@ -105,7 +107,7 @@ export const ParentBreadcrumbs = ({ libraryData, parents, containerType }: Paren
     // Add all parents as a single object containing list of links
     // This is converted to overflow menu by OverflowLinks component
     links.push({
-      label: parents.displayName || [],
+      label: parents.displayName || '',
       to: parents.key?.map((parentKey) => `/library/${libraryId}/${parentType}/${parentKey}`) || [],
       containerType,
     });
@@ -114,6 +116,8 @@ export const ParentBreadcrumbs = ({ libraryData, parents, containerType }: Paren
   return (
     <Breadcrumb
       ariaLabel={intl.formatMessage(messages.breadcrumbsAriaLabel)}
+      // @ts-ignore FIXME: <Breadcrumb> uses `label` as a key, so it shouldn't be an array (string[]),
+      // even if our custom <OverflowLinks> is handling arrays properly.
       links={links}
       linkAs={OverflowLinks}
     />

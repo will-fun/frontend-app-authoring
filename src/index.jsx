@@ -1,11 +1,20 @@
 import {
-  APP_INIT_ERROR, APP_READY, subscribe, initialize, mergeConfig, getConfig, getPath,
+  APP_INIT_ERROR,
+  APP_READY,
+  subscribe,
+  initialize,
+  mergeConfig,
+  getConfig,
+  getPath,
 } from '@edx/frontend-platform';
 import { AppProvider, ErrorPage } from '@edx/frontend-platform/react';
 import React, { StrictMode, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
-  Route, createRoutesFromElements, createBrowserRouter, RouterProvider,
+  Route,
+  createRoutesFromElements,
+  createBrowserRouter,
+  RouterProvider,
 } from 'react-router-dom';
 import {
   QueryClient,
@@ -17,7 +26,7 @@ import { logError } from '@edx/frontend-platform/logging';
 import messages from './i18n';
 
 import {
-  ComponentPicker,
+  LibraryAndComponentPicker,
   CreateLibrary,
   CreateLegacyLibrary,
   LibraryLayout,
@@ -73,22 +82,22 @@ const App = () => {
         <Route path="/library/:libraryId/*" element={<LibraryLayout />} />
         <Route
           path="/component-picker"
-          element={(
-            <ComponentPicker
+          element={
+            <LibraryAndComponentPicker
               extraFilter={['NOT block_type = "unit"', 'NOT block_type = "section"', 'NOT block_type = "subsection"']}
               visibleTabs={[ContentType.home, ContentType.components, ContentType.collections]}
             />
-          )}
+          }
         />
         <Route
           path="/component-picker/multiple"
-          element={(
-            <ComponentPicker
+          element={
+            <LibraryAndComponentPicker
               componentPickerMode="multiple"
               extraFilter={['NOT block_type = "unit"', 'NOT block_type = "section"', 'NOT block_type = "subsection"']}
               visibleTabs={[ContentType.home, ContentType.components, ContentType.collections]}
             />
-          )}
+          }
         />
         <Route path="/legacy/preview-changes/:usageKey" element={<PreviewChangesEmbed />} />
         <Route path="/course/:courseId/*" element={<CourseAuthoringRoutes />} />
@@ -171,12 +180,16 @@ initialize({
         NOTIFICATION_FEEDBACK_URL: process.env.NOTIFICATION_FEEDBACK_URL || null,
         ENABLE_UNIT_PAGE: process.env.ENABLE_UNIT_PAGE || 'false',
         ENABLE_ASSETS_PAGE: process.env.ENABLE_ASSETS_PAGE || 'false',
-        ENABLE_VIDEO_UPLOAD_PAGE_LINK_IN_CONTENT_DROPDOWN: process.env.ENABLE_VIDEO_UPLOAD_PAGE_LINK_IN_CONTENT_DROPDOWN || 'false',
+        ENABLE_VIDEO_UPLOAD_PAGE_LINK_IN_CONTENT_DROPDOWN:
+          process.env.ENABLE_VIDEO_UPLOAD_PAGE_LINK_IN_CONTENT_DROPDOWN || 'false',
         ENABLE_CERTIFICATE_PAGE: process.env.ENABLE_CERTIFICATE_PAGE || 'false',
+        ENABLE_COURSE_IMPORT_IN_LIBRARY: process.env.ENABLE_COURSE_IMPORT_IN_LIBRARY || 'false',
+        ENABLE_UNIT_PAGE_NEW_DESIGN: process.env.ENABLE_UNIT_PAGE_NEW_DESIGN || 'true',
         ENABLE_TAGGING_TAXONOMY_PAGES: process.env.ENABLE_TAGGING_TAXONOMY_PAGES || 'false',
         ENABLE_CHECKLIST_QUALITY: process.env.ENABLE_CHECKLIST_QUALITY || 'true',
         ENABLE_GRADING_METHOD_IN_PROBLEMS: process.env.ENABLE_GRADING_METHOD_IN_PROBLEMS === 'true',
-        LIBRARY_UNSUPPORTED_BLOCKS: (process.env.LIBRARY_UNSUPPORTED_BLOCKS || 'conditional,step-builder,problem-builder').split(','),
+        LIBRARY_UNSUPPORTED_BLOCKS:
+          (process.env.LIBRARY_UNSUPPORTED_BLOCKS || 'conditional,step-builder,problem-builder').split(','),
         COURSE_TEAM_SUPPORT_EMAIL: process.env.COURSE_TEAM_SUPPORT_EMAIL || null,
         ADMIN_CONSOLE_URL: process.env.ADMIN_CONSOLE_URL || null,
       }, 'CourseAuthoringConfig');

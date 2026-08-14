@@ -12,6 +12,7 @@ import classNames from 'classnames';
 import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
 
+import { usePublishedFilterContext } from '@src/library-authoring/common/context/PublishedFilterContext';
 import { useLibraryRoutes } from '../routes';
 import Loading from '../../generic/Loading';
 import ErrorAlert from '../../generic/alert-error';
@@ -29,7 +30,7 @@ import {
 import { SubHeaderTitle } from '../LibraryAuthoringPage';
 import { useCollection, useContentLibrary } from '../data/apiHooks';
 import { useComponentPickerContext } from '../common/context/ComponentPickerContext';
-import { useLibraryContext } from '../common/context/LibraryContext';
+import { useOptionalLibraryContext } from '../common/context/LibraryContext';
 import { SidebarBodyItemId, useSidebarContext } from '../common/context/SidebarContext';
 import messages from './messages';
 import { LibrarySidebar } from '../library-sidebar';
@@ -40,7 +41,7 @@ const HeaderActions = () => {
   const intl = useIntl();
 
   const { componentPickerMode } = useComponentPickerContext();
-  const { collectionId, readOnly } = useLibraryContext();
+  const { collectionId, readOnly } = useOptionalLibraryContext();
   const {
     closeLibrarySidebar,
     openAddContentSidebar,
@@ -101,13 +102,14 @@ const LibraryCollectionPage = () => {
   const intl = useIntl();
 
   const { componentPickerMode } = useComponentPickerContext();
+  const { showOnlyPublished } = usePublishedFilterContext();
   const {
     libraryId,
     collectionId,
-    showOnlyPublished,
     extraFilter: contextExtraFilter,
     setCollectionId,
-  } = useLibraryContext();
+    readOnly,
+  } = useOptionalLibraryContext();
   const { sidebarItemInfo } = useSidebarContext();
 
   const {
@@ -119,7 +121,7 @@ const LibraryCollectionPage = () => {
 
   const { data: libraryData, isPending: isLibLoading } = useContentLibrary(libraryId);
 
-  if (!collectionId || !libraryId) {
+  if (!collectionId || (!componentPickerMode && !libraryId)) {
     // istanbul ignore next - This shouldn't be possible; it's just here to satisfy the type checker.
     throw new Error('Rendered without collectionId or libraryId URL parameter');
   }
@@ -137,45 +139,52 @@ const LibraryCollectionPage = () => {
     return <ErrorAlert error={error} />;
   }
 
-  const breadcrumbs = !componentPickerMode ? (
-    <Breadcrumb
-      ariaLabel={intl.formatMessage(messages.breadcrumbsAriaLabel)}
-      links={[
-        {
-          label: libraryData.title,
-          to: `/library/${libraryId}`,
-        },
-        {
-          label: intl.formatMessage(messages.allCollections),
-          to: `/library/${libraryId}/collections`,
-        },
-        // Adding empty breadcrumb to add the last `>` spacer.
-        {
-          label: '',
-          to: '',
-        },
-      ]}
-      linkAs={Link}
-    />
-  ) : (
-    <Breadcrumb
-      ariaLabel={intl.formatMessage(messages.breadcrumbsAriaLabel)}
-      links={[
-        {
-          label: '',
-          to: '',
-        },
-        {
-          label: intl.formatMessage(messages.returnToLibrary),
-          onClick: () => { setCollectionId(undefined); },
-        },
-      ]}
-      spacer={<Icon src={ArrowBack} size="sm" />}
-      linkAs={Link}
-    />
-  );
+  const breadcrumbs = !componentPickerMode ?
+    (
+      <Breadcrumb
+        ariaLabel={intl.formatMessage(messages.breadcrumbsAriaLabel)}
+        links={[
+          {
+            label: libraryData.title,
+            to: `/library/${libraryId}`,
+          },
+          {
+            label: intl.formatMessage(messages.allCollections),
+            to: `/library/${libraryId}/collections`,
+          },
+          // Adding empty breadcrumb to add the last `>` spacer.
+          {
+            label: '',
+            to: '',
+          },
+        ]}
+        linkAs={Link}
+      />
+    ) :
+    (
+      <Breadcrumb
+        ariaLabel={intl.formatMessage(messages.breadcrumbsAriaLabel)}
+        links={[
+          {
+            label: '',
+            to: '',
+          },
+          {
+            label: intl.formatMessage(messages.returnToLibrary),
+            onClick: () => {
+              setCollectionId?.(undefined);
+            },
+          },
+        ]}
+        spacer={<Icon src={ArrowBack} size="sm" />}
+        linkAs={Link}
+      />
+    );
 
-  const extraFilter = [`context_key = "${libraryId}"`, `collections.key = "${collectionId}"`];
+  const extraFilter = [`collections.key = "${collectionId}"`];
+  if (libraryId) {
+    extraFilter.splice(0, 0, `context_key = "${libraryId}"`);
+  }
   if (showOnlyPublished) {
     extraFilter.push('last_published IS NOT NULL');
   }
@@ -187,13 +196,16 @@ const LibraryCollectionPage = () => {
   return (
     <div className="d-flex">
       <div className="flex-grow-1">
-        <Helmet><title>{libraryData.title} | {process.env.SITE_NAME}</title></Helmet>
+        <Helmet>
+          <title>{libraryData.title} | {process.env.SITE_NAME}</title>
+        </Helmet>
         {!componentPickerMode && (
           <Header
             number={libraryData.slug}
             title={libraryData.title}
             org={libraryData.org}
             contextId={libraryId}
+            readOnly={readOnly}
             isLibrary
             containerProps={{
               size: undefined,

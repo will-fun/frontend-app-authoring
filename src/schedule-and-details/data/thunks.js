@@ -1,8 +1,11 @@
-import { RequestStatus } from '../../data/constants';
+import {
+  getCourseSettings,
+} from '@src/data/api';
+import { RequestStatus } from '@src/data/constants';
+
 import {
   getCourseDetails,
   updateCourseDetails,
-  getCourseSettings,
 } from './api';
 import {
   updateSavingStatus,
@@ -40,7 +43,7 @@ export function updateCourseDetailsQuery(courseId, details) {
       dispatch(updateSavingStatus({ status: RequestStatus.SUCCESSFUL }));
       dispatch(updateCourseDetailsSuccess(detailsValues));
       return true;
-    } catch (error) {
+    } catch {
       dispatch(updateSavingStatus({ status: RequestStatus.FAILED }));
       return false;
     }

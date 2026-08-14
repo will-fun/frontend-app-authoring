@@ -22,11 +22,15 @@ const AssignmentSection = ({
   setGradingData,
   courseAssignmentLists,
   setShowSuccessAlert,
+  isEditable = true,
 }) => {
   const intl = useIntl();
   const [errorList, setErrorList] = useState({});
   const {
-    type, weight, minCount, dropCount,
+    type,
+    weight,
+    minCount,
+    dropCount,
   } = ASSIGNMENT_TYPES;
   const isFieldsWithoutErrors = Object.values(errorList).every(field => field !== true);
 
@@ -74,7 +78,7 @@ const AssignmentSection = ({
       {graders?.map((gradeField) => {
         const courseAssignmentUsage = courseAssignmentLists[gradeField.type];
         const showDefinedCaseAlert = gradeField.minCount !== courseAssignmentUsage?.length
-            && Boolean(courseAssignmentUsage?.length);
+          && Boolean(courseAssignmentUsage?.length);
         const showNotDefinedCaseAlert = !courseAssignmentUsage?.length && Boolean(gradeField.type);
 
         return (
@@ -84,6 +88,7 @@ const AssignmentSection = ({
                 value={gradeField.type}
                 errorEffort={errorList[`${type}-${gradeField.id}`]}
                 onChange={(e) => handleAssignmentChange(e, gradeField.id)}
+                disabled={!isEditable}
               />
               <AssignmentItem
                 className="course-grading-assignment-abbreviation"
@@ -93,6 +98,7 @@ const AssignmentSection = ({
                 name="shortLabel"
                 value={gradeField.shortLabel}
                 onChange={(e) => handleAssignmentChange(e, gradeField.id)}
+                disabled={!isEditable}
               />
               <AssignmentItem
                 className="course-grading-assignment-total-grade"
@@ -107,6 +113,7 @@ const AssignmentSection = ({
                 onChange={(e) => handleAssignmentChange(e, gradeField.id)}
                 errorEffort={errorList[`${weight}-${gradeField.id}`]}
                 trailingElement="%"
+                disabled={!isEditable}
               />
               <AssignmentItem
                 className="course-grading-assignment-total-number"
@@ -119,6 +126,7 @@ const AssignmentSection = ({
                 value={gradeField.minCount}
                 onChange={(e) => handleAssignmentChange(e, gradeField.id)}
                 errorEffort={errorList[`${minCount}-${gradeField.id}`]}
+                disabled={!isEditable}
               />
               <AssignmentItem
                 className="course-grading-assignment-number-droppable"
@@ -135,6 +143,7 @@ const AssignmentSection = ({
                   type: gradeField.type,
                 })}
                 errorEffort={errorList[`${dropCount}-${gradeField.id}`]}
+                disabled={!isEditable}
               />
             </ol>
             {showDefinedCaseAlert && (
@@ -143,18 +152,16 @@ const AssignmentSection = ({
                 variant="warning"
                 icon={Warning}
                 title={intl.formatMessage(messages.assignmentAlertWarningUsageTitle, { type: gradeField.type })}
-                description={(
+                description={
                   <>
                     <span className="course-grading-assignment-item-alert-warning-list-label">
                       {courseAssignmentUsage.length} Final assignment(s) found:
                     </span>
                     <ol className="course-grading-assignment-item-alert-warning-list">
-                      {courseAssignmentUsage.map(assignmentItem => (
-                        <li key={assignmentItem}>{assignmentItem}</li>
-                      ))}
+                      {courseAssignmentUsage.map(assignmentItem => <li key={assignmentItem}>{assignmentItem}</li>)}
                     </ol>
                   </>
-                )}
+                }
                 aria-hidden="true"
               />
             )}
@@ -164,11 +171,11 @@ const AssignmentSection = ({
                 variant="warning"
                 icon={Warning}
                 title={intl.formatMessage(messages.assignmentAlertWarningTitle, { type: gradeField.type })}
-                description={(
+                description={
                   <span className="course-grading-assignment-item-alert-warning-list-label">
                     {intl.formatMessage(messages.assignmentAlertWarningDescription)}
                   </span>
-                )}
+                }
                 aria-hidden="true"
               />
             )}
@@ -186,6 +193,7 @@ const AssignmentSection = ({
               variant="outline-primary"
               size="sm"
               onClick={() => handleRemoveAssignment(gradeField.id)}
+              disabled={!isEditable}
             >
               {intl.formatMessage(messages.assignmentDeleteButton)}
             </Button>
@@ -210,6 +218,7 @@ AssignmentSection.propTypes = {
   graders: PropTypes.arrayOf(
     PropTypes.shape(defaultAssignmentsPropTypes),
   ),
+  isEditable: PropTypes.bool,
 };
 
 export default AssignmentSection;

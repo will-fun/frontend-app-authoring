@@ -1,10 +1,17 @@
 import { useCallback, useMemo, useState } from 'react';
-
 import {
   Alert,
-  Breadcrumb, Button, Card, Icon, Stack,
+  Button,
+  Card,
+  Icon,
+  Stack,
 } from '@openedx/paragon';
-import { ArrowBack, Add, Delete } from '@openedx/paragon/icons';
+import {
+  Add,
+  ArrowBack,
+  ChevronRight,
+  Delete,
+} from '@openedx/paragon/icons';
 import { FormattedMessage, useIntl } from '@edx/frontend-platform/i18n';
 
 import { ContainerType, getBlockType } from '@src/generic/key-utils';
@@ -18,7 +25,10 @@ import ChildrenPreview from './ChildrenPreview';
 import ContainerRow from './ContainerRow';
 import { useCourseContainerChildren } from './data/apiHooks';
 import {
-  ContainerChild, ContainerChildBase, ContainerState, WithState,
+  ContainerChild,
+  ContainerChildBase,
+  ContainerState,
+  WithState,
 } from './types';
 import { diffPreviewContainerChildren, isRowClickable } from './utils';
 import messages from './messages';
@@ -78,7 +88,11 @@ const CompareContainersWidgetInner = ({
 
   const renderBeforeChildren = useCallback(() => {
     if (!result[0] && state !== 'added') {
-      return <div className="m-auto"><LoadingSpinner /></div>;
+      return (
+        <div className="m-auto">
+          <LoadingSpinner />
+        </div>
+      );
     }
 
     if (state === 'added') {
@@ -110,7 +124,11 @@ const CompareContainersWidgetInner = ({
 
   const renderAfterChildren = useCallback(() => {
     if (!result[1] && state !== 'removed') {
-      return <div className="m-auto"><LoadingSpinner /></div>;
+      return (
+        <div className="m-auto">
+          <LoadingSpinner />
+        </div>
+      );
     }
 
     if (state === 'removed') {
@@ -141,32 +159,26 @@ const CompareContainersWidgetInner = ({
 
   const getTitleComponent = useCallback((title?: string | null) => {
     if (!title) {
-      return <div className="m-auto"><LoadingSpinner /></div>;
+      return (
+        <div className="m-auto">
+          <LoadingSpinner />
+        </div>
+      );
     }
 
     if (parent.length === 0) {
       return title;
     }
     return (
-      <Breadcrumb
-        ariaLabel={intl.formatMessage(messages.breadcrumbAriaLabel)}
-        links={[
-          {
-            // This raises failed prop-type error as label expects a string but it works without any issues
-            label: <Stack direction="horizontal" gap={1}><Icon size="xs" src={ArrowBack} />Back</Stack>,
-            onClick: onBackBtnClick,
-            variant: 'link',
-            className: 'px-0 text-gray-900',
-          },
-          {
-            label: title,
-            variant: 'link',
-            className: 'px-0 text-gray-900',
-            disabled: true,
-          },
-        ]}
-        linkAs={Button}
-      />
+      <Stack direction="horizontal" gap={1}>
+        <Button variant="link" className="px-0 text-gray-900" onClick={onBackBtnClick}>
+          {/* We could also use iconBefore={ArrowBack} on the <Button> above but it's a bit too big that way. */}
+          <Icon size="xs" src={ArrowBack} className="mr-1" />
+          {intl.formatMessage(messages.breadcrumbBackLabel)}
+        </Button>
+        <Icon size="md" src={ChevronRight} />
+        <span role="heading" aria-level={3}>{title}</span>
+      </Stack>
     );
   }, [parent]);
 
@@ -225,15 +237,17 @@ export const CompareContainersWidget = ({
   downstreamBlockId,
   isReadyToSyncIndividually = false,
 }: ContainerInfoProps) => {
-  const [currentContainerState, setCurrentContainerState] = useState<ContainerInfoProps & {
-    state?: ContainerState;
-    parent:(ContainerInfoProps & { state?: ContainerState })[];
-  }>({
-        upstreamBlockId,
-        downstreamBlockId,
-        parent: [],
-        state: 'modified',
-      });
+  const [currentContainerState, setCurrentContainerState] = useState<
+    ContainerInfoProps & {
+      state?: ContainerState;
+      parent: (ContainerInfoProps & { state?: ContainerState; })[];
+    }
+  >({
+    upstreamBlockId,
+    downstreamBlockId,
+    parent: [],
+    state: 'modified',
+  });
 
   const { data } = useCourseContainerChildren(downstreamBlockId, true);
   let localUpdateAlertBlockName = '';
@@ -243,8 +257,11 @@ export const CompareContainersWidget = ({
   // We decided not to put this in `CompareContainersWidgetInner` because if you enter a child,
   // the alert would disappear. By keeping this call in CompareContainersWidget,
   // the alert remains in the modal regardless of whether you navigate within the children.
-  if (!isReadyToSyncIndividually && data?.upstreamReadyToSyncChildrenInfo
-      && data.upstreamReadyToSyncChildrenInfo.every(value => value.downstreamCustomized.length > 0 && value.blockType === 'html')
+  if (
+    !isReadyToSyncIndividually && data?.upstreamReadyToSyncChildrenInfo
+    && data.upstreamReadyToSyncChildrenInfo.every(value =>
+      value.downstreamCustomized.length > 0 && value.blockType === 'html'
+    )
   ) {
     localUpdateAlertCount = data.upstreamReadyToSyncChildrenInfo.length;
     if (localUpdateAlertCount === 1) {

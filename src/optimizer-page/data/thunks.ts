@@ -37,7 +37,7 @@ export function startLinkCheck(courseId: string) {
       await postLinkCheck(courseId);
       await dispatch(updateSavingStatus({ status: RequestStatus.SUCCESSFUL }));
       return true;
-    } catch (error) {
+    } catch {
       dispatch(updateSavingStatus({ status: RequestStatus.FAILED }));
       dispatch(updateLinkCheckInProgress(false));
       dispatch(updateCurrentStage(SCAN_STAGES[LINK_CHECK_STATUSES.CANCELED]));
@@ -110,7 +110,12 @@ export function updateAllPreviousRunLinks(courseId: string) {
   };
 }
 
-export function updateSinglePreviousRunLink(courseId: string, linkUrl: string, blockId: string, contentType: string = 'course_updates') {
+export function updateSinglePreviousRunLink(
+  courseId: string,
+  linkUrl: string,
+  blockId: string,
+  contentType: string = 'course_updates',
+) {
   return async (dispatch) => {
     dispatch(updateSavingStatus({ status: RequestStatus.PENDING }));
     try {

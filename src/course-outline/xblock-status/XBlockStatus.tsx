@@ -1,5 +1,5 @@
 import { ShowAnswerTypesKeys } from '@src/editors/data/constants/problem';
-import { XBlock } from '@src/data/types';
+import type { UnitXBlock, XBlock } from '@src/data/types';
 import { COURSE_BLOCK_NAMES } from '../constants';
 import ReleaseStatus from './ReleaseStatus';
 import GradingPolicyAlert from './GradingPolicyAlert';
@@ -10,8 +10,8 @@ import NeverShowAssessmentResultMessage from './NeverShowAssessmentResultMessage
 
 interface XBlockStatusProps {
   isSelfPaced: boolean;
-  isCustomRelativeDatesActive: boolean,
-  blockData: XBlock,
+  isCustomRelativeDatesActive: boolean;
+  blockData: XBlock | UnitXBlock;
 }
 
 const XBlockStatus = ({
@@ -73,9 +73,7 @@ const XBlockStatus = ({
           relativeWeeksDue={relativeWeeksDue}
         />
       )}
-      {hideAfterDue && (
-        <HideAfterDueMessage isSelfPaced={isSelfPaced} />
-      )}
+      {hideAfterDue && <HideAfterDueMessage isSelfPaced={isSelfPaced} />}
       <StatusMessages
         isVertical={isVertical}
         staffOnlyMessage={staffOnlyMessage}

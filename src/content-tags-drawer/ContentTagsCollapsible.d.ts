@@ -7,6 +7,7 @@ import type {} from 'react-select/base';
 export interface TagTreeEntry {
   explicit: boolean;
   children: Record<string, TagTreeEntry>;
+  isCopied: boolean;
   canChangeObjecttag: boolean;
   canDeleteObjecttag: boolean;
 }
@@ -17,9 +18,9 @@ export interface TaxonomySelectProps {
   appliedContentTagsTree: Record<string, TagTreeEntry>;
   stagedContentTagsTree: Record<string, TagTreeEntry>;
   checkedTags: string[];
-  selectCancelRef: Ref,
-  selectAddRef: Ref,
-  selectInlineAddRef: Ref,
+  selectCancelRef: Ref;
+  selectAddRef: Ref;
+  selectInlineAddRef: Ref;
   handleCommitStagedTags: () => void;
   handleCancelStagedTags: () => void;
   handleSelectableBoxChange: React.ChangeEventHandler;
@@ -36,5 +37,15 @@ declare module 'react-select/base' {
   export interface Props<Option, IsMulti extends boolean, Group extends GroupBase<Option>> extends TaxonomySelectProps {
   }
 }
+
+export type TagTree = {
+  [key: string]: {
+    children: TagTree;
+    canChangeObjecttag: boolean;
+    canDeleteObjecttag: boolean;
+    explicit: boolean;
+    isCopied: boolean;
+  };
+};
 
 export default ContentTagsCollapsible;

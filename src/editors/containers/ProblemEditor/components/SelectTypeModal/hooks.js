@@ -1,6 +1,11 @@
 import { useEffect } from 'react';
 import {
-  AdvanceProblemKeys, AdvanceProblems, ProblemTypeKeys, ProblemTypes, getProblemTypes, getAdvanceProblems,
+  AdvanceProblemKeys,
+  AdvanceProblems,
+  ProblemTypeKeys,
+  ProblemTypes,
+  getProblemTypes,
+  getAdvanceProblems,
 } from '@src/editors/data/constants/problem';
 import { snakeCaseKeys } from '../../../../utils';
 import { getDataFromOlx } from '../../../../data/redux/thunkActions/problem';
@@ -11,9 +16,13 @@ export const onSelect = ({
   setBlockTitle,
   defaultSettings,
   formatMessage,
-}) => () => {
-  if (selected === AdvanceProblemKeys.CUSTOMSINGLESELECT) {
-    updateField({ problemType: AdvanceProblemKeys.CUSTOMSINGLESELECT, rawOLX: AdvanceProblems[selected].template });
+}) =>
+() => {
+  if (
+    selected === AdvanceProblemKeys.CUSTOMSINGLESELECT
+    || selected === AdvanceProblemKeys.CUSTOMPROBLEM
+  ) {
+    updateField({ problemType: selected, rawOLX: AdvanceProblems[selected].template });
     if (formatMessage) {
       const localizedAdvanceProblems = getAdvanceProblems(formatMessage);
       setBlockTitle(localizedAdvanceProblems[selected].title);

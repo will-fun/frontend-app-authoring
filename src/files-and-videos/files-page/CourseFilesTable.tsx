@@ -1,5 +1,6 @@
 import { useIntl } from '@edx/frontend-platform/i18n';
 import { CheckboxFilter } from '@openedx/paragon';
+import { AgreementGated, UPLOAD_FILE_MAX_SIZE } from '@src/constants';
 import {
   addAssetFile,
   deleteAssetFile,
@@ -20,16 +21,19 @@ import {
   FileTable,
   ThumbnailColumn,
 } from '@src/files-and-videos/generic';
+import { GatedComponentWrapper } from '@src/generic/agreement-gated-feature';
 import { useModels } from '@src/generic/model-store';
 import { DeprecatedReduxState } from '@src/store';
 import { getFileSizeToClosestByte } from '@src/utils';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
+import { useCourseUserPermissions } from '@src/authz/hooks';
+import { getFilesPermissions } from '@src/authz/permissionHelpers';
 
 export const CourseFilesTable = () => {
   const intl = useIntl();
-  const { courseId } = useParams() as { courseId: string };
+  const { courseId } = useParams() as { courseId: string; };
   const dispatch = useDispatch();
   const {
     assetIds,
@@ -38,12 +42,19 @@ export const CourseFilesTable = () => {
     errors: errorMessages,
   } = useSelector((state: DeprecatedReduxState) => state.assets);
 
+  const {
+    canCreateFiles,
+    canDeleteFiles,
+    canEditFiles,
+  } = useCourseUserPermissions(courseId, getFilesPermissions(courseId));
+
   const handleErrorReset = (error) => dispatch(resetErrors(error));
   const handleDeleteFile = (id) => dispatch(deleteAssetFile(courseId, id));
-  const handleDownloadFile = (selectedRows) => dispatch(fetchAssetDownload({
-    selectedRows,
-    courseId,
-  }));
+  const handleDownloadFile = (selectedRows) =>
+    dispatch(fetchAssetDownload({
+      selectedRows,
+      courseId,
+    }));
   const handleAddFile = (files) => {
     handleErrorReset({ errorType: 'add' });
     dispatch(validateAssetFiles(courseId, files));
@@ -62,10 +73,12 @@ export const CourseFilesTable = () => {
   };
 
   const thumbnailPreview = (props) => FileThumbnail(props);
-  const infoModalSidebar = (asset) => FileInfoModalSidebar({
-    asset,
-    handleLockedAsset: handleLockFile,
-  });
+  const infoModalSidebar = (asset) =>
+    FileInfoModalSidebar({
+      asset,
+      handleLockedAsset: handleLockFile,
+      canLockFile: canEditFiles,
+    });
 
   const assets = useModels('assets', assetIds);
   const data = {
@@ -75,7 +88,7 @@ export const CourseFilesTable = () => {
     usageErrorMessages: errorMessages.usageMetrics,
     fileType: 'file',
   };
-  const maxFileSize = 20 * 1048576;
+  const maxFileSize = UPLOAD_FILE_MAX_SIZE;
 
   const activeColumn = {
     id: 'activeStatus',
@@ -158,26 +171,33 @@ export const CourseFilesTable = () => {
     return null;
   }
   return (
-    <>
-      <FileTable
-        {...{
-          courseId,
-          data,
-          handleAddFile,
-          handleDeleteFile,
-          handleDownloadFile,
-          handleLockFile,
-          handleUsagePaths,
-          handleErrorReset,
-          handleFileOrder,
-          tableColumns,
-          maxFileSize,
-          thumbnailPreview,
-          infoModalSidebar,
-          files: assets,
-        }}
-      />
-      <FileValidationModal {...{ handleFileOverwrite }} />
-    </>
+    <GatedComponentWrapper gatingTypes={[AgreementGated.UPLOAD, AgreementGated.UPLOAD_FILES]}>
+      <>
+        <FileTable
+          {...{
+            courseId,
+            data,
+            handleAddFile,
+            handleDeleteFile,
+            handleDownloadFile,
+            handleLockFile,
+            handleUsagePaths,
+            handleErrorReset,
+            handleFileOrder,
+            tableColumns,
+            maxFileSize,
+            thumbnailPreview,
+            infoModalSidebar,
+            files: assets,
+            permissions: {
+              canCreateFiles,
+              canDeleteFiles,
+              canEditFiles,
+            },
+          }}
+        />
+        <FileValidationModal {...{ handleFileOverwrite }} />
+      </>
+    </GatedComponentWrapper>
   );
 };

@@ -22,6 +22,10 @@ const TableActions = ({
   encodingsDownloadUrl,
   fileType,
   setInitialState,
+  permissions = {
+    canCreateFiles: true,
+    canDeleteFiles: true,
+  },
 }) => {
   const intl = useIntl();
   const [isSortOpen, openSort, closeSort] = useToggle(false);
@@ -51,33 +55,42 @@ const TableActions = ({
           <FormattedMessage {...messages.actionsButtonLabel} />
         </Dropdown.Toggle>
         <Dropdown.Menu>
-          {encodingsDownloadUrl ? (
-            <Dropdown.Item
-              download
-              href={`${getConfig().STUDIO_BASE_URL}${encodingsDownloadUrl}`}
-            >
-              <FormattedMessage {...messages.downloadEncodingsTitle} />
-            </Dropdown.Item>
-          ) : null}
+          {encodingsDownloadUrl ?
+            (
+              <Dropdown.Item
+                download
+                href={`${getConfig().STUDIO_BASE_URL}${encodingsDownloadUrl}`}
+              >
+                <FormattedMessage {...messages.downloadEncodingsTitle} />
+              </Dropdown.Item>
+            ) :
+            null}
           <Dropdown.Item
             onClick={() => handleBulkDownload(selectedFlatRows)}
             disabled={isEmpty(selectedFlatRows)}
           >
             <FormattedMessage {...messages.downloadTitle} />
           </Dropdown.Item>
-          <Dropdown.Divider />
-          <Dropdown.Item
-            data-testid="open-delete-confirmation-button"
-            onClick={() => handleOpenDeleteConfirmation(selectedFlatRows)}
-            disabled={isEmpty(selectedFlatRows)}
-          >
-            <FormattedMessage {...messages.deleteTitle} />
-          </Dropdown.Item>
+          {permissions.canDeleteFiles
+            && (
+              <>
+                <Dropdown.Divider />
+                <Dropdown.Item
+                  data-testid="open-delete-confirmation-button"
+                  onClick={() => handleOpenDeleteConfirmation(selectedFlatRows)}
+                  disabled={isEmpty(selectedFlatRows)}
+                >
+                  <FormattedMessage {...messages.deleteTitle} />
+                </Dropdown.Item>
+              </>
+            )}
         </Dropdown.Menu>
       </Dropdown>
-      <Button iconBefore={Add} onClick={handleOpenFileSelector}>
-        {intl.formatMessage(messages.addFilesButtonLabel, { fileType })}
-      </Button>
+      {permissions.canCreateFiles && (
+        <Button iconBefore={Add} onClick={handleOpenFileSelector}>
+          {intl.formatMessage(messages.addFilesButtonLabel, { fileType })}
+        </Button>
+      )}
       <SortAndFilterModal {...{ isSortOpen, closeSort, handleSort }} />
     </>
   );
@@ -109,6 +122,10 @@ TableActions.propTypes = {
   handleSort: PropTypes.func.isRequired,
   fileType: PropTypes.string.isRequired,
   setInitialState: PropTypes.func.isRequired,
+  permissions: PropTypes.shape({
+    canCreateFiles: PropTypes.bool,
+    canDeleteFiles: PropTypes.bool,
+  }),
 };
 
 TableActions.defaultProps = {

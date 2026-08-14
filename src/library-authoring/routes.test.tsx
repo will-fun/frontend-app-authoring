@@ -35,7 +35,7 @@ describe('Library Authoring routes', () => {
     // The Meilisearch client-side API uses fetch, not Axios.
     fetchMock.mockReset();
     fetchMock.post(searchEndpoint, (_url, req) => {
-      const requestData = JSON.parse(req.body?.toString() ?? '');
+      const requestData = JSON.parse((req.body ?? '') as string);
       const query = requestData?.queries[0]?.q ?? '';
       // We have to replace the query (search keywords) in the mock results with the actual query,
       // because otherwise Instantsearch will update the UI and change the query,
@@ -44,7 +44,9 @@ describe('Library Authoring routes', () => {
       newMockResult.results[0].query = query;
       // And fake the required '_formatted' fields; it contains the highlighting <mark>...</mark> around matched words
       // eslint-disable-next-line no-underscore-dangle, no-param-reassign
-      newMockResult.results[0]?.hits.forEach((hit) => { hit._formatted = { ...hit }; });
+      newMockResult.results[0]?.hits.forEach((hit) => {
+        hit._formatted = { ...hit };
+      });
       return newMockResult;
     });
   });

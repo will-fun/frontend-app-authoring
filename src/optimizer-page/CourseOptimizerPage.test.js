@@ -1,19 +1,21 @@
 /* eslint-disable @typescript-eslint/no-shadow */
 /* eslint-disable react/jsx-filename-extension */
 import {
-  fireEvent, render, waitFor, screen,
-} from '@testing-library/react';
-import { IntlProvider } from '@edx/frontend-platform/i18n';
-import { AppProvider } from '@edx/frontend-platform/react';
-import { initializeMockApp } from '@edx/frontend-platform';
-
-import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
-import MockAdapter from 'axios-mock-adapter';
-import initializeStore from '../store';
+  fireEvent,
+  render,
+  waitFor,
+  screen,
+  initializeMocks,
+} from '@src/testUtils';
+import { CourseAuthoringProvider } from '@src/CourseAuthoringContext';
 import messages from './messages';
 import generalMessages from '../messages';
 import scanResultsMessages from './scan-results/messages';
-import CourseOptimizerPage, { pollLinkCheckDuringScan, pollRerunLinkUpdateDuringUpdate, pollRerunLinkUpdateStatus } from './CourseOptimizerPage';
+import CourseOptimizerPage, {
+  pollLinkCheckDuringScan,
+  pollRerunLinkUpdateDuringUpdate,
+  pollRerunLinkUpdateStatus,
+} from './CourseOptimizerPage';
 import { postLinkCheckCourseApiUrl, getLinkCheckStatusApiUrl } from './data/api';
 import {
   mockApiResponse,
@@ -23,37 +25,35 @@ import {
 } from './mocks/mockApiResponse';
 import * as thunks from './data/thunks';
 import { useWaffleFlags } from '../data/apiHooks';
+import { useCourseUserPermissions } from '@src/authz/hooks';
 
-let store;
 let axiosMock;
 const courseId = '123';
-const courseName = 'About Node JS';
-
-jest.mock('../generic/model-store', () => ({
-  useModel: jest.fn().mockReturnValue({
-    name: courseName,
-  }),
-}));
 
 // Mock the waffle flags hook
 jest.mock('../data/apiHooks', () => ({
+  ...jest.requireActual('../data/apiHooks'),
   useWaffleFlags: jest.fn(() => ({
     enableCourseOptimizerCheckPrevRunLinks: false,
   })),
 }));
 
-jest.mock('../generic/model-store', () => ({
-  useModel: jest.fn().mockReturnValue({
-    name: 'About Node JS',
-  }),
+jest.mock('@src/authz/hooks', () => ({
+  useCourseUserPermissions: jest.fn(),
 }));
 
+const mockPermissions = (overrides = {}) =>
+  jest.mocked(useCourseUserPermissions).mockReturnValue({
+    isLoading: false,
+    isAuthzEnabled: true,
+    canEditCourseContent: true,
+    ...overrides,
+  });
+
 const OptimizerPage = () => (
-  <AppProvider store={store}>
-    <IntlProvider locale="en" messages={{}}>
-      <CourseOptimizerPage courseId={courseId} />
-    </IntlProvider>
-  </AppProvider>
+  <CourseAuthoringProvider courseId={courseId}>
+    <CourseOptimizerPage />
+  </CourseAuthoringProvider>
 );
 
 const setupOptimizerPage = async (apiResponse = mockApiResponse) => {
@@ -81,7 +81,10 @@ describe('CourseOptimizerPage', () => {
       mockFetchLinkCheckStatus = jest.fn();
       jest.spyOn(thunks, 'fetchLinkCheckStatus').mockImplementation(mockFetchLinkCheckStatus);
       jest.useFakeTimers();
-      jest.spyOn(global, 'setInterval').mockImplementation((cb) => { cb(); return true; });
+      jest.spyOn(global, 'setInterval').mockImplementation((cb) => {
+        cb();
+        return true;
+      });
     });
 
     afterEach(() => {
@@ -132,22 +135,40 @@ describe('CourseOptimizerPage', () => {
     beforeEach(() => {
       jest.useRealTimers();
       jest.clearAllMocks();
-      initializeMockApp({
-        authenticatedUser: {
-          userId: 3,
-          username: 'abc123',
-          administrator: true,
-          roles: [],
-        },
-      });
-      store = initializeStore();
-      axiosMock = new MockAdapter(getAuthenticatedHttpClient());
+      const mocks = initializeMocks();
+      axiosMock = mocks.axiosMock;
       axiosMock
         .onPost(postLinkCheckCourseApiUrl(courseId))
         .reply(200, { LinkCheckStatus: 'In-Progress' });
       axiosMock
         .onGet(getLinkCheckStatusApiUrl(courseId))
         .reply(200, mockApiResponse);
+      mockPermissions();
+    });
+
+    it('shows PermissionDeniedAlert when user lacks edit course content permission', async () => {
+      mockPermissions({ canEditCourseContent: false });
+      render(<OptimizerPage />);
+      expect(await screen.findByTestId('permissionDeniedAlert')).toBeInTheDocument();
+      expect(screen.queryByText(messages.headingTitle.defaultMessage)).not.toBeInTheDocument();
+    });
+
+    it('shows a loading spinner while permissions are loading', async () => {
+      mockPermissions({ isLoading: true, canEditCourseContent: false });
+      render(<OptimizerPage />);
+      expect(await screen.findByRole('status')).toBeInTheDocument();
+      expect(screen.queryByTestId('permissionDeniedAlert')).not.toBeInTheDocument();
+      expect(screen.queryByText(messages.headingTitle.defaultMessage)).not.toBeInTheDocument();
+    });
+
+    it('does not fetch the link check status when user lacks edit course content permission', async () => {
+      mockPermissions({ canEditCourseContent: false });
+      render(<OptimizerPage />);
+      expect(await screen.findByTestId('permissionDeniedAlert')).toBeInTheDocument();
+      const linkCheckRequests = axiosMock.history.get.filter(
+        (request) => request.url === getLinkCheckStatusApiUrl(courseId),
+      );
+      expect(linkCheckRequests).toHaveLength(0);
     });
 
     it('should render the component', () => {

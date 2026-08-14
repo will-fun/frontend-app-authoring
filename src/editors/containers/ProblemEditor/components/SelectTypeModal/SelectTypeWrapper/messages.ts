@@ -1,7 +1,6 @@
 import { defineMessages } from '@edx/frontend-platform/i18n';
 
 const messages = defineMessages({
-
   selectTypeTitle: {
     id: 'authoring.problemEditor.selectType.title',
     defaultMessage: 'Select problem type',
@@ -100,6 +99,11 @@ const messages = defineMessages({
     id: 'authoring.problemeditor.advancedproblemtype.customsingleselect.title',
     defaultMessage: 'Custom single select',
     description: 'Title for custom single select advanced problem type',
+  },
+  customProblemTitle: {
+    id: 'authoring.problemeditor.advancedproblemtype.customproblem.title',
+    defaultMessage: 'Custom problem',
+    description: 'Title for custom problem advanced problem type',
   },
 
   // Problem Type Descriptions

@@ -8,16 +8,17 @@ import messages from './messages';
 const onEditMock = jest.fn();
 const handoutsContentMock = 'Handouts Content';
 
-const renderComponent = (props) => render(
-  <IntlProvider locale="en">
-    <CourseHandouts
-      onEdit={onEditMock}
-      contentForHandouts={handoutsContentMock}
-      isDisabledButtons={false}
-      {...props}
-    />
-  </IntlProvider>,
-);
+const renderComponent = (props) =>
+  render(
+    <IntlProvider locale="en">
+      <CourseHandouts
+        onEdit={onEditMock}
+        contentForHandouts={handoutsContentMock}
+        isDisabledButtons={false}
+        {...props}
+      />
+    </IntlProvider>,
+  );
 
 describe('<CourseHandouts />', () => {
   it('render CourseHandouts component correctly', () => {
@@ -41,5 +42,20 @@ describe('<CourseHandouts />', () => {
 
     const editButton = getByTestId('course-handouts-edit-button');
     expect(editButton).toBeDisabled();
+  });
+
+  it('"Edit" button is not rendered when canEdit is false', () => {
+    const { queryByRole } = renderComponent({ canEdit: false });
+
+    const editButton = queryByRole('button', { name: /edit/i });
+    expect(editButton).toBeNull();
+  });
+
+  it('"Edit" button is rendered when canEdit is true', () => {
+    const { getByRole } = renderComponent({ canEdit: true });
+
+    const editButton = getByRole('button', { name: /edit/i });
+    expect(editButton).not.toBeNull();
+    expect(editButton).toBeInTheDocument();
   });
 });

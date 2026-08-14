@@ -5,7 +5,13 @@ import { useIntl } from '@edx/frontend-platform/i18n';
 import { useDispatch, useSelector } from 'react-redux';
 
 import {
-  ActionRow, Alert, Badge, Form, Hyperlink, ModalDialog, StatefulButton,
+  ActionRow,
+  Alert,
+  Badge,
+  Form,
+  Hyperlink,
+  ModalDialog,
+  StatefulButton,
 } from '@openedx/paragon';
 import { Info } from '@openedx/paragon/icons';
 import { updateModel, useModel } from 'CourseAuthoring/generic/model-store';
@@ -48,12 +54,14 @@ const ORASettings = ({ onClose }) => {
     event.preventDefault();
 
     success = success && await handleSettingsSave(formValues);
-    await setSaveError(!success);
+    setSaveError(!success);
     if ((initialFormValues.enableFlexiblePeerGrade !== formValues.enableFlexiblePeerGrade) && success) {
+      // oxlint-disable-next-line @typescript-eslint/await-thenable - this dispatch() IS returning a promise.
       success = await dispatch(updateModel({
         modelType: 'courseApps',
         model: {
-          id: appId, enabled: formValues.enableFlexiblePeerGrade,
+          id: appId,
+          enabled: formValues.enableFlexiblePeerGrade,
         },
       }));
     }
@@ -87,7 +95,7 @@ const ORASettings = ({ onClose }) => {
             <FormSwitchGroup
               id="enable-flexible-peer-grade"
               name="enableFlexiblePeerGrade"
-              label={(
+              label={
                 <div className="d-flex align-items-center">
                   {formatMessage(messages.enableFlexPeerGradeLabel)}
                   {formValues.enableFlexiblePeerGrade && (
@@ -96,8 +104,8 @@ const ORASettings = ({ onClose }) => {
                     </Badge>
                   )}
                 </div>
-              )}
-              helpText={(
+              }
+              helpText={
                 <div>
                   <p>{formatMessage(messages.enableFlexPeerGradeHelp)}</p>
                   <span className="py-3">
@@ -111,7 +119,7 @@ const ORASettings = ({ onClose }) => {
                     </Hyperlink>
                   </span>
                 </div>
-              )}
+              }
               onChange={handleChange}
               checked={formValues.enableFlexiblePeerGrade}
             />

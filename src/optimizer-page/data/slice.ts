@@ -7,14 +7,14 @@ export interface CourseOptimizerState {
   linkCheckResult: LinkCheckResult | null;
   lastScannedAt: string | null;
   currentStage: number | null;
-  error: { msg: string | null; unitUrl: string | null };
+  error: { msg: string | null; unitUrl: string | null; };
   downloadPath: string | null;
   successDate: string | null;
   isErrorModalOpen: boolean;
   loadingStatus: string;
   savingStatus: string;
   rerunLinkUpdateInProgress: boolean | null;
-  rerunLinkUpdateResult: any | null;
+  rerunLinkUpdateResult: any;
 }
 
 export type RootState = {

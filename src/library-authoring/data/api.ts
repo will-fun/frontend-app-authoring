@@ -13,7 +13,8 @@ export const getContentLibraryApiUrl = (libraryId: string) => `${getApiBaseUrl()
 /**
  * Get the URL for create content in library.
  */
-export const getCreateLibraryBlockUrl = (libraryId: string) => `${getApiBaseUrl()}/api/libraries/v2/${libraryId}/blocks/`;
+export const getCreateLibraryBlockUrl = (libraryId: string) =>
+  `${getApiBaseUrl()}/api/libraries/v2/${libraryId}/blocks/`;
 
 /**
  * Get the URL for the content library team API.
@@ -23,17 +24,31 @@ export const getLibraryTeamApiUrl = (libraryId: string) => `${getApiBaseUrl()}/a
 /**
  * Get the URL for updating/deleting a content library team member.
  */
-export const getLibraryTeamMemberApiUrl = (libraryId: string, username: string) => `${getApiBaseUrl()}/api/libraries/v2/${libraryId}/team/user/${username}/`;
+export const getLibraryTeamMemberApiUrl = (libraryId: string, username: string) =>
+  `${getApiBaseUrl()}/api/libraries/v2/${libraryId}/team/user/${username}/`;
 
 /**
  * Get the URL for block types metadata.
  */
-export const getBlockTypesMetaDataUrl = (libraryId: string) => `${getApiBaseUrl()}/api/libraries/v2/${libraryId}/block_types/`;
+export const getBlockTypesMetaDataUrl = (libraryId: string) =>
+  `${getApiBaseUrl()}/api/libraries/v2/${libraryId}/block_types/`;
+
+/**
+ * Get the URL for the entries of a publish group.
+ * publishGroupUuid: UUID of the PublishLog that groups this set of published entities.
+ */
+export const getLibraryPublishHistoryEntriesUrl = (
+  libraryId: string,
+  entityKey: string,
+  publishGroupUuid: string,
+) =>
+  `${getApiBaseUrl()}/api/libraries/v2/${libraryId}/publish_history_entries/?scope_entity_key=${entityKey}&publish_log_uuid=${publishGroupUuid}`;
 
 /**
  * Get the URL for library block metadata.
  */
-export const getLibraryBlockMetadataUrl = (usageKey: string) => `${getApiBaseUrl()}/api/libraries/v2/blocks/${usageKey}/`;
+export const getLibraryBlockMetadataUrl = (usageKey: string) =>
+  `${getApiBaseUrl()}/api/libraries/v2/blocks/${usageKey}/`;
 
 /**
  * Get the URL for restoring deleted library block.
@@ -43,12 +58,32 @@ export const getLibraryBlockRestoreUrl = (usageKey: string) => `${getLibraryBloc
 /**
  * Get the URL for library block collections.
  */
-export const getLibraryBlockCollectionsUrl = (usageKey: string) => `${getLibraryBlockMetadataUrl(usageKey)}collections/`;
+export const getLibraryBlockCollectionsUrl = (usageKey: string) =>
+  `${getLibraryBlockMetadataUrl(usageKey)}collections/`;
 
 /**
  * Get the URL for a single component hierarchy api.
  */
 export const getLibraryBlockHierarchyUrl = (usageKey: string) => `${getLibraryBlockMetadataUrl(usageKey)}hierarchy/`;
+
+/**
+ * Get the URL for the component draft history.
+ */
+export const getLibraryBlockDraftHistoryUrl = (usageKey: string) =>
+  `${getLibraryBlockMetadataUrl(usageKey)}draft_history/`;
+
+/**
+ * Get the URL for the component publish history.
+ */
+export const getLibraryBlockPublishHistoryUrl = (usageKey: string) =>
+  `${getLibraryBlockMetadataUrl(usageKey)}publish_history/`;
+
+/**
+ * Get the URL for the creation entry of a component.
+ * The creation entry is the draft change record representing when the component was first added to the library.
+ */
+export const getLibraryBlockCreationEntryUrl = (usageKey: string) =>
+  `${getLibraryBlockMetadataUrl(usageKey)}creation_entry/`;
 
 /**
  * Get the URL for content library list API.
@@ -58,49 +93,60 @@ export const getContentLibraryV2ListApiUrl = () => `${getApiBaseUrl()}/api/libra
 /**
  * Get the URL for commit/revert changes in library.
  */
-export const getCommitLibraryChangesUrl = (libraryId: string) => `${getApiBaseUrl()}/api/libraries/v2/${libraryId}/commit/`;
+export const getCommitLibraryChangesUrl = (libraryId: string) =>
+  `${getApiBaseUrl()}/api/libraries/v2/${libraryId}/commit/`;
 
 /**
  * Get the URL for paste clipboard content into library.
  */
-export const getLibraryPasteClipboardUrl = (libraryId: string) => `${getApiBaseUrl()}/api/libraries/v2/${libraryId}/paste_clipboard/`;
+export const getLibraryPasteClipboardUrl = (libraryId: string) =>
+  `${getApiBaseUrl()}/api/libraries/v2/${libraryId}/paste_clipboard/`;
 
 /**
-  * Get the URL for the xblock fields/metadata API.
-  */
-export const getXBlockFieldsApiUrl = (usageKey: string) => `${getApiBaseUrl()}/api/xblock/v2/xblocks/${usageKey}/fields/`;
-export const getXBlockFieldsVersionApiUrl = (usageKey: string, version: VersionSpec) => `${getApiBaseUrl()}/api/xblock/v2/xblocks/${usageKey}@${version}/fields/`;
+ * Get the URL for the xblock fields/metadata API.
+ */
+export const getXBlockFieldsApiUrl = (usageKey: string) =>
+  `${getApiBaseUrl()}/api/xblock/v2/xblocks/${usageKey}/fields/`;
+export const getXBlockFieldsVersionApiUrl = (usageKey: string, version: VersionSpec) =>
+  `${getApiBaseUrl()}/api/xblock/v2/xblocks/${usageKey}@${version}/fields/`;
 
 /**
-  * Get the URL for the xblock OLX API
-  */
+ * Get the URL for the xblock OLX API
+ */
 export const getXBlockOLXApiUrl = (usageKey: string) => `${getLibraryBlockMetadataUrl(usageKey)}olx/`;
-export const getXBlockOLXVersionApiUrl = (usageKey: string, version: VersionSpec) => `${getApiBaseUrl()}/api/xblock/v2/xblocks/${usageKey}@${version}/olx/`;
+export const getXBlockOLXVersionApiUrl = (usageKey: string, version: VersionSpec) =>
+  `${getApiBaseUrl()}/api/xblock/v2/xblocks/${usageKey}@${version}/olx/`;
 
 /**
  * Get the URL for the xblock Publish API
  */
-export const getXBlockPublishApiUrl = (usageKey: string) => `${getApiBaseUrl()}/api/libraries/v2/blocks/${usageKey}/publish/`;
+export const getXBlockPublishApiUrl = (usageKey: string) =>
+  `${getApiBaseUrl()}/api/libraries/v2/blocks/${usageKey}/publish/`;
 /**
-  * Get the URL for the xblock Assets List API
-  */
-export const getXBlockAssetsApiUrl = (usageKey: string) => `${getApiBaseUrl()}/api/libraries/v2/blocks/${usageKey}/assets/`;
+ * Get the URL for the xblock Assets List API
+ */
+export const getXBlockAssetsApiUrl = (usageKey: string) =>
+  `${getApiBaseUrl()}/api/libraries/v2/blocks/${usageKey}/assets/`;
 /**
  * Get the URL for the Library Collections API.
  */
-export const getLibraryCollectionsApiUrl = (libraryId: string) => `${getApiBaseUrl()}/api/libraries/v2/${libraryId}/collections/`;
+export const getLibraryCollectionsApiUrl = (libraryId: string) =>
+  `${getApiBaseUrl()}/api/libraries/v2/${libraryId}/collections/`;
 /**
  * Get the URL for the collection detail API.
  */
-export const getLibraryCollectionApiUrl = (libraryId: string, collectionId: string) => `${getLibraryCollectionsApiUrl(libraryId)}${collectionId}/`;
+export const getLibraryCollectionApiUrl = (libraryId: string, collectionId: string) =>
+  `${getLibraryCollectionsApiUrl(libraryId)}${collectionId}/`;
 /**
  * Get the URL for the collection items API.
  */
-export const getLibraryCollectionItemsApiUrl = (libraryId: string, collectionId: string) => `${getLibraryCollectionApiUrl(libraryId, collectionId)}items/`;
+export const getLibraryCollectionItemsApiUrl = (libraryId: string, collectionId: string) =>
+  `${getLibraryCollectionApiUrl(libraryId, collectionId)}items/`;
 /**
  * Get the API URL for restoring deleted collection.
  */
-export const getLibraryCollectionRestoreApiUrl = (libraryId: string, collectionId: string) => `${getLibraryCollectionApiUrl(libraryId, collectionId)}restore/`;
+export const getLibraryCollectionRestoreApiUrl = (libraryId: string, collectionId: string) =>
+  `${getLibraryCollectionApiUrl(libraryId, collectionId)}restore/`;
 /**
  * Get the URL for the xblock api.
  */
@@ -112,31 +158,54 @@ export const getContentStoreApiUrl = () => `${getApiBaseUrl()}/api/contentstore/
 /**
  * Get the URL for the library container api.
  */
-export const getLibraryContainersApiUrl = (libraryId: string) => `${getApiBaseUrl()}/api/libraries/v2/${libraryId}/containers/`;
+export const getLibraryContainersApiUrl = (libraryId: string) =>
+  `${getApiBaseUrl()}/api/libraries/v2/${libraryId}/containers/`;
 /**
  * Get the URL for the container detail api.
  */
-export const getLibraryContainerApiUrl = (containerId: string) => `${getApiBaseUrl()}/api/libraries/v2/containers/${containerId}/`;
+export const getLibraryContainerApiUrl = (containerId: string) =>
+  `${getApiBaseUrl()}/api/libraries/v2/containers/${containerId}/`;
 /**
  * Get the URL for restore a container
  */
-export const getLibraryContainerRestoreApiUrl = (containerId: string) => `${getLibraryContainerApiUrl(containerId)}restore/`;
+export const getLibraryContainerRestoreApiUrl = (containerId: string) =>
+  `${getLibraryContainerApiUrl(containerId)}restore/`;
 /**
  * Get the URL for a single container children api.
  */
-export const getLibraryContainerChildrenApiUrl = (containerId: string, published: boolean = false) => `${getLibraryContainerApiUrl(containerId)}children/?published=${published}`;
+export const getLibraryContainerChildrenApiUrl = (containerId: string, published: boolean = false) =>
+  `${getLibraryContainerApiUrl(containerId)}children/?published=${published}`;
 /**
  * Get the URL for a single container hierarchy api.
  */
-export const getLibraryContainerHierarchyApiUrl = (containerId: string) => `${getLibraryContainerApiUrl(containerId)}hierarchy/`;
+export const getLibraryContainerHierarchyApiUrl = (containerId: string) =>
+  `${getLibraryContainerApiUrl(containerId)}hierarchy/`;
 /**
  * Get the URL for library container collections.
  */
-export const getLibraryContainerCollectionsUrl = (containerId: string) => `${getLibraryContainerApiUrl(containerId)}collections/`;
+export const getLibraryContainerCollectionsUrl = (containerId: string) =>
+  `${getLibraryContainerApiUrl(containerId)}collections/`;
 /**
  * Get the URL for the API endpoint to publish a single container (+ children).
  */
-export const getLibraryContainerPublishApiUrl = (containerId: string) => `${getLibraryContainerApiUrl(containerId)}publish/`;
+export const getLibraryContainerPublishApiUrl = (containerId: string) =>
+  `${getLibraryContainerApiUrl(containerId)}publish/`;
+/**
+ * Get the URL for the draft history log of a contaienr.
+ */
+export const getLibraryContainerDraftHistoryUrl = (containerId: string) =>
+  `${getLibraryContainerApiUrl(containerId)}draft_history/`;
+/**
+ * Get the URL for the publish history log of a container.
+ */
+export const getLibraryContainerPublishHistoryUrl = (containerId: string) =>
+  `${getLibraryContainerApiUrl(containerId)}publish_history/`;
+/**
+ * Get the URL for the creation entry of a container.
+ * The creation entry is the draft change record representing when the container was first added to the library.
+ */
+export const getLibraryContainerCreationEntryUrl = (usageKey: string) =>
+  `${getLibraryContainerApiUrl(usageKey)}creation_entry/`;
 /**
  * Get the URL for the API endpoint to create a backup of a v2 library.
  */
@@ -144,7 +213,8 @@ export const getLibraryBackupApiUrl = (libraryId: string) => `${getApiBaseUrl()}
 /**
  * Get the URL for the API endpoint to get the status of a library backup task.
  */
-export const getLibraryBackupStatusApiUrl = (libraryId: string, taskId: string) => `${getApiBaseUrl()}/api/libraries/v2/${libraryId}/backup/?task_id=${taskId}`;
+export const getLibraryBackupStatusApiUrl = (libraryId: string, taskId: string) =>
+  `${getApiBaseUrl()}/api/libraries/v2/${libraryId}/backup/?task_id=${taskId}`;
 /**
  * Get the URL for the API endpoint to restore a library from an archive.
  */
@@ -152,11 +222,25 @@ export const getLibraryRestoreApiUrl = () => `${getApiBaseUrl()}/api/libraries/v
 /**
  * Get the URL for the API endpoint to get the status of a library restore task.
  */
-export const getLibraryRestoreStatusApiUrl = (taskId: string) => `${getApiBaseUrl()}/api/libraries/v2/restore/?task_id=${taskId}`;
+export const getLibraryRestoreStatusApiUrl = (taskId: string) =>
+  `${getApiBaseUrl()}/api/libraries/v2/restore/?task_id=${taskId}`;
 /**
  * Get the URL for the API endpoint to copy a single container.
  */
 export const getLibraryContainerCopyApiUrl = (containerId: string) => `${getLibraryContainerApiUrl(containerId)}copy/`;
+/**
+ * Base url for modulestore_migrator
+ */
+export const getBaseModuleStoreMigrationUrl = () => `${getApiBaseUrl()}/api/modulestore_migrator/v1/`;
+/**
+ * Get the url for the API endpoint to list library course imports.
+ */
+export const getCourseImportsApiUrl = (libraryId: string) =>
+  `${getBaseModuleStoreMigrationUrl()}library/${libraryId}/migrations/courses/`;
+/**
+ * Get the url for the API endpoint to get migration blocks info.
+ */
+export const getModulestoreMigratedBlocksInfoUrl = () => `${getBaseModuleStoreMigrationUrl()}migration_blocks/`;
 
 export interface ContentLibrary {
   id: string;
@@ -187,22 +271,22 @@ export type LibraryAccessLevel = 'read' | 'author' | 'admin';
 export interface LibraryTeamMember {
   username: string;
   email: string;
-  accessLevel: LibraryAccessLevel,
+  accessLevel: LibraryAccessLevel;
 }
 
 export interface AddLibraryTeamMember {
-  libraryId: string,
+  libraryId: string;
   email: string;
-  accessLevel: LibraryAccessLevel,
+  accessLevel: LibraryAccessLevel;
 }
 
 export interface DeleteLibraryTeamMember {
-  libraryId: string,
+  libraryId: string;
   username: string;
 }
 
 export interface UpdateLibraryTeamMember extends DeleteLibraryTeamMember {
-  accessLevel: LibraryAccessLevel,
+  accessLevel: LibraryAccessLevel;
 }
 
 export interface Collection {
@@ -223,13 +307,13 @@ export interface LibraryBlockType {
 }
 
 export interface LibrariesV2Response {
-  next: string | null,
-  previous: string | null,
-  count: number,
-  numPages: number,
-  currentPage: number,
-  start: number,
-  results: ContentLibrary[],
+  next: string | null;
+  previous: string | null;
+  count: number;
+  numPages: number;
+  currentPage: number;
+  start: number;
+  results: ContentLibrary[];
 }
 
 export interface XBlockFields {
@@ -241,23 +325,31 @@ export interface XBlockFields {
 /* Additional custom parameters for the API request. */
 export interface GetLibrariesV2CustomParams {
   /* (optional) Library type, default `complex` */
-  type?: string,
+  type?: string;
   /* (optional) Page number of results */
-  page?: number,
+  page?: number;
   /* (optional) The number of results on each page, default `50` */
-  pageSize?: number,
+  pageSize?: number;
   /* (optional) Whether pagination is supported, default `true` */
-  pagination?: boolean,
+  pagination?: boolean;
   /* (optional) Library field to order results by. Prefix with '-' for descending */
-  order?: string,
+  order?: string;
   /* (optional) Search query to filter v2 Libraries by */
-  search?: string,
+  search?: string;
+}
+
+export interface GetLibrariesV2CustomParamsNoPagination extends GetLibrariesV2CustomParams {
+  pagination: false;
+}
+
+export interface GetLibrariesV2CustomParamsPagination extends GetLibrariesV2CustomParams {
+  pagination?: true;
 }
 
 export type LibraryAssetResponse = {
-  path: string,
-  size: number,
-  url: string,
+  path: string;
+  size: number;
+  url: string;
 };
 
 export interface CreateBlockDataRequest {
@@ -283,9 +375,10 @@ export interface LibraryBlockMetadata {
   lastPublished: string | null;
   publishedBy: string | null;
   lastDraftCreated: string | null;
-  lastDraftCreatedBy: string | null,
+  lastDraftCreatedBy: string | null;
   hasUnpublishedChanges: boolean;
   created: string | null;
+  createdBy: string | null;
   modified: string | null;
   tagsCount: number;
   collections: CollectionMetadata[];
@@ -372,10 +465,27 @@ export async function updateLibraryMetadata(libraryData: UpdateLibraryDataReques
   return camelCaseObject(data);
 }
 
+function isNoPagination(
+  params: GetLibrariesV2CustomParams,
+): params is GetLibrariesV2CustomParamsNoPagination {
+  return params.pagination === false;
+}
+
 /**
  * Get a list of content libraries.
  */
-export async function getContentLibraryV2List(customParams: GetLibrariesV2CustomParams): Promise<LibrariesV2Response> {
+export async function getContentLibraryV2List(
+  customParams: GetLibrariesV2CustomParamsNoPagination,
+): Promise<ContentLibrary[]>;
+export async function getContentLibraryV2List(
+  customParams: GetLibrariesV2CustomParamsPagination,
+): Promise<LibrariesV2Response>;
+export async function getContentLibraryV2List(
+  customParams: GetLibrariesV2CustomParams,
+): Promise<LibrariesV2Response | ContentLibrary[]>;
+export async function getContentLibraryV2List(
+  customParams: GetLibrariesV2CustomParams,
+): Promise<LibrariesV2Response | ContentLibrary[]> {
   // Set default params if not passed in
   const customParamsDefaults = {
     type: customParams.type || 'complex',
@@ -388,7 +498,16 @@ export async function getContentLibraryV2List(customParams: GetLibrariesV2Custom
   const customParamsFormated = snakeCaseObject(customParamsDefaults);
   const { data } = await getAuthenticatedHttpClient()
     .get(getContentLibraryV2ListApiUrl(), { params: customParamsFormated });
-  return camelCaseObject(data);
+  const camel = camelCaseObject(data);
+
+  // Narrow the return type based on pagination flag
+  if (isNoPagination(customParams)) {
+    // `camel` is known to be an array of ContentLibrary
+    return camel as ContentLibrary[];
+  }
+
+  // otherwise it matches the paginated response shape
+  return camel as LibrariesV2Response;
 }
 
 /**
@@ -652,7 +771,7 @@ export interface Container {
   publishedBy: string | null;
   createdBy: string | null;
   lastDraftCreated: string | null;
-  lastDraftCreatedBy: string | null,
+  lastDraftCreatedBy: string | null;
   hasUnpublishedChanges: boolean;
   created: string;
   modified: string;
@@ -783,4 +902,180 @@ export async function getLibraryContainerHierarchy(
  */
 export async function publishContainer(containerId: string) {
   await getAuthenticatedHttpClient().post(getLibraryContainerPublishApiUrl(containerId));
+}
+
+export interface CourseImport {
+  taskUuid: string;
+  source: {
+    key: string;
+    displayName: string;
+  };
+  targetCollection: {
+    key: string;
+    title: string;
+  } | null;
+  state: 'Succeeded' | 'Failed' | 'In Progress';
+  progress: number;
+}
+
+/**
+ * Returns the course imports which had this library as destination.
+ */
+export async function getCourseImports(libraryId: string): Promise<CourseImport[]> {
+  const { data } = await getAuthenticatedHttpClient().get(getCourseImportsApiUrl(libraryId));
+  return camelCaseObject(data);
+}
+
+export interface MigrationInfo {
+  sourceKey: string;
+  targetCollectionKey: string;
+  targetCollectionTitle: string;
+  targetKey: string;
+  targetTitle: string;
+}
+
+/**
+ * Get the migration info data for a list of source keys
+ */
+export async function getMigrationInfo(sourceKeys: string[]): Promise<Record<string, MigrationInfo[]>> {
+  const client = getAuthenticatedHttpClient();
+
+  const params = new URLSearchParams();
+  sourceKeys.forEach(key => params.append('source_keys', key));
+
+  const { data } = await client.get(`${getApiBaseUrl()}/api/modulestore_migrator/v1/migration_info/`, { params });
+  return camelCaseObject(data);
+}
+
+export interface BlockMigrationInfo {
+  sourceKey: string;
+  targetKey: string | null;
+  unsupportedReason?: string;
+}
+
+/**
+ * Get the migration blocks info data for a library
+ */
+export async function getModulestoreMigrationBlocksInfo(
+  libraryId: string,
+  collectionId?: string,
+  isFailed?: boolean,
+  taskUuid?: string,
+): Promise<BlockMigrationInfo[]> {
+  const client = getAuthenticatedHttpClient();
+
+  const params = new URLSearchParams();
+  params.append('target_key', libraryId);
+  if (collectionId) {
+    params.append('target_collection_key', collectionId);
+  }
+  if (taskUuid) {
+    params.append('task_uuid', taskUuid);
+  }
+  if (isFailed !== undefined) {
+    params.append('is_failed', JSON.stringify(isFailed));
+  }
+
+  const { data } = await client.get(getModulestoreMigratedBlocksInfoUrl(), { params });
+  return camelCaseObject(data);
+}
+
+export interface DirectPublishedEntity {
+  entityKey: string;
+  entityType: string;
+  title: string;
+}
+export interface LibraryPublishHistoryGroup {
+  publishLogUuid: string;
+  directPublishedEntities: DirectPublishedEntity[];
+  publishedBy?: string;
+  publishedAt: string;
+  contributors: LibraryPublishContributor[];
+  /**
+   * Key to use as `scope_entity_key` when fetching entries for this group.
+   * Pre-Verawood history entries: the specific entity key for this group (container or usage key).
+   * Post-Verawood container groups: null — use the container currently being viewed.
+   * Component history (all eras): the component's usage key.
+   */
+  scopeEntityKey?: string;
+}
+
+export interface LibraryPublishContributor {
+  profileImageUrls: {
+    full: string;
+    large: string;
+    medium: string;
+    small: string;
+  };
+  username?: string;
+}
+
+export interface LibraryHistoryEntry {
+  contributor?: LibraryPublishContributor | null;
+  changedAt: string;
+  title: string;
+  itemType: string;
+  action: 'edited' | 'renamed' | 'created';
+}
+
+/**
+ * Get the publish history for a library block.
+ */
+export async function getLibraryBlockPublishHistory(usageKey: string): Promise<LibraryPublishHistoryGroup[]> {
+  const { data } = await getAuthenticatedHttpClient().get(getLibraryBlockPublishHistoryUrl(usageKey));
+  return camelCaseObject(data);
+}
+
+/**
+ * Get the entries for a publish history group of a library block.
+ */
+export async function getLibraryPublishHistoryEntries(
+  libraryId: string,
+  entityKey: string,
+  publishGroupUuid: string,
+): Promise<LibraryHistoryEntry[]> {
+  const { data } = await getAuthenticatedHttpClient().get(
+    getLibraryPublishHistoryEntriesUrl(libraryId, entityKey, publishGroupUuid),
+  );
+  return camelCaseObject(data);
+}
+
+/**
+ * Get the draft history for a library block.
+ */
+export async function getLibraryBlockDraftHistory(usageKey: string): Promise<LibraryHistoryEntry[]> {
+  const { data } = await getAuthenticatedHttpClient().get(getLibraryBlockDraftHistoryUrl(usageKey));
+  return camelCaseObject(data);
+}
+
+/**
+ * Get the creation entry for a library block.
+ */
+export async function getLibraryBlockCreationEntry(usageKey: string): Promise<LibraryHistoryEntry> {
+  const { data } = await getAuthenticatedHttpClient().get(getLibraryBlockCreationEntryUrl(usageKey));
+  return camelCaseObject(data);
+}
+
+/**
+ * Get the creation entry for a library container.
+ */
+export async function getLibraryContainerCreationEntry(containerKey: string): Promise<LibraryHistoryEntry> {
+  const { data } = await getAuthenticatedHttpClient().get(getLibraryContainerCreationEntryUrl(containerKey));
+  return camelCaseObject(data);
+}
+
+/**
+ * Get the publish history for a library container.
+ */
+export async function getLibraryContainerPublishHistory(containerKey: string): Promise<LibraryPublishHistoryGroup[]> {
+  const { data } = await getAuthenticatedHttpClient().get(getLibraryContainerPublishHistoryUrl(containerKey));
+  return camelCaseObject(data);
+}
+
+/**
+ * Get the draft history for a library container.
+ */
+export async function getLibraryContainerDraftHistory(containerKey: string): Promise<LibraryHistoryEntry[]> {
+  const { data } = await getAuthenticatedHttpClient().get(getLibraryContainerDraftHistoryUrl(containerKey));
+  return camelCaseObject(data);
 }

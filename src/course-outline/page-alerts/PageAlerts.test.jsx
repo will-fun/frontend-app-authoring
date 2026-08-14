@@ -1,5 +1,4 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
 import {
   act,
   render,
@@ -22,9 +21,10 @@ jest.mock('@edx/frontend-platform/i18n', () => ({
   }),
 }));
 
-jest.mock('react-redux', () => ({
-  ...jest.requireActual('react-redux'),
-  useSelector: jest.fn(),
+let mockNotices = {};
+jest.mock('@src/course-outline/data/apiHooks', () => ({
+  ...jest.requireActual('@src/course-outline/data/apiHooks'),
+  usePasteFileNotices: () => ({ data: mockNotices }),
 }));
 
 jest.mock('../../course-libraries/data/apiHooks', () => ({
@@ -50,16 +50,17 @@ const pageAlertsData = {
   savingStatus: '',
 };
 
-const renderComponent = (props) => render(
-  <AppProvider store={store} messages={{}}>
-    <IntlProvider locale="en">
-      <PageAlerts
-        {...pageAlertsData}
-        {...props}
-      />
-    </IntlProvider>
-  </AppProvider>,
-);
+const renderComponent = (props) =>
+  render(
+    <AppProvider store={store} messages={{}}>
+      <IntlProvider locale="en">
+        <PageAlerts
+          {...pageAlertsData}
+          {...props}
+        />
+      </IntlProvider>
+    </AppProvider>,
+  );
 
 describe('<PageAlerts />', () => {
   beforeEach(() => {
@@ -72,7 +73,7 @@ describe('<PageAlerts />', () => {
       },
     });
     store = initializeStore();
-    useSelector.mockReturnValue({});
+    mockNotices = {};
   });
 
   it('renders null when no alerts are present', async () => {
@@ -174,11 +175,11 @@ describe('<PageAlerts />', () => {
   });
 
   it('renders new & error files alert', async () => {
-    useSelector.mockReturnValue({
+    mockNotices = {
       newFiles: ['periodic-table.css'],
       conflictingFiles: [],
       errorFiles: ['error.css'],
-    });
+    };
     renderComponent();
     expect(screen.queryByText(messages.newFileAlertTitle.defaultMessage)).toBeInTheDocument();
     expect(screen.queryByText(messages.errorFileAlertTitle.defaultMessage)).toBeInTheDocument();
@@ -189,11 +190,11 @@ describe('<PageAlerts />', () => {
   });
 
   it('renders conflicting files alert', async () => {
-    useSelector.mockReturnValue({
+    mockNotices = {
       newFiles: [],
       conflictingFiles: ['some.css', 'some.js'],
       errorFiles: [],
-    });
+    };
     renderComponent();
     expect(screen.queryByText(messages.conflictingFileAlertTitle.defaultMessage)).toBeInTheDocument();
     expect(screen.queryByText(messages.newFileAlertAction.defaultMessage)).toHaveAttribute(
@@ -222,7 +223,10 @@ describe('<PageAlerts />', () => {
       ...pageAlertsData,
       errors: {
         outlineIndexApi: {
-          data: 'some error', status: 403, type: API_ERROR_TYPES.forbidden, dismissable: false,
+          data: 'some error',
+          status: 403,
+          type: API_ERROR_TYPES.forbidden,
+          dismissable: false,
         },
       },
     });
@@ -235,7 +239,10 @@ describe('<PageAlerts />', () => {
       ...pageAlertsData,
       errors: {
         outlineIndexApi: {
-          data: 'some error', status: 500, type: API_ERROR_TYPES.serverError, dismissable: true,
+          data: 'some error',
+          status: 500,
+          type: API_ERROR_TYPES.serverError,
+          dismissable: true,
         },
       },
     });

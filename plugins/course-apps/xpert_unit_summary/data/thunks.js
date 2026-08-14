@@ -1,9 +1,16 @@
-import { updateSavingStatus, updateLoadingStatus, updateResetStatus } from 'CourseAuthoring/pages-and-resources/data/slice';
+import {
+  updateSavingStatus,
+  updateLoadingStatus,
+  updateResetStatus,
+} from 'CourseAuthoring/pages-and-resources/data/slice';
 import { RequestStatus } from 'CourseAuthoring/data/constants';
 import { addModel, updateModel } from 'CourseAuthoring/generic/model-store';
 
 import {
-  getXpertSettings, postXpertSettings, getXpertPluginConfigurable, deleteXpertSettings,
+  getXpertSettings,
+  postXpertSettings,
+  getXpertPluginConfigurable,
+  deleteXpertSettings,
 } from './api';
 
 export function updateXpertSettings(courseId, state) {
@@ -13,13 +20,15 @@ export function updateXpertSettings(courseId, state) {
       const { response } = await postXpertSettings(courseId, state);
       const { success } = response;
       if (success) {
-        dispatch(updateModel({ modelType: 'XpertSettings', model: { id: 'xpert-unit-summary', enabled: state.enabled } }));
+        dispatch(
+          updateModel({ modelType: 'XpertSettings', model: { id: 'xpert-unit-summary', enabled: state.enabled } }),
+        );
         dispatch(updateSavingStatus({ status: RequestStatus.SUCCESSFUL }));
         return true;
       }
       dispatch(updateSavingStatus({ status: RequestStatus.FAILED }));
       return false;
-    } catch (error) {
+    } catch {
       dispatch(updateSavingStatus({ status: RequestStatus.FAILED }));
       return false;
     }
@@ -33,7 +42,7 @@ export function fetchXpertPluginConfigurable(courseId) {
     try {
       const { response } = await getXpertPluginConfigurable(courseId);
       enabled = response?.enabled;
-    } catch (e) {
+    } catch {
       enabled = undefined;
     }
 
@@ -55,7 +64,7 @@ export function fetchXpertSettings(courseId) {
     try {
       const { response } = await getXpertSettings(courseId);
       enabled = response?.enabled;
-    } catch (e) {
+    } catch {
       enabled = undefined;
     }
 
@@ -86,7 +95,7 @@ export function removeXpertSettings(courseId) {
       }
       dispatch(updateSavingStatus({ status: RequestStatus.FAILED }));
       return false;
-    } catch (error) {
+    } catch {
       dispatch(updateSavingStatus({ status: RequestStatus.FAILED }));
       return false;
     }
@@ -105,7 +114,7 @@ export function resetXpertSettings(courseId, state) {
       }
       dispatch(updateResetStatus({ status: RequestStatus.FAILED }));
       return false;
-    } catch (error) {
+    } catch {
       dispatch(updateResetStatus({ status: RequestStatus.FAILED }));
       return false;
     }

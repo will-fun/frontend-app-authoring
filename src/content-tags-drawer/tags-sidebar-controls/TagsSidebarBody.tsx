@@ -1,6 +1,10 @@
 import { useState, useMemo } from 'react';
 import {
-  Card, Stack, Button, Collapsible, Icon,
+  Card,
+  Stack,
+  Button,
+  Collapsible,
+  Icon,
 } from '@openedx/paragon';
 import { ArrowDropDown, ArrowDropUp } from '@openedx/paragon/icons';
 import { useIntl } from '@edx/frontend-platform/i18n';
@@ -12,14 +16,11 @@ import { useContentTaxonomyTagsData } from '../data/apiHooks';
 import type { ContentTaxonomyTagData, Tag } from '../data/types';
 import { LoadingSpinner } from '../../generic/Loading';
 import TagsTree from '../TagsTree';
+import { TagTree } from '../ContentTagsCollapsible';
 
 interface TagsSidebarBodyProps {
-  readOnly: boolean
+  readOnly: boolean;
 }
-
-type TagTree = {
-  [key: string]: { children: TagTree, canChangeObjecttag: boolean, canDeleteObjecttag: boolean }
-};
 
 const TagsSidebarBody = ({ readOnly }: TagsSidebarBodyProps) => {
   const intl = useIntl();
@@ -43,6 +44,8 @@ const TagsSidebarBody = ({ readOnly }: TagsSidebarBodyProps) => {
             children: {},
             canChangeObjecttag: item.canChangeObjecttag,
             canDeleteObjecttag: item.canDeleteObjecttag,
+            explicit: false,
+            isCopied: item.isCopied,
           };
         }
 
@@ -54,7 +57,7 @@ const TagsSidebarBody = ({ readOnly }: TagsSidebarBodyProps) => {
   };
 
   const tree = useMemo(() => {
-    const result: (Omit<ContentTaxonomyTagData, 'tags'> & { tags: TagTree })[] = [];
+    const result: (Omit<ContentTaxonomyTagData, 'tags'> & { tags: TagTree; })[] = [];
     if (isContentTaxonomyTagsLoaded && contentTaxonomyTagsData) {
       contentTaxonomyTagsData.taxonomies.forEach((taxonomy) => {
         result.push({
@@ -68,11 +71,9 @@ const TagsSidebarBody = ({ readOnly }: TagsSidebarBodyProps) => {
 
   return (
     <>
-      <Card.Body
-        className="course-unit-sidebar-date tags-sidebar-body pl-2.5"
-      >
+      <Card.Body className="course-unit-sidebar-date tags-sidebar-body pl-2.5">
         <Stack>
-          { isContentTaxonomyTagsLoaded
+          {isContentTaxonomyTagsLoaded
             ? (
               <Stack>
                 {tree.map((taxonomy) => (

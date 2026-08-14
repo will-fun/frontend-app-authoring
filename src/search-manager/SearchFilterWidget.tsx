@@ -22,12 +22,13 @@ import messages from './messages';
  * element's `children`. So use this to wrap a <RefinementList> etc.
  */
 const SearchFilterWidget: React.FC<{
-  appliedFilters: { label: React.ReactNode }[];
+  appliedFilters: { label: React.ReactNode; }[];
   label: React.ReactNode;
   children: React.ReactNode;
-  clearFilter: () => void,
+  clearFilter: () => void;
   icon: React.ComponentType;
   skipLabelUpdate?: boolean;
+  btnSize?: 'sm' | 'md' | 'lg';
 }> = ({ appliedFilters, ...props }) => {
   const intl = useIntl();
   const [isOpen, open, close] = useToggle(false);
@@ -40,20 +41,24 @@ const SearchFilterWidget: React.FC<{
 
   return (
     <>
-      <div className="d-flex mr-3">
+      <div className="d-flex">
         <Button
           ref={setTarget}
           variant={appliedFilters.length ? 'light' : 'outline-primary'}
-          size="sm"
+          size={props.btnSize || 'sm'}
           onClick={open}
           iconBefore={props.icon}
           iconAfter={ArrowDropDown}
         >
           {props.label}
           {!props.skipLabelUpdate && appliedFilters.length >= 1 ? <>: {appliedFilters[0].label}</> : null}
-          {!props.skipLabelUpdate && appliedFilters.length > 1 ? (
-            <>,&nbsp;<Badge variant="secondary">+{appliedFilters.length - 1}</Badge></>
-          ) : null}
+          {!props.skipLabelUpdate && appliedFilters.length > 1 ?
+            (
+              <>
+                ,&nbsp;<Badge variant="secondary">+{appliedFilters.length - 1}</Badge>
+              </>
+            ) :
+            null}
         </Button>
       </div>
       <ModalPopup
@@ -67,8 +72,7 @@ const SearchFilterWidget: React.FC<{
         >
           {props.children}
 
-          {
-            !!appliedFilters.length
+          {!!appliedFilters.length
             && (
               <div className="d-flex justify-content-end">
                 <Button
@@ -76,11 +80,10 @@ const SearchFilterWidget: React.FC<{
                   variant="link"
                   className="text-info-500 text-decoration-none clear-filter-button"
                 >
-                  { intl.formatMessage(messages.clearFilter) }
+                  {intl.formatMessage(messages.clearFilter)}
                 </Button>
               </div>
-            )
-          }
+            )}
         </div>
       </ModalPopup>
     </>

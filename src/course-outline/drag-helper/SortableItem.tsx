@@ -3,7 +3,9 @@ import { useIntl } from '@edx/frontend-platform/i18n';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
-  Col, Icon, Row,
+  Col,
+  Icon,
+  Row,
 } from '@openedx/paragon';
 import { DragIndicator } from '@openedx/paragon/icons';
 
@@ -16,11 +18,12 @@ interface SortableItemProps {
     childAddable?: boolean;
     displayName: string;
     status: string;
-  }
+  };
   isDroppable?: boolean;
   isDraggable?: boolean;
   children: React.ReactNode;
   componentStyle?: object;
+  onClick?: (e: React.MouseEvent) => void;
 }
 
 const SortableItem = ({
@@ -30,6 +33,7 @@ const SortableItem = ({
   componentStyle,
   data,
   children,
+  onClick,
 }: SortableItemProps) => {
   const intl = useIntl();
   const {
@@ -66,8 +70,18 @@ const SortableItem = ({
   return (
     <Row
       ref={setNodeRef}
+      tabIndex={onClick ? 0 : -1}
       style={style}
       className="mx-0"
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (!onClick) { return; }
+
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick(e);
+        }
+      }}
     >
       <Col className="extend-margin px-0">
         {children}

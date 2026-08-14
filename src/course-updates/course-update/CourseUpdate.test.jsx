@@ -10,18 +10,19 @@ const onDeleteMock = jest.fn();
 const dateForUpdateMock = 'May 1, 2023';
 const contentForUpdateMock = 'Update Content';
 
-const renderComponent = (props) => render(
-  <IntlProvider locale="en">
-    <CourseUpdate
-      dateForUpdate={dateForUpdateMock}
-      contentForUpdate={contentForUpdateMock}
-      onEdit={onEditMock}
-      onDelete={onDeleteMock}
-      isDisabledButtons={false}
-      {...props}
-    />
-  </IntlProvider>,
-);
+const renderComponent = (props) =>
+  render(
+    <IntlProvider locale="en">
+      <CourseUpdate
+        dateForUpdate={dateForUpdateMock}
+        contentForUpdate={contentForUpdateMock}
+        onEdit={onEditMock}
+        onDelete={onDeleteMock}
+        isDisabledButtons={false}
+        {...props}
+      />
+    </IntlProvider>,
+  );
 
 describe('<CourseUpdate />', () => {
   it('render CourseUpdate component correctly', () => {
@@ -68,5 +69,23 @@ describe('<CourseUpdate />', () => {
 
     expect(getByTestId('course-update-edit-button')).toBeDisabled();
     expect(getByTestId('course-update-delete-button')).toBeDisabled();
+  });
+
+  it('"Edit" and "Delete" buttons are not rendered when canEdit and canDelete are false', () => {
+    const { queryByRole } = renderComponent({ canEdit: false, canDelete: false });
+
+    expect(queryByRole('button', { name: /edit/i })).toBeNull();
+    expect(queryByRole('button', { name: /delete/i })).toBeNull();
+  });
+
+  it('"Edit" and "Delete" buttons are rendered when canEdit and canDelete are true', () => {
+    const { getByRole } = renderComponent({ canEdit: true, canDelete: true });
+
+    const editButton = getByRole('button', { name: /edit/i });
+    const deleteButton = getByRole('button', { name: /delete/i });
+    expect(editButton).not.toBeNull();
+    expect(deleteButton).not.toBeNull();
+    expect(editButton).toBeInTheDocument();
+    expect(deleteButton).toBeInTheDocument();
   });
 });

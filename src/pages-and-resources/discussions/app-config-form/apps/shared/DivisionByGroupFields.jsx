@@ -1,7 +1,10 @@
 import React, { useEffect, useContext } from 'react';
 import { useIntl } from '@edx/frontend-platform/i18n';
 import {
-  Form, TransitionReplace, Hyperlink, Alert,
+  Form,
+  TransitionReplace,
+  Hyperlink,
+  Alert,
 } from '@openedx/paragon';
 import { AppContext } from '@edx/frontend-platform/react';
 import { FieldArray, useFormikContext } from 'formik';
@@ -36,10 +39,13 @@ const DivisionByGroupFields = () => {
   useEffect(() => {
     if (divideByCohorts) {
       if (!divideCourseTopicsByCohorts && size(discussionTopics) !== size(divideDiscussionIds)) {
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
         setFieldValue('divideDiscussionIds', discussionTopics.map(topic => topic.id));
       }
     } else {
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       setFieldValue('divideDiscussionIds', []);
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       setFieldValue('divideCourseTopicsByCohorts', false);
     }
   }, [
@@ -59,6 +65,7 @@ const DivisionByGroupFields = () => {
   const handleDivideCourseTopicsByCohortsToggle = (event) => {
     const { checked } = event.target;
     if (!checked) {
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       setFieldValue('divideDiscussionIds', []);
     }
     handleChange(event);
@@ -70,14 +77,14 @@ const DivisionByGroupFields = () => {
         {intl.formatMessage(messages.divisionByGroup)}
       </h5>
       {!cohortsEnabled
-      && (
-        <Alert className="bg-light-200 font-weight-normal h5" id="alert">
-          {intl.formatMessage(messages.cohortsEnabled)}
-          <Hyperlink destination={learningCourseURL} target="_blank">
-            {intl.formatMessage(messages.instructorDashboard)}
-          </Hyperlink>
-        </Alert>
-      )}
+        && (
+          <Alert className="bg-light-200 font-weight-normal h5" id="alert">
+            {intl.formatMessage(messages.cohortsEnabled)}
+            <Hyperlink destination={learningCourseURL} target="_blank">
+              {intl.formatMessage(messages.instructorDashboard)}
+            </Hyperlink>
+          </Alert>
+        )}
       <FormSwitchGroup
         onChange={handleChange}
         className="mt-2"
@@ -89,55 +96,57 @@ const DivisionByGroupFields = () => {
         disabled={!cohortsEnabled}
       />
       <TransitionReplace>
-        {(divideByCohorts && cohortsEnabled) ? (
-          <React.Fragment key="open">
-            <AppConfigFormDivider />
-            <FormSwitchGroup
-              onChange={(event) => handleDivideCourseTopicsByCohortsToggle(event)}
-              onBlur={handleBlur}
-              className="ml-4 mt-3"
-              id="divideCourseTopicsByCohorts"
-              checked={divideCourseTopicsByCohorts}
-              label={intl.formatMessage(messages.divideCourseTopicsByCohortsLabel)}
-              helpText={intl.formatMessage(messages.divideCourseTopicsByCohortsHelp)}
-            />
-            <TransitionReplace>
-              {divideCourseTopicsByCohorts ? (
-                <React.Fragment key="open">
-                  <FieldArray
-                    name="divideDiscussionIds"
-                    render={({ push, remove }) => (
-                      <Form.Group className="ml-4">
-                        <Form.CheckboxSet
-                          name="dividedTopics"
-                          onChange={(event) => handleCheckBoxToggle(event, push, remove)}
-                          onBlur={handleBlur}
-                          defaultValue={divideDiscussionIds}
-                        >
-                          {validDiscussionTopics.map((topic) => (
-                            topic.name ? (
-                              <Form.Checkbox
-                                key={`checkbox-${topic.id}`}
-                                id={`checkbox-${topic.id}`}
-                                value={topic.id}
-                              >
-                                {topic.name}
-                              </Form.Checkbox>
-                            ) : null
-                          ))}
-                        </Form.CheckboxSet>
-                      </Form.Group>
-                    )}
-                  />
-                </React.Fragment>
-              ) : (
-                <React.Fragment key="closed" />
-              )}
-            </TransitionReplace>
-          </React.Fragment>
-        ) : (
-          <React.Fragment key="closed" />
-        )}
+        {(divideByCohorts && cohortsEnabled) ?
+          (
+            <React.Fragment key="open">
+              <AppConfigFormDivider />
+              <FormSwitchGroup
+                onChange={(event) => handleDivideCourseTopicsByCohortsToggle(event)}
+                onBlur={handleBlur}
+                className="ml-4 mt-3"
+                id="divideCourseTopicsByCohorts"
+                checked={divideCourseTopicsByCohorts}
+                label={intl.formatMessage(messages.divideCourseTopicsByCohortsLabel)}
+                helpText={intl.formatMessage(messages.divideCourseTopicsByCohortsHelp)}
+              />
+              <TransitionReplace>
+                {divideCourseTopicsByCohorts ?
+                  (
+                    <React.Fragment key="open">
+                      <FieldArray
+                        name="divideDiscussionIds"
+                        render={({ push, remove }) => (
+                          <Form.Group className="ml-4">
+                            <Form.CheckboxSet
+                              name="dividedTopics"
+                              onChange={(event) => handleCheckBoxToggle(event, push, remove)}
+                              onBlur={handleBlur}
+                              defaultValue={divideDiscussionIds}
+                            >
+                              {validDiscussionTopics.map((topic) => (
+                                topic.name ?
+                                  (
+                                    <Form.Checkbox
+                                      key={`checkbox-${topic.id}`}
+                                      id={`checkbox-${topic.id}`}
+                                      value={topic.id}
+                                    >
+                                      {topic.name}
+                                    </Form.Checkbox>
+                                  ) :
+                                  null
+                              ))}
+                            </Form.CheckboxSet>
+                          </Form.Group>
+                        )}
+                      />
+                    </React.Fragment>
+                  ) :
+                  <React.Fragment key="closed" />}
+              </TransitionReplace>
+            </React.Fragment>
+          ) :
+          <React.Fragment key="closed" />}
       </TransitionReplace>
     </>
   );

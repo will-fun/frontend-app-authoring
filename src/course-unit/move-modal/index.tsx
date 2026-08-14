@@ -18,7 +18,10 @@ import { EmptyMessage, ModalLoader, CategoryIndicator } from './components';
 import messages from './messages';
 
 const MoveModal: FC<IUseMoveModalParams> = ({
-  isOpenModal, closeModal, openModal, courseId,
+  isOpenModal,
+  closeModal,
+  openModal,
+  courseId,
 }) => {
   const intl = useIntl();
 
@@ -38,19 +41,21 @@ const MoveModal: FC<IUseMoveModalParams> = ({
     handleCLoseModal,
     handleMoveXBlock,
   } = useMoveModal({
-    isOpenModal, closeModal, openModal, courseId,
+    isOpenModal,
+    closeModal,
+    openModal,
+    courseId,
   });
 
   const renderBreadcrumbs = useCallback(() => (
     <Breadcrumb
       ariaLabel={intl.formatMessage(messages.moveModalBreadcrumbsLabel)}
-      data-testid="move-xblock-modal-breadcrumbs"
       isMobile={isExtraSmall}
       links={breadcrumbs.slice(0, -1).map((breadcrumb, index) => (
         { label: breadcrumb, 'data-parent-index': index }
       ))}
       activeLabel={breadcrumbs[breadcrumbs.length - 1]}
-      clickHandler={({ target }) => handleBreadcrumbsClick(target.dataset.parentIndex)}
+      clickHandler={({ currentTarget }) => handleBreadcrumbsClick(currentTarget.dataset.parentIndex!)}
     />
   ), [isExtraSmall, breadcrumbs, handleBreadcrumbsClick]);
 
@@ -75,26 +80,32 @@ const MoveModal: FC<IUseMoveModalParams> = ({
     </Button>
   ), [currentXBlockParentIds, handleXBlockClick]);
 
-  const renderCourseStructureItemSpan = useCallback((xBlock: IXBlock) => (
-    <span className="component text-left justify-content-start text-gray-700">
-      <span className="xblock-display-name text-truncate">
-        {xBlock?.displayName}
-      </span>
-      {currentXBlockParentIds.includes(xBlock.id) && (
-        <span className="current-location text-nowrap mr-3">
-          {intl.formatMessage(messages.moveModalOutlineItemCurrentComponentLocationText)}
+  const renderCourseStructureItemSpan = useCallback(
+    (xBlock: IXBlock) => (
+      <span className="component text-left justify-content-start text-gray-700">
+        <span className="xblock-display-name text-truncate">
+          {xBlock?.displayName}
         </span>
-      )}
-    </span>
-  ), [currentXBlockParentIds]);
+        {currentXBlockParentIds.includes(xBlock.id) && (
+          <span className="current-location text-nowrap mr-3">
+            {intl.formatMessage(messages.moveModalOutlineItemCurrentComponentLocationText)}
+          </span>
+        )}
+      </span>
+    ),
+    [currentXBlockParentIds],
+  );
 
-  const renderCourseStructureListItem = useCallback((xBlock: IXBlock, index: number) => (
-    <li key={xBlock.id} className="xblock-item">
-      {sourceXBlockId !== xBlock.id && (xBlock?.childInfo || childrenInfo.category !== CATEGORIES.KEYS.component)
-        ? getCourseStructureItemButton(xBlock, index)
-        : renderCourseStructureItemSpan(xBlock)}
-    </li>
-  ), [sourceXBlockId, childrenInfo.category, getCourseStructureItemButton, renderCourseStructureItemSpan]);
+  const renderCourseStructureListItem = useCallback(
+    (xBlock: IXBlock, index: number) => (
+      <li key={xBlock.id} className="xblock-item">
+        {sourceXBlockId !== xBlock.id && (xBlock?.childInfo || childrenInfo.category !== CATEGORIES.KEYS.component)
+          ? getCourseStructureItemButton(xBlock, index)
+          : renderCourseStructureItemSpan(xBlock)}
+      </li>
+    ),
+    [sourceXBlockId, childrenInfo.category, getCourseStructureItemButton, renderCourseStructureItemSpan],
+  );
 
   return (
     <ModalDialog

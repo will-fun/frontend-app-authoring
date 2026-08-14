@@ -1,17 +1,24 @@
 import { FormattedMessage, useIntl } from '@edx/frontend-platform/i18n';
 import {
-  useCallback, useContext, useEffect, useState,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
 } from 'react';
 import {
-  ActionRow, Badge, Icon, Stack,
+  ActionRow,
+  Badge,
+  Icon,
+  Stack,
 } from '@openedx/paragon';
 import { Description } from '@openedx/paragon/icons';
 import { InplaceTextEditor } from '@src/generic/inplace-text-editor';
+import { usePublishedFilterContext } from '@src/library-authoring/common/context/PublishedFilterContext';
 import DraggableList, { SortableItem } from '../../generic/DraggableList';
 import Loading from '../../generic/Loading';
 import ErrorAlert from '../../generic/alert-error';
 import { ContainerType, getBlockType } from '../../generic/key-utils';
-import { useLibraryContext } from '../common/context/LibraryContext';
+import { useOptionalLibraryContext } from '../common/context/LibraryContext';
 import {
   useContainerChildren,
   useUpdateContainer,
@@ -43,12 +50,15 @@ interface ContainerRowProps extends LibraryContainerChildrenProps {
 }
 
 const ContainerRow = ({
-  containerKey, container, readOnly, index,
+  containerKey,
+  container,
+  readOnly,
+  index,
 }: ContainerRowProps) => {
   const intl = useIntl();
   const { showToast } = useContext(ToastContext);
   const updateMutation = useUpdateContainer(container.originalId, containerKey);
-  const { showOnlyPublished } = useLibraryContext();
+  const { showOnlyPublished } = usePublishedFilterContext();
   const { setSidebarAction, openItemSidebar } = useSidebarContext();
 
   const handleSaveDisplayName = async (newDisplayName: string) => {
@@ -57,7 +67,7 @@ const ContainerRow = ({
         displayName: newDisplayName,
       });
       showToast(intl.formatMessage(containerMessages.updateContainerSuccessMsg));
-    } catch (err) {
+    } catch {
       showToast(intl.formatMessage(containerMessages.updateContainerErrorMsg));
     }
   };
@@ -77,10 +87,8 @@ const ContainerRow = ({
   return (
     <>
       {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-      <div
-        // Prevent parent card from being clicked.
-        className="stop-event-propagation"
-      >
+      <div // Prevent parent card from being clicked.
+       className="stop-event-propagation">
         <InplaceTextEditor
           onSave={handleSaveDisplayName}
           text={showOnlyPublished ? (container.publishedDisplayName ?? container.displayName) : container.displayName}
@@ -127,7 +135,8 @@ const ContainerRow = ({
 export const LibraryContainerChildren = ({ containerKey, readOnly }: LibraryContainerChildrenProps) => {
   const intl = useIntl();
   const [orderedChildren, setOrderedChildren] = useState<LibraryContainerMetadataWithUniqueId[]>([]);
-  const { showOnlyPublished, readOnly: libReadOnly } = useLibraryContext();
+  const { readOnly: libReadOnly } = useOptionalLibraryContext();
+  const { showOnlyPublished } = usePublishedFilterContext();
   const { navigateTo } = useLibraryRoutes();
   const { sidebarItemInfo, openItemSidebar } = useSidebarContext();
   const [activeDraggingId, setActiveDraggingId] = useState<string | null>(null);
@@ -142,7 +151,7 @@ export const LibraryContainerChildren = ({ containerKey, readOnly }: LibraryCont
     try {
       await orderMutator.mutateAsync(childrenKeys);
       showToast(intl.formatMessage(messages.orderUpdatedMsg));
-    } catch (e) {
+    } catch {
       showToast(intl.formatMessage(messages.failedOrderUpdatedMsg));
     }
   }, [orderMutator]);
@@ -186,7 +195,7 @@ export const LibraryContainerChildren = ({ containerKey, readOnly }: LibraryCont
   }, [openItemSidebar, navigateTo, readOnly]);
 
   const getComponentStyle = useCallback((childId: string) => {
-    const style: { marginBottom: string, borderRadius: string, outline?: string } = {
+    const style: { marginBottom: string; borderRadius: string; outline?: string; } = {
       marginBottom: '1rem',
       borderRadius: '8px',
     };
@@ -209,11 +218,9 @@ export const LibraryContainerChildren = ({ containerKey, readOnly }: LibraryCont
     <div className="ml-2 library-container-children">
       {children?.length === 0 && (
         <h4 className="ml-2">
-          {containerType === ContainerType.Section ? (
-            <FormattedMessage {...sectionMessages.noChildrenText} />
-          ) : (
-            <FormattedMessage {...subsectionMessages.noChildrenText} />
-          )}
+          {containerType === ContainerType.Section ?
+            <FormattedMessage {...sectionMessages.noChildrenText} /> :
+            <FormattedMessage {...subsectionMessages.noChildrenText} />}
         </h4>
       )}
       <DraggableList
@@ -244,17 +251,18 @@ export const LibraryContainerChildren = ({ containerKey, readOnly }: LibraryCont
               }
             }}
             disabled={readOnly || libReadOnly}
-            cardClassName={sidebarItemInfo?.id === child.originalId && sidebarItemInfo?.index === index ? 'selected' : undefined}
-            actions={(
+            cardClassName={sidebarItemInfo?.id === child.originalId && sidebarItemInfo?.index === index
+              ? 'selected'
+              : undefined}
+            actions={
               <ContainerRow
                 containerKey={containerKey}
                 container={child}
                 readOnly={readOnly || libReadOnly}
                 index={index}
               />
-            )}
+            }
           />
-
         ))}
       </DraggableList>
     </div>

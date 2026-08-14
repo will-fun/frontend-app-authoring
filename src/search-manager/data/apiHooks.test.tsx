@@ -3,9 +3,10 @@ import { renderHook, waitFor } from '@testing-library/react';
 import fetchMock from 'fetch-mock-jest';
 
 import mockResult from './__mocks__/block-types.json';
-import { mockContentSearchConfig } from './api.mock';
+import { mockContentSearchConfig, mockGetContentHits } from './api.mock';
 import {
   useGetBlockTypes,
+  useGetContentHits,
 } from './apiHooks';
 
 mockContentSearchConfig.applyMock();
@@ -52,5 +53,18 @@ describe('search manager api hooks', () => {
     };
     expect(result.current.data).toEqual(expectedData);
     expect(fetchMock.calls().length).toEqual(1);
+  });
+
+  it('useGetContentHits should return hits', async () => {
+    mockGetContentHits('someHits');
+    const { result } = renderHook(() => useGetContentHits('filter'), { wrapper });
+    await waitFor(() => {
+      expect(result.current.isPending).toBeFalsy();
+    });
+    const expectedData = {
+      hits: [{ usage_key: 'some-key' }, { usage_key: 'other-key' }],
+      estimatedTotalHits: 2,
+    };
+    expect(result.current.data).toEqual(expectedData);
   });
 });

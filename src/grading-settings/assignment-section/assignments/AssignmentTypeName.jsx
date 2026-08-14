@@ -11,15 +11,17 @@ const AssignmentTypeName = ({
   value,
   errorEffort,
   onChange,
+  disabled = false,
 }) => {
   const intl = useIntl();
   const initialAssignmentName = useRef(value);
 
   return (
     <li className="course-grading-assignment-type-name">
-      <Form.Group className={classNames('form-group-custom', {
-        'form-group-custom_isInvalid': errorEffort,
-      })}
+      <Form.Group
+        className={classNames('form-group-custom', {
+          'form-group-custom_isInvalid': errorEffort,
+        })}
       >
         <Form.Label className="grading-label">
           {intl.formatMessage(messages.assignmentTypeNameTitle)}
@@ -31,6 +33,7 @@ const AssignmentTypeName = ({
           onChange={onChange}
           value={value}
           isInvalid={Boolean(errorEffort)}
+          disabled={disabled}
         />
         <Form.Control.Feedback className="grading-description">
           {intl.formatMessage(messages.assignmentTypeNameDescription)}
@@ -66,6 +69,7 @@ AssignmentTypeName.propTypes = {
   onChange: PropTypes.func.isRequired,
   errorEffort: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]).isRequired,
+  disabled: PropTypes.bool,
 };
 
 export default AssignmentTypeName;

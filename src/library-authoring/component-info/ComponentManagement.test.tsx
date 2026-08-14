@@ -1,12 +1,14 @@
 import { setConfig, getConfig } from '@edx/frontend-platform';
 
-import { mockContentTaxonomyTagsData } from '../../content-tags-drawer/data/api.mocks';
+import { mockContentTaxonomyTagsData } from '@src/content-tags-drawer/data/api.mocks';
 import {
   initializeMocks,
   render as baseRender,
   screen,
   waitFor,
-} from '../../testUtils';
+  matchInnerText,
+} from '@src/testUtils';
+
 import { LibraryProvider } from '../common/context/LibraryContext';
 import { SidebarActions, SidebarBodyItemId, SidebarProvider } from '../common/context/SidebarContext';
 import { mockContentLibrary, mockLibraryBlockMetadata } from '../data/api.mocks';
@@ -14,7 +16,7 @@ import ComponentManagement from './ComponentManagement';
 
 jest.mock('../../content-tags-drawer', () => ({
   ...jest.requireActual('../../content-tags-drawer'),
-  ContentTagsDrawer: ({ readOnly }: { readOnly: boolean }) => (
+  ContentTagsDrawer: ({ readOnly }: { readOnly: boolean; }) => (
     <div>Mocked {readOnly ? 'read-only' : 'editable'} ContentTagsDrawer</div>
   ),
 }));
@@ -33,38 +35,21 @@ mockContentLibrary.applyMock();
 mockLibraryBlockMetadata.applyMock();
 mockContentTaxonomyTagsData.applyMock();
 
-/*
- * Utility to get the inner text of an element safely.
- */
-const getInnerText = (element: Element | null): string => {
-  if (!element) {
-    return '';
-  }
-  return (element.textContent ?? '')
-    .split('\n')
-    .filter((text) => text && !/^\s+$/.test(text))
-    .map((text) => text.trim())
-    .join(' ');
-};
-
-const matchInnerText = (nodeName: string, textToMatch: string) => (_: string, element: Element | null) => !!element
-    && element.nodeName === nodeName
-    && getInnerText(element) === textToMatch;
-
-const render = (usageKey: string, libraryId?: string) => baseRender(<ComponentManagement />, {
-  extraWrapper: ({ children }) => (
-    <LibraryProvider libraryId={libraryId || mockContentLibrary.libraryId}>
-      <SidebarProvider
-        initialSidebarItemInfo={{
-          id: usageKey,
-          type: SidebarBodyItemId.ComponentInfo,
-        }}
-      >
-        {children}
-      </SidebarProvider>
-    </LibraryProvider>
-  ),
-});
+const render = (usageKey: string, libraryId?: string) =>
+  baseRender(<ComponentManagement />, {
+    extraWrapper: ({ children }) => (
+      <LibraryProvider libraryId={libraryId || mockContentLibrary.libraryId}>
+        <SidebarProvider
+          initialSidebarItemInfo={{
+            id: usageKey,
+            type: SidebarBodyItemId.ComponentInfo,
+          }}
+        >
+          {children}
+        </SidebarProvider>
+      </LibraryProvider>
+    ),
+  });
 
 describe('<ComponentManagement />', () => {
   beforeEach(() => {

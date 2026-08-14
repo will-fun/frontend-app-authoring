@@ -1,10 +1,6 @@
-import React from 'react';
-import { AppProvider } from '@edx/frontend-platform/react';
-import { render } from '@testing-library/react';
-import { IntlProvider } from '@edx/frontend-platform/i18n';
-import { initializeMockApp } from '@edx/frontend-platform';
+import { initializeMocks, render } from '@src/testUtils';
 
-import initializeStore from '../../store';
+import { CourseAuthoringProvider } from '@src/CourseAuthoringContext';
 import { courseSettingsMock, courseDetailsMock } from '../__mocks__';
 import messages from './messages';
 import IntroducingSection from '.';
@@ -29,14 +25,11 @@ jest.mock('../../editors/sharedComponents/TinyMceWidget', () => ({
   })),
 }));
 
-let store;
 const onChangeMock = jest.fn();
 const RootWrapper = (props) => (
-  <IntlProvider locale="en">
-    <AppProvider store={store}>
-      <IntroducingSection {...props} />
-    </AppProvider>
-  </IntlProvider>
+  <CourseAuthoringProvider courseId="1">
+    <IntroducingSection {...props} />
+  </CourseAuthoringProvider>
 );
 
 const {
@@ -48,7 +41,10 @@ const {
 } = courseDetailsMock;
 
 const {
-  aboutPageEditable, sidebarHtmlEnabled, shortDescriptionEditable, lmsLinkForAboutPage,
+  aboutPageEditable,
+  sidebarHtmlEnabled,
+  shortDescriptionEditable,
+  lmsLinkForAboutPage,
 } = courseSettingsMock;
 
 const props = {
@@ -68,16 +64,7 @@ const props = {
 
 describe('<IntroducingSection />', () => {
   beforeEach(() => {
-    initializeMockApp({
-      authenticatedUser: {
-        userId: 3,
-        username: 'abc123',
-        administrator: true,
-        roles: [],
-      },
-    });
-
-    store = initializeStore();
+    initializeMocks();
   });
 
   it('renders successfully', () => {
@@ -98,5 +85,15 @@ describe('<IntroducingSection />', () => {
     expect(queryAllByText(messages.introducingDescription.defaultMessage).length).toBe(0);
     expect(queryAllByText(messages.courseOverviewLabel.defaultMessage).length).toBe(0);
     expect(queryAllByText(messages.courseAboutSidebarLabel.defaultMessage).length).toBe(0);
+  });
+
+  it('disables the short description textarea when isEditable is false', () => {
+    const { getByLabelText } = render(<RootWrapper {...props} isEditable={false} />);
+    expect(getByLabelText(messages.courseShortDescriptionLabel.defaultMessage)).toBeDisabled();
+  });
+
+  it('enables the short description textarea when isEditable is true', () => {
+    const { getByLabelText } = render(<RootWrapper {...props} isEditable />);
+    expect(getByLabelText(messages.courseShortDescriptionLabel.defaultMessage)).not.toBeDisabled();
   });
 });

@@ -28,7 +28,7 @@ const messages = defineMessages({
   },
   releaseTimeUTC: {
     id: 'course-authoring.course-outline.configure-modal.basic-tab.release-time-UTC',
-    defaultMessage: 'Release time in UTC:',
+    defaultMessage: 'Release time in GMT+7:',
   },
   visibilityTabTitle: {
     id: 'course-authoring.course-outline.configure-modal.visibility-tab.title',
@@ -125,7 +125,7 @@ const messages = defineMessages({
   },
   dueTimeUTC: {
     id: 'course-authoring.course-outline.configure-modal.basic-tab.due-time-UTC',
-    defaultMessage: 'Due time in UTC:',
+    defaultMessage: 'Due time in GMT+7:',
   },
   subsectionVisibility: {
     id: 'course-authoring.course-outline.configure-modal.visibility-tab.subsection-visibility',

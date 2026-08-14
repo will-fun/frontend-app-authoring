@@ -161,23 +161,6 @@ const QuestionGroup = ({
         />
       </div>
 
-      {/* - Explanation - */}
-      <div className="tinyMceWidget mt-4 text-primary-500">
-        <div className="h4 mb-3">{intl.formatMessage(messages.explanationSectionTitle, { number: n })}</div>
-        <div className="small mb-3">
-          <FormattedMessage {...messages.explanationHelperText} />
-        </div>
-        <GroupEditor
-          id={`cp-q-${group.id}-explanation`}
-          editorType="solution"
-          content={group.explanation}
-          onUpdate={updateExplanation}
-          images={images}
-          isLibrary={isLibrary}
-          learningContextId={learningContextId}
-        />
-      </div>
-
       {/* - Answers - */}
       <div className="mt-4 text-primary-500">
         <div className="d-flex align-items-center justify-content-between mb-2">
@@ -333,6 +316,23 @@ const QuestionGroup = ({
             </Form.Group>
           </div>
         )}
+      </div>
+
+      {/* - Explanation - */}
+      <div className="tinyMceWidget mt-4 text-primary-500">
+        <div className="h4 mb-3">{intl.formatMessage(messages.explanationSectionTitle, { number: n })}</div>
+        <div className="small mb-3">
+          <FormattedMessage {...messages.explanationHelperText} />
+        </div>
+        <GroupEditor
+          id={`cp-q-${group.id}-explanation`}
+          editorType="solution"
+          content={group.explanation}
+          onUpdate={updateExplanation}
+          images={images}
+          isLibrary={isLibrary}
+          learningContextId={learningContextId}
+        />
       </div>
     </div>
   );

@@ -127,6 +127,11 @@ const messages = defineMessages({
     defaultMessage: 'Specify one or more correct text answers, including numbers and special characters, submitted in a response field.',
     description: 'Preview description for text input problem type',
   },
+  customProblemDescription: {
+    id: 'authoring.problemeditor.problemtype.customproblem.description',
+    defaultMessage: 'Group several questions into one problem, each with its own answer type.',
+    description: 'Preview description for custom problem type',
+  },
   advancedProblemDescription: {
     id: 'authoring.problemeditor.problemtype.advanced.description',
     defaultMessage: 'An Advanced Problem Type',
@@ -158,6 +163,11 @@ const messages = defineMessages({
     id: 'authoring.problemeditor.problemtype.textinput.instruction',
     defaultMessage: 'Enter your text input answers below and select which choices are correct. Learners must enter one correct answer.',
     description: 'Instruction for text input problem type',
+  },
+  customProblemInstruction: {
+    id: 'authoring.problemeditor.problemtype.customproblem.instruction',
+    defaultMessage: 'Add a question, its answers and an explanation for each group. Learners answer every question in the problem.',
+    description: 'Instruction for custom problem type',
   },
 });
 

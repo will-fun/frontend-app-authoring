@@ -2,7 +2,12 @@
 import React from 'react';
 
 import * as problemConstants from '@src/editors/data/constants/problem';
-import { AdvanceProblems, ProblemTypeKeys, ProblemTypes } from '@src/editors/data/constants/problem';
+import {
+  AdvanceProblemKeys,
+  AdvanceProblems,
+  ProblemTypeKeys,
+  ProblemTypes,
+} from '@src/editors/data/constants/problem';
 import * as hooks from './hooks';
 import { getDataFromOlx } from '../../../../data/redux/thunkActions/problem';
 
@@ -96,6 +101,7 @@ describe('SelectTypeModal hooks', () => {
       <div id="optionresponse" />
       <div id="numericalresponse" />
       <div id="stringresponse" />
+      <div id="customproblem" />
     `;
     const mockKeyUp = new KeyboardEvent('keydown', { key: 'ArrowUp' });
     const mockKeyDown = new KeyboardEvent('keydown', { key: 'ArrowDown' });
@@ -108,11 +114,11 @@ describe('SelectTypeModal hooks', () => {
         [cb, prereqs] = React.useEffect.mock.calls[0];
         cb();
       });
-      test('pressing up arrow sets MULTISELECT', () => {
+      test('pressing up arrow sets CUSTOMPROBLEM', () => {
         expect(React.useEffect.mock.calls.length).toEqual(1);
         expect(prereqs).toStrictEqual([ProblemTypeKeys.SINGLESELECT, mockSetSelected]);
         document.dispatchEvent(mockKeyUp);
-        expect(mockSetSelected).toHaveBeenCalledWith(ProblemTypeKeys.TEXTINPUT);
+        expect(mockSetSelected).toHaveBeenCalledWith(AdvanceProblemKeys.CUSTOMPROBLEM);
       });
       test('pressing down arrow sets MULTISELECT', () => {
         expect(React.useEffect.mock.calls.length).toEqual(1);
@@ -190,9 +196,28 @@ describe('SelectTypeModal hooks', () => {
         document.dispatchEvent(mockKeyUp);
         expect(mockSetSelected).toHaveBeenCalledWith(ProblemTypeKeys.NUMERIC);
       });
-      test('pressing down arrow sets SINGLESELECT', () => {
+      test('pressing down arrow sets CUSTOMPROBLEM', () => {
         expect(React.useEffect.mock.calls.length).toEqual(1);
         expect(prereqs).toStrictEqual([ProblemTypeKeys.TEXTINPUT, mockSetSelected]);
+        document.dispatchEvent(mockKeyDown);
+        expect(mockSetSelected).toHaveBeenCalledWith(AdvanceProblemKeys.CUSTOMPROBLEM);
+      });
+    });
+    describe('CUSTOMPROBLEM', () => {
+      beforeEach(() => {
+        hooks.useArrowNav(AdvanceProblemKeys.CUSTOMPROBLEM, mockSetSelected);
+        [cb, prereqs] = React.useEffect.mock.calls[0];
+        cb();
+      });
+      test('pressing up arrow sets TEXTINPUT', () => {
+        expect(React.useEffect.mock.calls.length).toEqual(1);
+        expect(prereqs).toStrictEqual([AdvanceProblemKeys.CUSTOMPROBLEM, mockSetSelected]);
+        document.dispatchEvent(mockKeyUp);
+        expect(mockSetSelected).toHaveBeenCalledWith(ProblemTypeKeys.TEXTINPUT);
+      });
+      test('pressing down arrow sets SINGLESELECT', () => {
+        expect(React.useEffect.mock.calls.length).toEqual(1);
+        expect(prereqs).toStrictEqual([AdvanceProblemKeys.CUSTOMPROBLEM, mockSetSelected]);
         document.dispatchEvent(mockKeyDown);
         expect(mockSetSelected).toHaveBeenCalledWith(ProblemTypeKeys.SINGLESELECT);
       });

@@ -24,21 +24,25 @@ const Preview = ({
         <FormattedMessage {...messages[`problemType.${problemType}.title`]} />{' '}
         {intl.formatMessage(messages.problemTextInPreviewTitle)}
       </div>
-      <Image
-        fluid
-        className="my-3"
-        src={staticData.preview}
-        alt={intl.formatMessage(messages.previewAltText, { problemType })}
-      />
-      <div className="mb-3">
+      {staticData.preview && (
+        <Image
+          fluid
+          className="my-3"
+          src={staticData.preview}
+          alt={intl.formatMessage(messages.previewAltText, { problemType })}
+        />
+      )}
+      <div className="my-3">
         <FormattedMessage {...messages[`problemType.${problemType}.description`]} />
       </div>
-      <Hyperlink
-        destination={staticData.helpLink}
-        target="_blank"
-      >
-        <FormattedMessage {...messages.learnMoreButtonLabel} />
-      </Hyperlink>
+      {staticData.helpLink && (
+        <Hyperlink
+          destination={staticData.helpLink}
+          target="_blank"
+        >
+          <FormattedMessage {...messages.learnMoreButtonLabel} />
+        </Hyperlink>
+      )}
     </Container>
   );
 };

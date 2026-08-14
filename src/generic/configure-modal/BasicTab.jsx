@@ -1,9 +1,31 @@
 import PropTypes from 'prop-types';
+import moment from 'moment';
 import { Stack, Form } from '@openedx/paragon';
 import { FormattedMessage, useIntl } from '@edx/frontend-platform/i18n';
 
 import { DatepickerControl, DATEPICKER_TYPES } from '../datepicker-control';
+import { DATE_TIME_FORMAT } from '../../constants';
 import messages from './messages';
+
+const GMT7_OFFSET_HOURS = 7;
+
+// Studio stores/sends release & due dates as UTC, but react-datepicker only knows how to
+// display/edit local wall-clock digits. Shift the digit string by +7h (GMT+7) before handing
+// it to the picker, and shift it back on save, so the picker always shows GMT+7 regardless of
+// the viewer's own machine timezone.
+const toGmt7DateString = (utcDateStr) => {
+  if (!utcDateStr) {
+    return utcDateStr;
+  }
+  return moment.utc(String(utcDateStr).substring(0, 19)).add(GMT7_OFFSET_HOURS, 'hours').format('YYYY-MM-DDTHH:mm:ss');
+};
+
+const fromGmt7DateString = (gmt7DateStr) => {
+  if (!gmt7DateStr) {
+    return gmt7DateStr;
+  }
+  return moment.utc(String(gmt7DateStr).substring(0, 19)).subtract(GMT7_OFFSET_HOURS, 'hours').format(DATE_TIME_FORMAT);
+};
 
 const BasicTab = ({
   values,
@@ -36,17 +58,17 @@ const BasicTab = ({
             <Stack className="mt-3" direction="horizontal" gap={5}>
               <DatepickerControl
                 type={DATEPICKER_TYPES.date}
-                value={releaseDate}
+                value={toGmt7DateString(releaseDate)}
                 label={intl.formatMessage(messages.releaseDate)}
                 controlName="state-date"
-                onChange={(val) => setFieldValue('releaseDate', val)}
+                onChange={(val) => setFieldValue('releaseDate', fromGmt7DateString(val))}
               />
               <DatepickerControl
                 type={DATEPICKER_TYPES.time}
-                value={releaseDate}
+                value={toGmt7DateString(releaseDate)}
                 label={intl.formatMessage(messages.releaseTimeUTC)}
                 controlName="start-time"
-                onChange={(val) => setFieldValue('releaseDate', val)}
+                onChange={(val) => setFieldValue('releaseDate', fromGmt7DateString(val))}
               />
             </Stack>
           </div>
@@ -79,18 +101,18 @@ const BasicTab = ({
               <Stack className="mt-3" direction="horizontal" gap={5}>
                 <DatepickerControl
                   type={DATEPICKER_TYPES.date}
-                  value={dueDate}
+                  value={toGmt7DateString(dueDate)}
                   label={intl.formatMessage(messages.dueDate)}
                   controlName="state-date"
-                  onChange={(val) => setFieldValue('dueDate', val)}
+                  onChange={(val) => setFieldValue('dueDate', fromGmt7DateString(val))}
                   data-testid="due-date-picker"
                 />
                 <DatepickerControl
                   type={DATEPICKER_TYPES.time}
-                  value={dueDate}
+                  value={toGmt7DateString(dueDate)}
                   label={intl.formatMessage(messages.dueTimeUTC)}
                   controlName="start-time"
-                  onChange={(val) => setFieldValue('dueDate', val)}
+                  onChange={(val) => setFieldValue('dueDate', fromGmt7DateString(val))}
                 />
               </Stack>
             </div>

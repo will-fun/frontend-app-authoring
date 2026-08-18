@@ -13,7 +13,7 @@ const messages = defineMessages({
   },
   releaseTimeLabel: {
     id: 'course-authoring.course-outline.sidebar.library.subsection-settings.release.time-label',
-    defaultMessage: 'Release Time (UTC)',
+    defaultMessage: 'Release Time (GMT+7)',
     description: 'Release data time section label in subsection settings sidebar.',
   },
   subsectionGradingTitle: {
@@ -48,7 +48,7 @@ const messages = defineMessages({
   },
   subsectionGradingDueTimeLabel: {
     id: 'course-authoring.course-outline.sidebar.library.subsection-settings.grading.due-time-label',
-    defaultMessage: 'Due Time (UTC)',
+    defaultMessage: 'Due Time (GMT+7)',
     description: 'Label for Due Time field in subsection settings sidebar',
   },
   subsectionVisibilityTitle: {

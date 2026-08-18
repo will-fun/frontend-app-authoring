@@ -1,19 +1,18 @@
 import React from 'react';
-import { Button, Container } from '@openedx/paragon';
+import { Container } from '@openedx/paragon';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 
 import {
-  ProblemTypeKeys,
-  AdvanceProblemKeys,
   AdvancedProblemType,
   ProblemType,
+  selectableProblemTypes,
 } from '@src/editors/data/constants/problem';
 // SelectableBox in paragon has a bug where you can't change selection. So we override it
 import SelectableBox from '../../../../../sharedComponents/SelectableBox';
 import messages from './messages';
 
 interface Props {
-  selected: ProblemType;
+  selected: ProblemType | AdvancedProblemType;
   setSelected: (selected: ProblemType | AdvancedProblemType) => void;
 }
 
@@ -22,7 +21,6 @@ const ProblemTypeSelect: React.FC<Props> = ({
   setSelected,
 }) => {
   const handleChange = e => setSelected(e.target.value);
-  const handleClick = () => setSelected(AdvanceProblemKeys.BLANK);
   const settings = { type: 'radio' };
 
   return (
@@ -34,25 +32,18 @@ const ProblemTypeSelect: React.FC<Props> = ({
         type={settings.type}
         value={selected}
       >
-        {Object.values(ProblemTypeKeys).map((key) => (
-          key !== 'advanced'
-            ? (
-              <SelectableBox
-                className="border border-light-400 text-primary-500 shadow-none"
-                id={key}
-                key={key}
-                value={key}
-                {...settings}
-              >
-                <FormattedMessage {...messages[`problemType.${key}.title`]} />
-              </SelectableBox>
-            )
-            : null
+        {selectableProblemTypes.map((key) => (
+          <SelectableBox
+            className="border border-light-400 text-primary-500 shadow-none"
+            id={key}
+            key={key}
+            value={key}
+            {...settings}
+          >
+            <FormattedMessage {...messages[`problemType.${key}.title`]} />
+          </SelectableBox>
         ))}
       </SelectableBox.Set>
-      <Button variant="link" className="pl-0 mt-2" onClick={handleClick}>
-        <FormattedMessage {...messages.advanceProblemButtonLabel} />
-      </Button>
     </Container>
   );
 };

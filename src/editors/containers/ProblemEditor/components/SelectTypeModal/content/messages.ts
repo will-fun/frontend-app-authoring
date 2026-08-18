@@ -115,6 +115,11 @@ const messages = defineMessages({
     defaultMessage: 'Specify one or more correct text answers, including numbers and special characters, submitted in a response field.',
     description: 'Preview description for text input problem type',
   },
+  'problemType.customproblem.description': {
+    id: 'authoring.problemeditor.problemtype.customproblem.description',
+    defaultMessage: 'Group several questions into one problem, each with its own answer type.',
+    description: 'Preview description for custom problem type',
+  },
   'problemType.advanced.title': {
     id: 'authoring.problemeditor.problemtype.advanced.title',
     defaultMessage: 'Advanced Problem',

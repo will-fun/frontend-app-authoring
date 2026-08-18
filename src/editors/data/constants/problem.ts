@@ -21,6 +21,39 @@ export const ProblemTypeKeys = StrictDict(
 );
 export type ProblemType = typeof ProblemTypeKeys[keyof typeof ProblemTypeKeys];
 
+export const AdvanceProblemKeys = StrictDict(
+  {
+    BLANK: 'blankadvanced',
+    CIRCUITSCHEMATIC: 'circuitschematic',
+    JSINPUT: 'jsinputresponse',
+    CUSTOMGRADER: 'customgrader',
+    IMAGE: 'imageresponse',
+    FORMULA: 'formularesponse',
+    PROBLEMWITHHINT: 'problemwithhint',
+    CUSTOMSINGLESELECT: 'customsingleselect',
+    CUSTOMPROBLEM: 'customproblem',
+  } as const,
+);
+export type AdvancedProblemType = typeof AdvanceProblemKeys[keyof typeof AdvanceProblemKeys];
+
+export function isAdvancedProblemType(pt: ProblemType | AdvancedProblemType): pt is AdvancedProblemType {
+  return Object.values(AdvanceProblemKeys).includes(pt as any);
+}
+
+/**
+ * Problem types offered in the main "Select problem type" list, in the order they appear.
+ * Custom problem is authored through its own editor rather than the raw OLX editor, so it
+ * belongs here next to the built-in types even though its template lives in AdvanceProblems.
+ */
+export const selectableProblemTypes = [
+  ProblemTypeKeys.SINGLESELECT,
+  ProblemTypeKeys.MULTISELECT,
+  ProblemTypeKeys.DROPDOWN,
+  ProblemTypeKeys.NUMERIC,
+  ProblemTypeKeys.TEXTINPUT,
+  AdvanceProblemKeys.CUSTOMPROBLEM,
+] as const;
+
 /**
  * Get problem types with internationalized strings.
  * @param {Function} formatMessage - The intl.formatMessage function
@@ -47,7 +80,7 @@ export const getProblemTypes = (formatMessage) => ({
     helpLink: getExternalLinkUrl(
       'https://docs.openedx.org/en/latest/educators/concepts/exercise_tools/about_multi_select.html',
     ),
-    prev: ProblemTypeKeys.TEXTINPUT,
+    prev: AdvanceProblemKeys.CUSTOMPROBLEM,
     next: ProblemTypeKeys.MULTISELECT,
     template: basicProblemTemplates.singleSelect.olx,
     markdownTemplate: basicProblemTemplates.singleSelect.markdown,
@@ -100,9 +133,16 @@ export const getProblemTypes = (formatMessage) => ({
       'https://docs.openedx.org/en/latest/educators/how-tos/course_development/exercise_tools/add_text_input.html',
     ),
     prev: ProblemTypeKeys.NUMERIC,
-    next: ProblemTypeKeys.SINGLESELECT,
+    next: AdvanceProblemKeys.CUSTOMPROBLEM,
     template: basicProblemTemplates.textInput.olx,
     markdownTemplate: basicProblemTemplates.textInput.markdown,
+  },
+  [AdvanceProblemKeys.CUSTOMPROBLEM]: {
+    title: formatMessage(problemMessages.customProblemTitle),
+    previewDescription: formatMessage(problemMessages.customProblemDescription),
+    description: formatMessage(problemMessages.customProblemInstruction),
+    prev: ProblemTypeKeys.TEXTINPUT,
+    next: ProblemTypeKeys.SINGLESELECT,
   },
   [ProblemTypeKeys.ADVANCED]: {
     title: formatMessage(problemMessages.advancedProblemTitle),
@@ -122,7 +162,7 @@ export const ProblemTypes = StrictDict({
     helpLink: getExternalLinkUrl(
       'https://docs.openedx.org/en/latest/educators/concepts/exercise_tools/about_multi_select.html',
     ),
-    prev: ProblemTypeKeys.TEXTINPUT,
+    prev: AdvanceProblemKeys.CUSTOMPROBLEM,
     next: ProblemTypeKeys.MULTISELECT,
     template: basicProblemTemplates.singleSelect.olx,
     markdownTemplate: basicProblemTemplates.singleSelect.markdown,
@@ -179,9 +219,17 @@ export const ProblemTypes = StrictDict({
       'https://docs.openedx.org/en/latest/educators/how-tos/course_development/exercise_tools/add_text_input.html',
     ),
     prev: ProblemTypeKeys.NUMERIC,
-    next: ProblemTypeKeys.SINGLESELECT,
+    next: AdvanceProblemKeys.CUSTOMPROBLEM,
     template: basicProblemTemplates.textInput.olx,
     markdownTemplate: basicProblemTemplates.textInput.markdown,
+  },
+  [AdvanceProblemKeys.CUSTOMPROBLEM]: {
+    title: 'Custom problem',
+    previewDescription: 'Group several questions into one problem, each with its own answer type.',
+    description:
+      'Add a question, its answers and an explanation for each group. Learners answer every question in the problem.',
+    prev: ProblemTypeKeys.TEXTINPUT,
+    next: ProblemTypeKeys.SINGLESELECT,
   },
   [ProblemTypeKeys.ADVANCED]: {
     title: 'Advanced Problem',
@@ -190,25 +238,6 @@ export const ProblemTypes = StrictDict({
     helpLink: 'something.com',
   },
 });
-
-export const AdvanceProblemKeys = StrictDict(
-  {
-    BLANK: 'blankadvanced',
-    CIRCUITSCHEMATIC: 'circuitschematic',
-    JSINPUT: 'jsinputresponse',
-    CUSTOMGRADER: 'customgrader',
-    IMAGE: 'imageresponse',
-    FORMULA: 'formularesponse',
-    PROBLEMWITHHINT: 'problemwithhint',
-    CUSTOMSINGLESELECT: 'customsingleselect',
-    CUSTOMPROBLEM: 'customproblem',
-  } as const,
-);
-export type AdvancedProblemType = typeof AdvanceProblemKeys[keyof typeof AdvanceProblemKeys];
-
-export function isAdvancedProblemType(pt: ProblemType | AdvancedProblemType): pt is AdvancedProblemType {
-  return Object.values(AdvanceProblemKeys).includes(pt as any);
-}
 
 /**
  * Get advanced problem types with internationalized strings.

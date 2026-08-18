@@ -6,6 +6,7 @@ import {
   AccessTime as ClockIcon,
 } from '@openedx/paragon/icons';
 
+import { convertUtcDisplayDateToGmt7 } from '../utils';
 import messages from './messages';
 
 const ReleaseStatus = ({
@@ -36,7 +37,7 @@ const ReleaseStatus = ({
       </span>
       <Icon className="mr-1" size="sm" src={ClockIcon} />
       {intl.formatMessage(releaseLabel)}
-      {releaseDate}
+      {convertUtcDisplayDateToGmt7(releaseDate)}
     </div>
   );
 

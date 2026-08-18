@@ -7,6 +7,7 @@ import {
   CalendarMonth as CalendarIcon,
 } from '@openedx/paragon/icons';
 
+import { convertUtcDisplayDateToGmt7 } from '../utils';
 import messages from './messages';
 
 const GradingTypeAndDueDate = ({
@@ -54,7 +55,7 @@ const GradingTypeAndDueDate = ({
     if (dueDate && isInstructorPaced) {
       return (
         <div className="status-grading-date" data-testid="due-date-div">
-          {intl.formatMessage(messages.dueLabel)} {dueDate}
+          {intl.formatMessage(messages.dueLabel)} {convertUtcDisplayDateToGmt7(dueDate)}
         </div>
       );
     }

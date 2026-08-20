@@ -10,6 +10,7 @@ import { SidebarFooter, SidebarHeader } from '@src/course-unit/legacy-sidebar/co
 import useCourseUnitData from '@src/course-unit/legacy-sidebar/hooks';
 import ReleaseInfoComponent from '@src/course-unit/legacy-sidebar/components/ReleaseInfoComponent';
 import { useConfigureUnitWithPageUpdates } from '@src/course-unit/data/apiHooks';
+import { convertUtcDisplayDateToGmt7 } from '@src/utils';
 import messages from './messages';
 import UnitVisibilityInfo from './UnitVisibilityInfo';
 
@@ -108,7 +109,7 @@ const PublishControls = ({
                   </>
                 )}
                 <span>
-                  {editedOn}
+                  {convertUtcDisplayDateToGmt7(editedOn)}
                 </span>
               </Stack>
             </div>
@@ -131,7 +132,7 @@ const PublishControls = ({
                   </>
                 )}
                 <span>
-                  {publishedOn}
+                  {convertUtcDisplayDateToGmt7(publishedOn)}
                 </span>
               </Stack>
             </div>

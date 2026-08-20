@@ -1,6 +1,7 @@
 import { useSelector } from 'react-redux';
 import { useIntl } from '@edx/frontend-platform/i18n';
 
+import { convertUtcDisplayDateToGmt7 } from '@src/utils';
 import { getCourseUnitData } from '../../data/selectors';
 import { getReleaseInfo } from '../utils';
 
@@ -10,7 +11,7 @@ const ReleaseInfoComponent = () => {
     releaseDate,
     releaseDateFrom,
   } = useSelector(getCourseUnitData);
-  const releaseInfo = getReleaseInfo(intl, releaseDate, releaseDateFrom);
+  const releaseInfo = getReleaseInfo(intl, convertUtcDisplayDateToGmt7(releaseDate), releaseDateFrom);
 
   if (releaseInfo.isScheduled) {
     return (

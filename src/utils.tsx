@@ -313,6 +313,24 @@ export const convertToStringFromDate = (date: moment.MomentInput): string => {
   return moment.utc(gmt7Digits).subtract(GMT7_OFFSET_HOURS, 'hours').format(DATE_TIME_FORMAT);
 };
 
+// edx-platform also sends some release/due/edited/published summary strings pre-formatted in
+// UTC on the server, e.g. "Jan 01, 2024 at 00:00 UTC". Since that formatting happens
+// server-side (not through convertToDateFromString above), shift the displayed value to GMT+7
+// here instead.
+const UTC_DISPLAY_DATE_FORMAT = 'MMM DD, YYYY [at] HH:mm [UTC]';
+const GMT7_DISPLAY_DATE_FORMAT = 'MMM DD, YYYY [at] HH:mm [GMT+7]';
+
+export const convertUtcDisplayDateToGmt7 = (utcDisplayStr?: string): string | undefined => {
+  if (!utcDisplayStr) {
+    return utcDisplayStr;
+  }
+  const parsed = moment.utc(utcDisplayStr, UTC_DISPLAY_DATE_FORMAT, true);
+  if (!parsed.isValid()) {
+    return utcDisplayStr;
+  }
+  return parsed.add(GMT7_OFFSET_HOURS, 'hours').format(GMT7_DISPLAY_DATE_FORMAT);
+};
+
 export const isValidDate = (date: moment.MomentInput) => {
   const formattedValue = convertToStringFromDate(date).split('T')[0];
 

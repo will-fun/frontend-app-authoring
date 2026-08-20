@@ -1,5 +1,4 @@
 import type { IntlShape, MessageDescriptor } from 'react-intl';
-import moment from 'moment';
 import {
   CheckCircle as CheckCircleIcon,
   Lock as LockIcon,
@@ -8,32 +7,11 @@ import {
 import DraftIcon from '@src/generic/DraftIcon';
 import { VisibilityTypes } from '@src/data/constants';
 import { ValueOf } from '@src/types';
+import { convertUtcDisplayDateToGmt7 } from '@src/utils';
 import { ITEM_BADGE_STATUS, VIDEO_SHARING_OPTIONS } from './constants';
 
 export type ItemBadgeStatusValue = ValueOf<typeof ITEM_BADGE_STATUS>;
 
-// edx-platform sends release/due date summary strings pre-formatted in UTC, e.g.
-// "Jan 01, 2024 at 00:00 UTC". Since that formatting happens server-side, shift the
-// displayed value to GMT+7 here rather than changing the backend.
-const UTC_DISPLAY_DATE_FORMAT = 'MMM DD, YYYY [at] HH:mm [UTC]';
-const GMT7_DISPLAY_DATE_FORMAT = 'MMM DD, YYYY [at] HH:mm [GMT+7]';
-const GMT7_OFFSET_HOURS = 7;
-
-/**
- * Convert a pre-formatted "MMM DD, YYYY at HH:mm UTC" display string (as sent by
- * edx-platform) to the same format shifted to GMT+7. Returns the original string
- * unchanged if it doesn't match the expected format.
- */
-const convertUtcDisplayDateToGmt7 = (utcDisplayStr?: string): string | undefined => {
-  if (!utcDisplayStr) {
-    return utcDisplayStr;
-  }
-  const parsed = moment.utc(utcDisplayStr, UTC_DISPLAY_DATE_FORMAT, true);
-  if (!parsed.isValid()) {
-    return utcDisplayStr;
-  }
-  return parsed.add(GMT7_OFFSET_HOURS, 'hours').format(GMT7_DISPLAY_DATE_FORMAT);
-};
 /**
  * Get section status depended on section info
  */
